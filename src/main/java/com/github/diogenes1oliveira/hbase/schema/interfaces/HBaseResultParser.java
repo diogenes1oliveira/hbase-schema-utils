@@ -7,7 +7,16 @@ import java.util.SortedMap;
  *
  * @param <T> POJO type
  */
+@FunctionalInterface
 public interface HBaseResultParser<T> {
+    /**
+     * Populates the POJO with data from HBase cells
+     *
+     * @param pojo              POJO object
+     * @param valuesByQualifier map of (qualifier -> value)
+     */
+    void parseValues(T pojo, SortedMap<byte[], byte[]> valuesByQualifier);
+
     /**
      * Populates the POJO with data from the row key, qualifiers and values fetched from HBase
      * <p>
@@ -21,14 +30,6 @@ public interface HBaseResultParser<T> {
         parseRowKey(pojo, rowKey);
         parseValues(pojo, valuesByQualifier);
     }
-
-    /**
-     * Populates the POJO with data from HBase cells
-     *
-     * @param pojo              POJO object
-     * @param valuesByQualifier map of (qualifier -> value)
-     */
-    void parseValues(T pojo, SortedMap<byte[], byte[]> valuesByQualifier);
 
     /**
      * Populates the POJO with data from the row key

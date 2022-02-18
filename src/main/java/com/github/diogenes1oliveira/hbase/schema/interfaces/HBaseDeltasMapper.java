@@ -7,6 +7,7 @@ import java.util.SortedMap;
  *
  * @param <T> POJO type
  */
+@FunctionalInterface
 public interface HBaseDeltasMapper<T> {
     /**
      * Generates the increment delta values based on the POJO fields
