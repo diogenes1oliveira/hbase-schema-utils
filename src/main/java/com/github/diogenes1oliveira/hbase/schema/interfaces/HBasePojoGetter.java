@@ -9,20 +9,19 @@ import static java.util.Collections.singleton;
 
 /**
  * Interface to effectively build, execute and parse a Get POJO query
- *
- * @param <T> POJO type
  */
 @FunctionalInterface
-public interface HBasePojoGetter<T> {
+public interface HBasePojoGetter {
     /**
      * Queries HBase for the data corresponding to the input POJOs
      *
      * @param queries      POJO objects to act as query source data
      * @param getGenerator object to map the query data from the POJO into a Get request
+     * @param <T>          POJO type
      * @return list of fetched POJOs
      * @throws IOException HBase error while fetching
      */
-    List<T> get(Collection<? extends T> queries, HBaseGetGenerator<T> getGenerator) throws IOException;
+    <T> List<T> get(Collection<? extends T> queries, HBaseGetGenerator<T> getGenerator) throws IOException;
 
     /**
      * Queries HBase for the data corresponding to the input POJO
@@ -31,12 +30,14 @@ public interface HBasePojoGetter<T> {
      *
      * @param query        POJO object to act as query source data
      * @param getGenerator object to map the query data from the POJO into a Get request
+     * @param <T>          POJO type
      * @return fetched POJO or an empty optional
      * @throws IOException           HBase error while mutating
      * @throws IllegalStateException more than 1 result returned by query
      */
-    default Optional<T> get(T query, HBaseGetGenerator<T> getGenerator) throws IOException {
+    default <T> Optional<T> get(T query, HBaseGetGenerator<T> getGenerator) throws IOException {
         List<T> pojos = get(singleton(query), getGenerator);
+
         if (pojos.isEmpty()) {
             return Optional.empty();
         } else if (pojos.size() == 1) {

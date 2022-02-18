@@ -8,20 +8,19 @@ import static java.util.Collections.singleton;
 
 /**
  * Interface to effectively build, execute and parse a Scan POJO query
- *
- * @param <T> POJO type
  */
 @FunctionalInterface
-public interface HBasePojoScanner<T> {
+public interface HBasePojoScanner {
     /**
      * Scans HBase for the data corresponding to the input POJOs
      *
      * @param queries       POJO objects to act as query source data
      * @param scanGenerator object to map the query data from the POJO into a Scan request
+     * @param <T>           POJO type
      * @return list of fetched POJOs
      * @throws IOException HBase error while scanning
      */
-    List<T> scan(Collection<? extends T> queries, HBaseScanGenerator<T> scanGenerator) throws IOException;
+    <T> List<T> scan(Collection<? extends T> queries, HBaseScanGenerator<T> scanGenerator) throws IOException;
 
     /**
      * Queries HBase for the data corresponding to the input POJO
@@ -30,10 +29,11 @@ public interface HBasePojoScanner<T> {
      *
      * @param query         POJO object to act as query source data
      * @param scanGenerator object to map the query data from the POJO into a Scan request
+     * @param <T>           POJO type
      * @return list of fetched POJOs
      * @throws IOException HBase error while scanning
      */
-    default List<T> scan(T query, HBaseScanGenerator<T> scanGenerator) throws IOException {
+    default <T> List<T> scan(T query, HBaseScanGenerator<T> scanGenerator) throws IOException {
         return scan(singleton(query), scanGenerator);
     }
 }
