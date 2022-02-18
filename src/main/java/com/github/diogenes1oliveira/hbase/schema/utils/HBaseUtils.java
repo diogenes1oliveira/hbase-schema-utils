@@ -1,9 +1,7 @@
 package com.github.diogenes1oliveira.hbase.schema.utils;
 
-import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.util.Bytes;
 
-import java.util.Arrays;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
@@ -35,41 +33,8 @@ public final class HBaseUtils {
      * @param <T> value type
      * @return map sorted by bytes values using {@link Bytes#BYTES_COMPARATOR}
      */
-    public static <T> SortedMap<byte[], T> comparableByteMap() {
+    public static <T> SortedMap<byte[], T> sortedByteMap() {
         return new TreeMap<>(Bytes.BYTES_COMPARATOR);
     }
 
-    /**
-     * Extracts the column qualifier from the cell
-     *
-     * @param cell HBase result cell
-     * @return copied qualifier array or null
-     */
-    public static byte[] getCellQualifier(Cell cell) {
-        if (cell.getQualifierArray() == null) {
-            return null;
-        }
-        return Arrays.copyOfRange(
-                cell.getQualifierArray(),
-                cell.getQualifierOffset(),
-                cell.getQualifierOffset() + cell.getQualifierLength()
-        );
-    }
-
-    /**
-     * Extracts the binary value from the cell
-     *
-     * @param cell HBase result cell
-     * @return copied value array or null
-     */
-    public static byte[] getCellValue(Cell cell) {
-        if (cell.getValueArray() == null) {
-            return null;
-        }
-        return Arrays.copyOfRange(
-                cell.getValueArray(),
-                cell.getValueOffset(),
-                cell.getValueOffset() + cell.getValueLength()
-        );
-    }
 }
