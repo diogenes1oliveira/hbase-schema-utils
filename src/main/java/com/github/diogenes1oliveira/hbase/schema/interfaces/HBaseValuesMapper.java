@@ -1,0 +1,18 @@
+package com.github.diogenes1oliveira.hbase.schema.interfaces;
+
+import java.util.SortedMap;
+
+/**
+ * Interface to generate HBase cell data from a POJO object
+ *
+ * @param <T> POJO type
+ */
+public interface HBaseValuesMapper<T> {
+    /**
+     * Generates the cells data based on the POJO fields
+     *
+     * @param pojo POJO object
+     * @return sorted map (qualifier -> cell value)
+     */
+    SortedMap<byte[], byte[]> getValues(T pojo);
+}
