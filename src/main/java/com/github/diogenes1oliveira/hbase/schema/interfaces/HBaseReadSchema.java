@@ -1,6 +1,8 @@
 package com.github.diogenes1oliveira.hbase.schema.interfaces;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
+import org.apache.hadoop.hbase.filter.ColumnPrefixFilter;
+import org.apache.hadoop.hbase.filter.Filter;
 
 import java.util.List;
 import java.util.SortedSet;
@@ -10,7 +12,7 @@ import java.util.SortedSet;
  *
  * @param <T> POJO type
  */
-public interface HBaseReadSchema<T> {
+public interface HBaseReadSchema<T> extends HBaseFilterGenerator<T> {
     /**
      * Object to populate the POJO with data from the fetched row key
      *
@@ -55,4 +57,24 @@ public interface HBaseReadSchema<T> {
     default byte[] getQualifiersPrefix(T pojo) {
         return null;
     }
+
+    /**
+     * Generates a filter based on the data from a POJO object
+     * <p>
+     * The default implementation generates a {@link ColumnPrefixFilter} based on the qualifier prefix
+     * generated from {@link HBaseReadSchema#getQualifiersPrefix(T)}
+     *
+     * @param query POJO object to act as query source data
+     * @return built filter or null
+     */
+    @Nullable
+    @Override
+    default Filter toFilter(T query) {
+        byte[] prefix = this.getQualifiersPrefix(query);
+        if (prefix == null) {
+            return null;
+        }
+        return new ColumnPrefixFilter(prefix);
+    }
+
 }
