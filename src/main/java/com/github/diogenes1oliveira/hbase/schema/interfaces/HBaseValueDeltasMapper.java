@@ -8,12 +8,12 @@ import java.util.SortedMap;
  * @param <T> POJO type
  */
 @FunctionalInterface
-public interface HBaseDeltasMapper<T> {
+public interface HBaseValueDeltasMapper<T> {
     /**
      * Generates the increment delta values based on the POJO fields
      *
      * @param pojo POJO object
      * @return sorted map (qualifier -> increment delta value)
      */
-    SortedMap<byte[], Long> getValues(T pojo);
+    SortedMap<byte[], Long> getValueDeltas(T pojo);
 }

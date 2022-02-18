@@ -8,7 +8,7 @@ import java.util.SortedMap;
  * @param <T> POJO type
  */
 @FunctionalInterface
-public interface HBaseResultParser<T> {
+public interface HBaseValuesParser<T> {
     /**
      * Populates the POJO with data from HBase cells
      *
