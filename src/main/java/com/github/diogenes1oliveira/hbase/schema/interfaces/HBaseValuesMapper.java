@@ -15,5 +15,5 @@ public interface HBaseValuesMapper<T> {
      * @param pojo POJO object
      * @return sorted map (qualifier -> cell value)
      */
-    SortedMap<byte[], byte[]> getValues(T pojo);
+    SortedMap<byte[], byte[]> getBytes(T pojo);
 }
