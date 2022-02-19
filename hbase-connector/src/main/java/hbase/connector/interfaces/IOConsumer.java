@@ -3,9 +3,9 @@ package hbase.connector.interfaces;
 import java.io.IOException;
 
 /**
- * Alternative to {@link java.util.function.Supplier} that can throw {@link IOException}
+ * Alternative to {@link java.util.function.Consumer} that can throw {@link IOException}
  *
- * @param <T> supplied type
+ * @param <T> consumed type
  */
 @FunctionalInterface
 public interface IOConsumer<T> {
