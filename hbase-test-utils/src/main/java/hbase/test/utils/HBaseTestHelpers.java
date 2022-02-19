@@ -13,8 +13,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Properties;
 
 import static java.util.Arrays.asList;
 import static java.util.Arrays.stream;
@@ -137,5 +139,24 @@ public final class HBaseTestHelpers {
             Thread.currentThread().interrupt();
             throw new IllegalStateException("Thread interrupted while sleeping", e);
         }
+    }
+
+    /**
+     * Loads the .properties object from the classpath
+     *
+     * @param name name of the resource to fetch
+     * @return parsed Properties object
+     */
+    public static Properties loadPropsFromResource(String name) throws IOException {
+        Properties props = new Properties();
+
+        try (InputStream stream = HBaseTestHelpers.class.getClassLoader().getResourceAsStream(name)) {
+            if (stream == null) {
+                throw new IOException("No such resource: " + name);
+            }
+            props.load(stream);
+        }
+
+        return props;
     }
 }
