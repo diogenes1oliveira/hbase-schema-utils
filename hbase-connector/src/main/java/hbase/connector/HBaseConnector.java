@@ -1,8 +1,10 @@
 package hbase.connector;
 
 import hbase.connector.interfaces.HBaseConnectionFactory;
-import hbase.connector.interfaces.HBaseUncheckedConnectionProxy;
-import hbase.connector.utils.HBaseUncloseableConnection;
+import hbase.connector.interfaces.HBaseConnectionProxy;
+import hbase.connector.utils.ContextReadWriteLock;
+import hbase.connector.utils.HBaseExpirableConnection;
+import hbase.connector.utils.HBaseRecreatableConnection;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.client.Connection;
 
@@ -20,23 +22,7 @@ import static hbase.connector.utils.HBaseHelpers.toHBaseConf;
  * Obs: connection and disconnection are mutually synchronized
  */
 public class HBaseConnector implements AutoCloseable {
-    /**
-     * Kerberos principal name
-     */
-    public static final String CONFIG_PRINCIPAL = "hbase.client.keytab.principal";
-    /**
-     * Kerberos keytab file
-     */
-    public static final String CONFIG_KEYTAB = "hbase.client.keytab.file";
-    /**
-     * Automatic reconnection period
-     */
-    public static final String CONFIG_RECONNECTION_PERIOD = "custom.hbase.reconnection.period";
-
-    private volatile HBaseUncloseableConnection uncloseableConnection = null;
-    private final Configuration conf;
-    private final HBaseConnectionFactory factory = new HBaseRegistryConnectionFactory();
-    private final Object lock = new Object();
+    private final HBaseExpirableConnection connection;
 
     /**
      * @param props Java properties for the new connection
@@ -53,32 +39,32 @@ public class HBaseConnector implements AutoCloseable {
     }
 
     /**
-     * @param conf Hadoop-style configuration for the new connection
+     * @param conf Hadoop-style configuration for the connection
      */
     public HBaseConnector(Configuration conf) {
-        this.conf = conf;
+        this.connection = newConnection(conf, new HBaseRegistryConnectionFactory(), new ContextReadWriteLock());
     }
 
     /**
      * Creates a new connection or returns the current one
      * <p>
-     * You don't need to use this in a try-with-resources fashion, because the returned connection's method
-     * {@link Connection#close()} is overriden as no-op. Call {@link #close()} to actually close the current
-     * connection
+     * You do need to use this in a try-with-resources fashion, because the returned connection's method
+     * {@link Connection#close()} is overriden with locks to avoid concurrent reconnections
      * <p>
-     * Obs: this method is idempotent, i.e., it's a no-op if already connected
      *
      * @return HBase connection object
      * @throws IOException failed to create connection
      */
-    public HBaseUncheckedConnectionProxy connect() throws IOException {
-        synchronized (lock) {
-            if (uncloseableConnection != null) {
-                return uncloseableConnection;
-            }
-            uncloseableConnection = new HBaseUncloseableConnection(factory.create(conf));
-            return uncloseableConnection;
-        }
+    public HBaseConnectionProxy connect() throws IOException {
+        return connection.getWrappedConnection();
+    }
+
+    /**
+     * Closes the current connection and creates it back up
+     */
+    public void reconnect() throws IOException {
+        close();
+        connection.refreshNow();
     }
 
     /**
@@ -90,31 +76,22 @@ public class HBaseConnector implements AutoCloseable {
      */
     @Override
     public void close() throws IOException {
-        synchronized (lock) {
-            if (uncloseableConnection == null) {
-                return;
-            }
-            uncloseableConnection.getWrappedConnection().close();
-            uncloseableConnection = null;
-        }
+        connection.close();
     }
 
     /**
      * Checks if there's an active connection
      */
     boolean isConnected() {
-        return uncloseableConnection != null;
+        return connection.getUnproxiedConnection() != null;
     }
 
-    /**
-     * Applies proxy wrappers to the connection object
-     * <p>
-     * The default implementation just returns identity
-     *
-     * @param original original uncloseable connection
-     * @return wrapped connection
-     */
-    protected Connection applyWrappers(Connection original) {
-        return original;
+    private static HBaseExpirableConnection newConnection(Configuration conf,
+                                                          HBaseConnectionFactory factory,
+                                                          ContextReadWriteLock contextLock) {
+        HBaseRecreatableConnection connection = new HBaseRecreatableConnection(
+                conf, factory, contextLock
+        );
+        return new HBaseExpirableConnection(connection);
     }
 }
