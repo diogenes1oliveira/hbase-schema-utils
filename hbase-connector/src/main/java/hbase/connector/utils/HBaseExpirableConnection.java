@@ -8,7 +8,6 @@ import org.apache.hadoop.hbase.client.Connection;
 import org.apache.hadoop.hbase.client.TableBuilder;
 
 import java.io.IOException;
-import java.time.Duration;
 import java.util.concurrent.ExecutorService;
 
 import static hbase.connector.utils.HBaseHelpers.getMillisDuration;
@@ -27,12 +26,6 @@ public class HBaseExpirableConnection extends HBaseConnectionProxy {
      * Max allowed age for a connection
      */
     public static final String CONFIG_EXPIRE_TIMEOUT = "custom.hbase.expiration.timeout";
-
-    /**
-     * Minimum allowed difference between the reconnection period and expiration timeout
-     */
-    public static final long MIN_EXPIRATION_DELTA_MINUTES = 2;
-    private static final long MIN_EXPIRATION_DELTA_MS = Duration.ofMinutes(MIN_EXPIRATION_DELTA_MINUTES).toMillis();
 
     /**
      * Multiplier to derive the default expiration from the refresh period
@@ -147,11 +140,9 @@ public class HBaseExpirableConnection extends HBaseConnectionProxy {
         long defaultExpireMillis = (long) (refreshMillis * DEFAULT_EXPIRATION_MULTIPLIER);
         long expireMillis = getMillisDuration(conf, CONFIG_EXPIRE_TIMEOUT, defaultExpireMillis);
 
-        if (expireMillis - refreshMillis <= MIN_EXPIRATION_DELTA_MS) {
+        if (expireMillis < refreshMillis) {
             throw new IllegalArgumentException(
-                    "Expiration timeout has to be at least " +
-                            MIN_EXPIRATION_DELTA_MINUTES +
-                            " minutes longer than refresh period"
+                    "Expiration timeout can't be less than refresh period"
             );
         }
 
