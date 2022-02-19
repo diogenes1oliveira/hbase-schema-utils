@@ -19,6 +19,8 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <maven.compiler.parameters>true</maven.compiler.parameters>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <!-- main dependencies -->
+        <hbase.version>2.0.2</hbase.version>
         <!-- test dependencies -->
         <commons-io.version>2.11.0</commons-io.version>
         <junit.version>5.7.0</junit.version>
@@ -54,6 +56,11 @@
                 <groupId>com.github.diogenes1oliveira</groupId>
                 <artifactId>hbase-schema-connector</artifactId>
                 <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.hbase</groupId>
+                <artifactId>hbase-shaded-client</artifactId>
+                <version>${hbase.version}</version>
             </dependency>
             <dependency>
                 <groupId>commons-io</groupId>

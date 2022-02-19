@@ -1,5 +1,7 @@
 package com.github.diogenes1oliveira.hbase.schema.connector.interfaces;
 
+import com.github.diogenes1oliveira.hbase.schema.api.interfaces.HBaseMutationsGenerator;
+
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;

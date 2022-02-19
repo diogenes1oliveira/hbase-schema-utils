@@ -14,7 +14,9 @@
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
-      <module name="hbase-schema-api" options="-parameters" />
+      <module name="hbase-connector" options="" />
+      <module name="hbase-schema-api" options="" />
+      <module name="hbase-schema-connector" options="-parameters" />
     </option>
   </component>
 </project>

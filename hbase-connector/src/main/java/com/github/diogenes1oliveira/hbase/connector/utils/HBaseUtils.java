@@ -2,15 +2,13 @@ package com.github.diogenes1oliveira.hbase.connector.utils;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
-import org.apache.hadoop.hbase.util.Bytes;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
-import java.util.SortedMap;
-import java.util.TreeMap;
 
 /**
- * Generic utility aid methods
+ * Generic helper methods
  */
 public final class HBaseUtils {
     private HBaseUtils() {
@@ -39,9 +37,16 @@ public final class HBaseUtils {
      * @param props Java properties to convert
      * @return Hadoop configuration object
      */
-    @SuppressWarnings({"unchecked", "rawtypes"})
     public static Configuration toHBaseConf(Properties props) {
-        Map<String, String> propsMap = (Map) props;
+        Map<String, String> propsMap = new HashMap<>();
+
+        // a simple un-templated cast should work, but just in case
+        for (String name : props.stringPropertyNames()) {
+            String value = props.getProperty(name);
+            propsMap.put(name, value);
+        }
+
         return toHBaseConf(propsMap);
     }
+
 }
