@@ -1,2 +1,3 @@
-# hbase-schema-utils
-Tools to map HBase tables to Java POJOs
+# hbase-utils
+
+Utilities to connect, parse and Put data into HBase in a sane fashion
