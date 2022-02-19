@@ -19,7 +19,7 @@ import static hbase.connector.utils.HBaseHelpers.toHBaseConf;
  * <p>
  * Obs: connection and disconnection are mutually synchronized
  */
-public class HBaseConnector {
+public class HBaseConnector implements AutoCloseable {
     /**
      * Kerberos principal name
      */
@@ -63,7 +63,7 @@ public class HBaseConnector {
      * Creates a new connection or returns the current one
      * <p>
      * You don't need to use this in a try-with-resources fashion, because the returned connection's method
-     * {@link Connection#close()} is overriden as no-op. Call {@link #disconnect()} to actually close the current
+     * {@link Connection#close()} is overriden as no-op. Call {@link #close()} to actually close the current
      * connection
      * <p>
      * Obs: this method is idempotent, i.e., it's a no-op if already connected
@@ -88,7 +88,8 @@ public class HBaseConnector {
      *
      * @throws IOException failed to close the currently open connection
      */
-    public void disconnect() throws IOException {
+    @Override
+    public void close() throws IOException {
         synchronized (lock) {
             if (uncloseableConnection == null) {
                 return;
@@ -106,11 +107,12 @@ public class HBaseConnector {
     }
 
     /**
-     * Applies
+     * Applies proxy wrappers to the connection object
+     * <p>
+     * The default implementation just returns identity
      *
-     * The default implementation
-     * @param original
-     * @return
+     * @param original original uncloseable connection
+     * @return wrapped connection
      */
     protected Connection applyWrappers(Connection original) {
         return original;
