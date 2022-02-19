@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <packaging>jar</packaging>
-    <artifactId>kerberos-utils</artifactId>
+    <artifactId>hadoop-auth-utils</artifactId>
     <description>
         Library with utilities to deal with Kerberos
     </description>

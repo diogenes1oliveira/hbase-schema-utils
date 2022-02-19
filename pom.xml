@@ -38,7 +38,7 @@
         <module>hbase-schema-api</module>
         <module>hbase-schema-connector</module>
         <module>hbase-test-utils</module>
-        <module>hadoop-kerberos-utils</module>
+        <module>hadoop-auth-utils</module>
     </modules>
 
     <dependencyManagement>
@@ -66,7 +66,7 @@
             </dependency>
             <dependency>
                 <groupId>com.github.diogenes1oliveira</groupId>
-                <artifactId>hadoop-kerberos-utils</artifactId>
+                <artifactId>hadoop-auth-utils</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
