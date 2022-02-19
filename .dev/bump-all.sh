@@ -34,6 +34,7 @@ absolute_path() (
 case "${1:-}" in
 -h | --help | help )
   usage
+  exit 0
   ;;
 '')
   usage >&2
