@@ -17,6 +17,8 @@
     </parent>
 
     <properties>
+        <testcontainers.version>1.16.3</testcontainers.version>
+        <hbase2-testcontainers.version>1.0.0</hbase2-testcontainers.version>
     </properties>
 
     <dependencies>
@@ -25,17 +27,35 @@
             <groupId>org.apache.hbase</groupId>
             <artifactId>hbase-shaded-client</artifactId>
         </dependency>
-        <!-- test dependencies -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-engine</artifactId>
-            <scope>test</scope>
+            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-params</artifactId>
-            <scope>test</scope>
+            <scope>compile</scope>
         </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>testcontainers</artifactId>
+            <version>${testcontainers.version}</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>${testcontainers.version}</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.github.diogenes1oliveira</groupId>
+            <artifactId>hbase2-testcontainers</artifactId>
+            <version>${hbase2-testcontainers.version}</version>
+            <scope>compile</scope>
+        </dependency>
+        <!-- test dependencies -->
         <dependency>
             <groupId>org.hamcrest</groupId>
             <artifactId>hamcrest</artifactId>
