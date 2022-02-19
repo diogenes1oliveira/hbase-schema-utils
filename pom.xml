@@ -37,6 +37,7 @@
         <module>hbase-connector</module>
         <module>hbase-schema-api</module>
         <module>hbase-schema-connector</module>
+        <module>hbase-test-utils</module>
     </modules>
 
     <dependencyManagement>
@@ -55,6 +56,11 @@
             <dependency>
                 <groupId>com.github.diogenes1oliveira</groupId>
                 <artifactId>hbase-schema-connector</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.github.diogenes1oliveira</groupId>
+                <artifactId>hbase-test-utils</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
