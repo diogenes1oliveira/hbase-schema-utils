@@ -1,14 +1,7 @@
-Kerberos Context as in:
-
-```java
-UserGroupInformation.setConfiguration(kerberosConf);
-UserGroupInformation ugi = UserGroupInformation.loginUserFromKeytabAndReturnUGI(principal, keyTab);
-try {
-    return ugi.doAs((PrivilegedExceptionAction<T>) action::get);
-} catch (InterruptedException e) {
-    LOGGER.warn("Interrupted while executing code within Kerberos context", e);
-    Thread.currentThread().interrupt();
-    throw new IOException("Interrupted while executing code within Kerberos context", e);
-}
-
-```
+HBase UI with React?
+JOLT, Groovy, json path, etc to yield a generic Schema?
+Kerberized HBase docker in this very repo?
+Supervisord to handle the start/stopping of the Docker container;
+Wrap the connections in WebSocket? This would help with DNS and authorization, etc
+Devise a scheme to fetch the Kerberos context and transmitting it via SPNEGO/LDAP/SSH etc
+Queries HBase via Spark => I can use these schema mappers as well
