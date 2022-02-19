@@ -20,6 +20,10 @@
     </properties>
 
     <dependencies>
+        <dependency>
+            <groupId>org.apache.hbase</groupId>
+            <artifactId>hbase-shaded-client</artifactId>
+        </dependency>
         <!-- test dependencies -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
