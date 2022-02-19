@@ -1,4 +1,4 @@
-package hbase.connector;
+package hadoop.kerberos.utils;
 
 /**
  * Executes code within a logged-in UGI context;
