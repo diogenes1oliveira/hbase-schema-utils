@@ -24,6 +24,10 @@
     <dependencies>
         <!-- main dependencies -->
         <dependency>
+            <groupId>com.github.diogenes1oliveira</groupId>
+            <artifactId>hbase-connector</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.apache.hbase</groupId>
             <artifactId>hbase-shaded-client</artifactId>
         </dependency>
