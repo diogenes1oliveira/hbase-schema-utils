@@ -1,7 +1,7 @@
 package hadoop.kerberos.utils;
 
 import hadoop.kerberos.utils.exceptions.ContextInterruptedException;
-import hadoop.kerberos.utils.interfaces.AuthContext;
+import hadoop.kerberos.utils.interfaces.IOAuthContext;
 import hadoop.kerberos.utils.interfaces.IOSupplier;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.UserGroupInformation;
@@ -11,7 +11,6 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.security.PrivilegedExceptionAction;
 import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Supplier;
 
 /**
@@ -20,25 +19,27 @@ import java.util.function.Supplier;
  * Because this requires a global lock, you should take care of only calling this context
  * when necessary (for instance, when recreating a connection)
  */
-public class UgiConfigContext implements AuthContext<UserGroupInformation, IOException> {
+public class UgiConfigContext implements IOAuthContext<UserGroupInformation> {
     private static final Logger LOGGER = LoggerFactory.getLogger(UgiConfigContext.class);
 
-    private static final Lock globalLock = new ReentrantLock();
-
     private final Configuration originalConf;
+    private final Lock lock;
     private final UserGroupInformation ugi;
 
     /**
      * @param originalConf    Hadoop's configuration to be restored outside the context
      * @param contextConf     Hadoop's configuration inside the context
+     * @param lock            lock object to be acquired before any changes to the UGI
      * @param localUgiFactory object to supply the UGI inside the context
      * @throws IOException failed to create UGI
      */
     public UgiConfigContext(Configuration originalConf,
                             Configuration contextConf,
+                            Lock lock,
                             IOSupplier<UserGroupInformation> localUgiFactory) throws IOException {
         this.originalConf = originalConf;
-        globalLock.lock();
+        this.lock = lock;
+        this.lock.lock();
 
         UserGroupInformation.setConfiguration(contextConf);
         this.ugi = localUgiFactory.get();
@@ -77,6 +78,6 @@ public class UgiConfigContext implements AuthContext<UserGroupInformation, IOExc
     @Override
     public void close() {
         UserGroupInformation.setConfiguration(originalConf);
-        globalLock.unlock();
+        lock.unlock();
     }
 }

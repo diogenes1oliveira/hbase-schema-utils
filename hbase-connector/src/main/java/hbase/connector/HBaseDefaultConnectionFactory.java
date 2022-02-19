@@ -1,9 +1,12 @@
 package hbase.connector;
 
+import hadoop.kerberos.utils.UgiGlobalContextManager;
+import hadoop.kerberos.utils.interfaces.IOAuthContext;
 import hbase.connector.interfaces.HBaseConnectionFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.client.Connection;
 import org.apache.hadoop.hbase.client.ConnectionFactory;
+import org.apache.hadoop.security.UserGroupInformation;
 
 import java.io.IOException;
 
@@ -12,13 +15,26 @@ import java.io.IOException;
  */
 public class HBaseDefaultConnectionFactory implements HBaseConnectionFactory {
     /**
+     * Kerberos principal name
+     */
+    public static final String CONFIG_PRINCIPAL = "hbase.client.keytab.principal";
+    /**
+     * Kerberos keytab file
+     */
+    public static final String CONFIG_KEYTAB = "hbase.client.keytab.file";
+
+    /**
      * @param conf Hadoop-style configuration for the new connection
      * @return the new connection
      * @throws IOException failed to connect
      */
     @Override
     public Connection create(Configuration conf) throws IOException {
-        return ConnectionFactory.createConnection(conf);
+        Configuration confCopy = new Configuration(conf);
+
+        try (IOAuthContext<UserGroupInformation> context = enterUgiContext(confCopy)) {
+            return ConnectionFactory.createConnection(confCopy);
+        }
     }
 
     /**
@@ -30,5 +46,16 @@ public class HBaseDefaultConnectionFactory implements HBaseConnectionFactory {
     @Override
     public boolean supports(Configuration conf) {
         return true;
+    }
+
+    protected IOAuthContext<UserGroupInformation> enterUgiContext(Configuration conf) throws IOException {
+        String principal = conf.getTrimmed(CONFIG_PRINCIPAL, "");
+        String keytab = conf.getTrimmed(CONFIG_KEYTAB, "");
+
+        if (principal.isEmpty() || keytab.isEmpty()) {
+            return UgiGlobalContextManager.enterDefault(conf);
+        } else {
+            return UgiGlobalContextManager.enterWithKeytab(conf, principal, keytab);
+        }
     }
 }
