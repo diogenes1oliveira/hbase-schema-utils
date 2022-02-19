@@ -67,6 +67,13 @@
                 <groupId>org.apache.hbase</groupId>
                 <artifactId>hbase-shaded-client</artifactId>
                 <version>${hbase.version}</version>
+                <exclusions>
+                    <!-- for some reason it comes with a concrete SLF4J binding, exclude it to avoid issues -->
+                    <exclusion>
+                        <groupId>log4j</groupId>
+                        <artifactId>log4j</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>commons-io</groupId>
@@ -176,13 +183,13 @@
                             <phase>test-compile</phase>
                         </execution>
                         <!-- attached to Maven test phase -->
-                       <execution>
-                           <id>jacoco-site</id>
-                           <phase>verify</phase>
-                           <goals>
-                               <goal>report</goal>
-                           </goals>
-                       </execution>
+                        <execution>
+                            <id>jacoco-site</id>
+                            <phase>verify</phase>
+                            <goals>
+                                <goal>report</goal>
+                            </goals>
+                        </execution>
                     </executions>
                 </plugin>
             </plugins>
@@ -232,7 +239,7 @@
                             <goal>report-aggregate</goal>
                         </goals>
                         <configuration>
-<!--                            <dataFile>${user.dir}/target/jacoco.exec</dataFile>-->
+                            <!--                            <dataFile>${user.dir}/target/jacoco.exec</dataFile>-->
                         </configuration>
                     </execution>
                 </executions>
