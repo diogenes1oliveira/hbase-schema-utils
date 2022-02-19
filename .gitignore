@@ -36,5 +36,6 @@ hs_err_pid*
 
 # IntelliJ
 *.iml
-/.idea/jarRepositories.xml
 /.idea/libraries
+/.idea/jarRepositories.xml
+/.idea/compiler.xml
