@@ -82,7 +82,7 @@ public class HBaseConnector implements AutoCloseable {
     /**
      * Checks if there's an active connection
      */
-    boolean isConnected() {
+    public boolean isConnected() {
         return connection.getUnproxiedConnection() != null;
     }
 
