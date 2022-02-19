@@ -1,6 +1,5 @@
 package hadoop.kerberos.utils;
 
-import edu.umd.cs.findbugs.annotations.Nullable;
 import hadoop.kerberos.utils.exceptions.ContextInterruptedException;
 import hadoop.kerberos.utils.interfaces.AuthContext;
 import hadoop.kerberos.utils.interfaces.IOSupplier;
@@ -35,15 +34,13 @@ public class UgiConfigContext implements AuthContext<UserGroupInformation, IOExc
      * @param localUgiFactory object to supply the UGI inside the context
      * @throws IOException failed to create UGI
      */
-    public UgiConfigContext(@Nullable Configuration originalConf,
-                            @Nullable Configuration contextConf,
+    public UgiConfigContext(Configuration originalConf,
+                            Configuration contextConf,
                             IOSupplier<UserGroupInformation> localUgiFactory) throws IOException {
         this.originalConf = originalConf;
         globalLock.lock();
 
-        if (contextConf != null) {
-            UserGroupInformation.setConfiguration(contextConf);
-        }
+        UserGroupInformation.setConfiguration(contextConf);
         this.ugi = localUgiFactory.get();
     }
 
@@ -79,9 +76,7 @@ public class UgiConfigContext implements AuthContext<UserGroupInformation, IOExc
      */
     @Override
     public void close() {
-        if (originalConf != null) {
-            UserGroupInformation.setConfiguration(originalConf);
-        }
+        UserGroupInformation.setConfiguration(originalConf);
         globalLock.unlock();
     }
 }
