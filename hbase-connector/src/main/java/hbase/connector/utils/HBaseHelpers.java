@@ -10,8 +10,8 @@ import java.util.Properties;
 /**
  * Generic helper methods
  */
-public final class HBaseUtils {
-    private HBaseUtils() {
+public final class HBaseHelpers {
+    private HBaseHelpers() {
         // utility class
     }
 

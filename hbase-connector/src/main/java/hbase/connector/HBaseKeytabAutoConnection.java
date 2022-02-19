@@ -1,6 +1,6 @@
 package hbase.connector;
 
-import hbase.connector.interfaces.HBaseConnectionProxy;
+import hbase.connector.interfaces.HBaseUncheckedConnectionProxy;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.client.Connection;
 
@@ -12,7 +12,7 @@ import java.util.concurrent.atomic.AtomicReference;
  * <p>
  * This class extracts the principal and keytab as in post-2.2.0 HBase, also scheduling reconnections automatically
  */
-public class HBaseKeytabAutoConnection extends HBaseConnectionProxy {
+public class HBaseKeytabAutoConnection extends HBaseUncheckedConnectionProxy {
     /**
      * Kerberos principal name
      */
@@ -36,7 +36,7 @@ public class HBaseKeytabAutoConnection extends HBaseConnectionProxy {
     }
 
     @Override
-    protected Connection getConnection() {
+    protected Connection getWrappedConnection() {
         return connectionRef.get();
     }
 
