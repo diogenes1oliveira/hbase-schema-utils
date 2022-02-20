@@ -1,6 +1,7 @@
 package hbase.schema.api.utils;
 
 import hbase.schema.api.interfaces.converters.HBaseBytesParser;
+import hbase.schema.api.interfaces.converters.HBaseLongParser;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.hadoop.hbase.util.Bytes;
 
@@ -29,10 +30,6 @@ public final class HBaseBytesParsingUtils {
         };
     }
 
-    public static <T> HBaseBytesParser<T> longParser(BiConsumer<T, Long> setter) {
-        return bytesParser(setter, Bytes::toLong);
-    }
-
     public static <T> HBaseBytesParser<T> stringParser(BiConsumer<T, String> setter) {
         return bytesParser(setter, bytes -> new String(bytes, StandardCharsets.UTF_8));
     }
@@ -56,11 +53,11 @@ public final class HBaseBytesParsingUtils {
         return bytesParser(setter, Bytes::toStringBinary);
     }
 
-    public static <T> HBaseBytesParser<T> instantLongParser(BiConsumer<T, Instant> setter) {
-        return longParser((obj, l) -> {
+    public static <T> HBaseLongParser<T> instantLongParser(BiConsumer<T, Instant> setter) {
+        return (obj, l) -> {
             Instant instant = Instant.ofEpochMilli(l);
             setter.accept(obj, instant);
-        });
+        };
     }
 
     public static <T> HBaseBytesParser<T> instantStringParser(BiConsumer<T, Instant> setter) {
