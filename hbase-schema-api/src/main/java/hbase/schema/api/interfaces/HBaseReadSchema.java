@@ -1,7 +1,7 @@
 package hbase.schema.api.interfaces;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
-import hbase.schema.api.interfaces.converters.HBaseBytesExtractor;
+import hbase.schema.api.interfaces.converters.HBaseBytesGetter;
 import hbase.schema.api.interfaces.converters.HBaseBytesParser;
 import org.apache.hadoop.hbase.filter.ColumnPrefixFilter;
 import org.apache.hadoop.hbase.filter.Filter;
@@ -9,7 +9,6 @@ import org.apache.hadoop.hbase.filter.FilterList;
 
 import java.util.List;
 import java.util.Set;
-import java.util.SortedSet;
 
 import static hbase.schema.api.utils.HBaseSchemaUtils.sortedByteSet;
 
@@ -31,14 +30,14 @@ public interface HBaseReadSchema<T> extends HBaseFilterGenerator<T> {
      *
      * @return row key generator
      */
-    HBaseBytesExtractor<T> getRowKeyGenerator();
+    HBaseBytesGetter<T> getRowKeyGenerator();
 
     /**
      * Object to generate the Scan row key prefix
      *
      * @return search key prefix generator
      */
-    HBaseBytesExtractor<T> getScanRowKeyGenerator();
+    HBaseBytesGetter<T> getScanRowKeyGenerator();
 
     /**
      * Object to populate the POJO with data from the fetched qualifiers and values

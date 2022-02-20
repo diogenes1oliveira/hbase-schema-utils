@@ -1,9 +1,9 @@
 package hbase.schema.api.interfaces;
 
-import hbase.schema.api.interfaces.converters.HBaseBytesExtractor;
+import hbase.schema.api.interfaces.converters.HBaseBytesGetter;
 import hbase.schema.api.interfaces.converters.HBaseLongsMapper;
-import hbase.schema.api.interfaces.converters.HBaseLongExtractor;
-import hbase.schema.api.interfaces.converters.HBaseBytesMapper;
+import hbase.schema.api.interfaces.converters.HBaseLongGetter;
+import hbase.schema.api.interfaces.converters.HBaseCellsMapper;
 
 import java.util.List;
 
@@ -18,21 +18,21 @@ public interface HBaseWriteSchema<T> {
      *
      * @return row key parser
      */
-    HBaseBytesExtractor<T> getRowKeyGenerator();
+    HBaseBytesGetter<T> getRowKeyGenerator();
 
     /**
      * Object to generate a millis-timestamp
      *
      * @return timestamp generator
      */
-    HBaseLongExtractor<T> getTimestampGenerator();
+    HBaseLongGetter<T> getTimestampGenerator();
 
     /**
      * Object to generate a map of byte[] values
      *
      * @return bytes value generator
      */
-    List<HBaseBytesMapper<T>> getPutGenerators();
+    List<HBaseCellsMapper<T>> getPutGenerators();
 
     /**
      * Object to generate a map of increment deltas
