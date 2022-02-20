@@ -1,0 +1,20 @@
+version: "3.5"
+services:
+  hbase:
+    image: diogenes1oliveira/hbase2-docker:1.0.0-hbase2.0.2
+    container_name: hbase
+    hostname: hbase.localhost
+    ports:
+      - "2181:2181"
+      - "16000:16000"
+      - "16010:16010"
+      - "16020:16020"
+      - "16030:16030"
+    working_dir: /opt
+    environment:
+      HBASE_CONF_hbase_regionserver_hostname: hbase.localhost
+      HBASE_CONF_hbase_master_hostname: hbase.localhost
+
+networks:
+  default:
+    name: localhost
