@@ -6,7 +6,8 @@ import org.apache.hadoop.hbase.util.Bytes;
 import java.util.*;
 
 import static java.util.Arrays.asList;
-import static java.util.Collections.unmodifiableSet;
+import static java.util.Collections.unmodifiableSortedMap;
+import static java.util.Collections.unmodifiableSortedSet;
 
 /**
  * Generic utility aid methods
@@ -54,10 +55,37 @@ public final class HBaseSchemaUtils {
      *
      * @return set sorted by bytes values using {@link Bytes#BYTES_COMPARATOR}
      */
-    public static Set<byte[]> frozenSortedByteSet(byte[]... values) {
+    public static SortedSet<byte[]> frozenSortedByteSet(byte[]... values) {
         SortedSet<byte[]> set = sortedByteSet();
         set.addAll(asList(values));
-        return unmodifiableSet(set);
+        return unmodifiableSortedSet(set);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static <T> SortedMap<byte[], T> frozenSortedByteMapGeneric(Object... keysAndValues) {
+        if (keysAndValues.length % 2 != 0) {
+            throw new IllegalStateException("Key without value");
+        }
+        SortedMap<byte[], T> map = sortedByteMap();
+
+        for (int i = 0; i < keysAndValues.length; i += 2) {
+            byte[] key = (byte[]) keysAndValues[i];
+            T value = (T) keysAndValues[i + 1];
+            map.put(key, value);
+        }
+        return unmodifiableSortedMap(map);
+    }
+
+    public static <T> SortedMap<byte[], T> frozenSortedByteMap() {
+        return frozenSortedByteMapGeneric();
+    }
+
+    public static SortedMap<byte[], byte[]> frozenSortedByteMap(byte[] key, byte[] value) {
+        return frozenSortedByteMapGeneric(key, value);
+    }
+
+    public static SortedMap<byte[], Long> frozenSortedByteMap(byte[] key, Long value) {
+        return frozenSortedByteMapGeneric(key, value);
     }
 
     @SuppressWarnings("unchecked")
