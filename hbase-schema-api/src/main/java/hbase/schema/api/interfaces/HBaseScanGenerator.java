@@ -1,7 +1,7 @@
 package hbase.schema.api.interfaces;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
-import hbase.schema.api.interfaces.converters.HBaseBytesGetter;
+import hbase.schema.api.interfaces.converters.HBaseBytesMapper;
 import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.filter.Filter;
 import org.apache.hadoop.hbase.filter.MultiRowRangeFilter;
@@ -40,7 +40,7 @@ public interface HBaseScanGenerator<T> {
      */
     @Nullable
     default Filter toRowKeyScanFilter(Collection<? extends T> queries, HBaseReadSchema<T> readSchema) {
-        HBaseBytesGetter<T> prefixGenerator = readSchema.getScanRowKeyGenerator();
+        HBaseBytesMapper<T> prefixGenerator = readSchema.getScanRowKeyGenerator();
         List<MultiRowRangeFilter.RowRange> ranges = new ArrayList<>();
 
         for (T query : queries) {

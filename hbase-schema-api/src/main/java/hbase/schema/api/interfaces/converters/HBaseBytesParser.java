@@ -12,4 +12,5 @@ public interface HBaseBytesParser<T> {
      * @param value data from row key, qualifier or cell value
      */
     void setFromBytes(T pojo, byte[] value);
+
 }

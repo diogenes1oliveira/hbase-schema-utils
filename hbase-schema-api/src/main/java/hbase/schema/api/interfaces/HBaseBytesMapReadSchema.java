@@ -1,6 +1,6 @@
 package hbase.schema.api.interfaces;
 
-import hbase.schema.api.interfaces.converters.HBaseBytesGetter;
+import hbase.schema.api.interfaces.converters.HBaseBytesMapper;
 import hbase.schema.api.interfaces.converters.HBaseBytesParser;
 
 import java.util.Arrays;
@@ -62,7 +62,7 @@ public interface HBaseBytesMapReadSchema<T> extends HBaseReadSchema<Map<byte[], 
      *
      * @return row key generator
      */
-    default HBaseBytesGetter<Map<byte[], byte[]>> getRowKeyGenerator() {
+    default HBaseBytesMapper<Map<byte[], byte[]>> getRowKeyGenerator() {
         return this::generateRowKey;
     }
 
@@ -71,7 +71,7 @@ public interface HBaseBytesMapReadSchema<T> extends HBaseReadSchema<Map<byte[], 
      *
      * @return search key prefix generator
      */
-    default HBaseBytesGetter<Map<byte[], byte[]>> getScanRowKeyGenerator() {
+    default HBaseBytesMapper<Map<byte[], byte[]>> getScanRowKeyGenerator() {
         return query -> Arrays.copyOf(generateRowKey(query), getSearchKeySize(query));
     }
 

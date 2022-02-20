@@ -59,4 +59,14 @@ public final class HBaseSchemaUtils {
         return unmodifiableSet(set);
     }
 
+    @SuppressWarnings("unchecked")
+    public static <T> T verifiedCast(Class<T> type, Object value) {
+        if (value == null) {
+            return null;
+        } else if (!type.isAssignableFrom(value.getClass())) {
+            throw new IllegalArgumentException("Invalid object type");
+        }
+        return (T) value;
+    }
+
 }
