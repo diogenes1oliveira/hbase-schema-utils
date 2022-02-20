@@ -1,4 +1,4 @@
-package hbase.schema.api.interfaces;
+package hbase.schema.api.interfaces.converters;
 
 /**
  * Interface to parse data from a byte[] value into a POJO object

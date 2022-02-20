@@ -1,4 +1,4 @@
-package hbase.schema.api.interfaces;
+package hbase.schema.api.interfaces.converters;
 
 import java.util.SortedMap;
 

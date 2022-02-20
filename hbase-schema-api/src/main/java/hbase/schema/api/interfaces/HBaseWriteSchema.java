@@ -1,5 +1,10 @@
 package hbase.schema.api.interfaces;
 
+import hbase.schema.api.interfaces.converters.HBaseBytesExtractor;
+import hbase.schema.api.interfaces.converters.HBaseDeltasMapper;
+import hbase.schema.api.interfaces.converters.HBaseLongExtractor;
+import hbase.schema.api.interfaces.converters.HBaseValuesMapper;
+
 import java.util.List;
 
 /**

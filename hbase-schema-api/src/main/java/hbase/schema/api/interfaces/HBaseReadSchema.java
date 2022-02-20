@@ -1,6 +1,8 @@
 package hbase.schema.api.interfaces;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
+import hbase.schema.api.interfaces.converters.HBaseBytesExtractor;
+import hbase.schema.api.interfaces.converters.HBaseBytesParser;
 import org.apache.hadoop.hbase.filter.ColumnPrefixFilter;
 import org.apache.hadoop.hbase.filter.Filter;
 

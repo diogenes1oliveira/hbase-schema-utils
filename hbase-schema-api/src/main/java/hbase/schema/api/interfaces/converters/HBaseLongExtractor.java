@@ -1,4 +1,4 @@
-package hbase.schema.api.interfaces;
+package hbase.schema.api.interfaces.converters;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
 import org.apache.hadoop.hbase.util.Bytes;
