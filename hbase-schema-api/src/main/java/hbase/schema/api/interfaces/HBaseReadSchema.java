@@ -5,9 +5,13 @@ import hbase.schema.api.interfaces.converters.HBaseBytesExtractor;
 import hbase.schema.api.interfaces.converters.HBaseBytesParser;
 import org.apache.hadoop.hbase.filter.ColumnPrefixFilter;
 import org.apache.hadoop.hbase.filter.Filter;
+import org.apache.hadoop.hbase.filter.FilterList;
 
 import java.util.List;
+import java.util.Set;
 import java.util.SortedSet;
+
+import static hbase.schema.api.utils.HBaseSchemaUtils.sortedByteSet;
 
 /**
  * Interface to parse data from a HBase Result into a POJO object
@@ -41,30 +45,30 @@ public interface HBaseReadSchema<T> extends HBaseFilterGenerator<T> {
      *
      * @return cells parser
      */
-    List<HBaseBytesParser<T>> getCellsParsers();
+    List<HBaseCellParser<T>> getCellParsers();
 
     /**
      * Set of fixed qualifiers to read data from in a Get or a Put
      *
-     * @return sorted set of qualifier bytes
+     * @return set of qualifier bytes
      */
-    SortedSet<byte[]> getQualifiers(T pojo);
+    default Set<byte[]> getQualifiers(T query) {
+        return sortedByteSet();
+    }
 
     /**
-     * Returns the common prefix to all qualifiers in the list returned by {@link #getQualifiers(T)}
-     * <p>
-     * The default implementation returns null, i.e., no common prefix for all qualifiers
+     * Set of qualifier prefixes to read data from in a Get or a Put
+     *
+     * @return set of qualifier prefix bytes
      */
-    @Nullable
-    default byte[] getQualifiersPrefix(T pojo) {
-        return null;
+    default Set<byte[]> getQualifierPrefixes(T query) {
+        return sortedByteSet();
     }
 
     /**
      * Generates a filter based on the data from a POJO object
      * <p>
-     * The default implementation generates a {@link ColumnPrefixFilter} based on the qualifier prefix
-     * generated from {@link HBaseReadSchema#getQualifiersPrefix(T)}
+     * The default implementation generates a column filter based on {@link HBaseReadSchema#getQualifierPrefixes(T)}
      *
      * @param query POJO object to act as query source data
      * @return built filter or null
@@ -72,11 +76,18 @@ public interface HBaseReadSchema<T> extends HBaseFilterGenerator<T> {
     @Nullable
     @Override
     default Filter toFilter(T query) {
-        byte[] prefix = this.getQualifiersPrefix(query);
-        if (prefix == null) {
-            return null;
+        FilterList list = new FilterList(FilterList.Operator.MUST_PASS_ONE);
+        for (byte[] prefix : getQualifierPrefixes(query)) {
+            if (prefix.length > 0) {
+                Filter qualifierFilter = new ColumnPrefixFilter(prefix);
+                list.addFilter(qualifierFilter);
+            }
         }
-        return new ColumnPrefixFilter(prefix);
+        if (list.size() == 0) {
+            return null;
+        } else {
+            return list;
+        }
     }
 
 }

@@ -1,9 +1,9 @@
 package hbase.schema.api.interfaces;
 
 import hbase.schema.api.interfaces.converters.HBaseBytesExtractor;
-import hbase.schema.api.interfaces.converters.HBaseDeltasMapper;
+import hbase.schema.api.interfaces.converters.HBaseLongsMapper;
 import hbase.schema.api.interfaces.converters.HBaseLongExtractor;
-import hbase.schema.api.interfaces.converters.HBaseValuesMapper;
+import hbase.schema.api.interfaces.converters.HBaseBytesMapper;
 
 import java.util.List;
 
@@ -32,12 +32,12 @@ public interface HBaseWriteSchema<T> {
      *
      * @return bytes value generator
      */
-    List<HBaseValuesMapper<T>> getPutGenerators();
+    List<HBaseBytesMapper<T>> getPutGenerators();
 
     /**
      * Object to generate a map of increment deltas
      *
      * @return long increment generator
      */
-    List<HBaseDeltasMapper<T>> getIncrementGenerators();
+    List<HBaseLongsMapper<T>> getIncrementGenerators();
 }

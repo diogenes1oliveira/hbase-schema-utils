@@ -8,7 +8,7 @@ import java.util.SortedMap;
  * @param <T> POJO type
  */
 @FunctionalInterface
-public interface HBaseValuesMapper<T> {
+public interface HBaseBytesMapper<T> {
     /**
      * Generates the cells data based on the POJO fields
      *
