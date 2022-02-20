@@ -1,5 +1,6 @@
 package hbase.schema.api.utils;
 
+import edu.umd.cs.findbugs.annotations.Nullable;
 import org.apache.hadoop.hbase.util.Bytes;
 
 import java.util.*;
@@ -67,6 +68,46 @@ public final class HBaseSchemaUtils {
             throw new IllegalArgumentException("Invalid object type");
         }
         return (T) value;
+    }
+
+
+    @Nullable
+    public static byte[] findCommonPrefix(Collection<byte[]> bytesCollection) {
+        List<Byte> common = new ArrayList<>();
+
+        for (int i = 0; ; i++) {
+            byte current = 0;
+            boolean first = true;
+            boolean different = false;
+            for (byte[] bytes : bytesCollection) {
+                if (bytes.length <= i) {
+                    break;
+                }
+                byte b = bytes[i];
+                if (first) {
+                    current = b;
+                    first = false;
+                } else if (b != current) {
+                    different = true;
+                    break;
+                }
+            }
+            if (!different) {
+                common.add(current);
+            } else {
+                break;
+            }
+        }
+
+        if (common.isEmpty()) {
+            return null;
+        } else {
+            byte[] prefix = new byte[common.size()];
+            for (int i = 0; i < common.size(); ++i) {
+                prefix[i] = common.get(i);
+            }
+            return prefix;
+        }
     }
 
 }

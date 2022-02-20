@@ -13,4 +13,15 @@ public interface HBaseBytesParser<T> {
      */
     void setFromBytes(T pojo, byte[] value);
 
+    /**
+     * Returns a no-op parser
+     *
+     * @param <T> input object type
+     * @return new dummy bytes parser
+     */
+    static <T> HBaseBytesParser<T> dummy() {
+        return (obj, bytes) -> {
+
+        };
+    }
 }
