@@ -5,6 +5,8 @@ import org.apache.hadoop.hbase.client.Connection;
 
 import java.io.IOException;
 
+import static hbase.connector.utils.HBaseHelpers.isFromThisModule;
+
 /**
  * Generic creator of HBase connections
  */
@@ -27,12 +29,12 @@ public interface HBaseConnectionFactory {
     /**
      * Returns a priority number in case two factories support the configuration
      * <p>
-     * The default implementation returns 0
+     * The default implementation returns 0 for implementations from this module and 100 otherwise
      *
      * @param conf Hadoop-style configuration for the new connection
      * @return a number for the priority
      */
     default int priority(Configuration conf) {
-        return 0;
+        return isFromThisModule(this.getClass()) ? 0 : 100;
     }
 }

@@ -67,9 +67,14 @@ public final class HBaseHelpers {
             try {
                 return Duration.parse(value).toMillis();
             } catch (DateTimeParseException e) {
-                throw new IllegalArgumentException("Invalid value for " + name, e);
+                throw new IllegalArgumentException("Invalid value for " + name + ", should be an ISO duration", e);
             }
         }
     }
 
+    public static boolean isFromThisModule(Class<?> clazz) {
+        String classPackage = clazz.getPackage().getName();
+        String thisPackage = HBaseHelpers.class.getPackage().getName().replaceAll("\\.utils$", "");
+        return classPackage.startsWith(thisPackage);
+    }
 }
