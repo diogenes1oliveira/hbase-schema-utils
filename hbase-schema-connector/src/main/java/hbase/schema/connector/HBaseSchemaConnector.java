@@ -8,14 +8,26 @@ import hbase.schema.connector.interfaces.HBasePojoMutationBuilder;
 import hbase.schema.connector.interfaces.HBasePojoScanBuilder;
 import hbase.schema.connector.interfaces.HBaseResultParser;
 import org.apache.hadoop.hbase.TableName;
-import org.apache.hadoop.hbase.client.*;
+import org.apache.hadoop.hbase.client.Connection;
+import org.apache.hadoop.hbase.client.Get;
+import org.apache.hadoop.hbase.client.Mutation;
+import org.apache.hadoop.hbase.client.Result;
+import org.apache.hadoop.hbase.client.ResultScanner;
+import org.apache.hadoop.hbase.client.Scan;
+import org.apache.hadoop.hbase.client.Table;
 import org.apache.hadoop.hbase.filter.Filter;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Optional;
+import java.util.SortedMap;
 
 import static java.util.Arrays.stream;
-import static java.util.Collections.*;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singleton;
+import static java.util.Collections.singletonList;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
 
@@ -38,7 +50,40 @@ public class HBaseSchemaConnector<T> implements HBasePojoScanBuilder<T>, HBasePo
         this.family = family;
     }
 
-    public List<T> get(List<Get> gets) throws IOException {
+    public Optional<T> get(T query) throws IOException {
+        Get get = toGet(query);
+        return get(get);
+    }
+
+    public List<T> get(List<? extends T> queries) throws IOException {
+        List<Get> gets = toGets(queries);
+        return getMany(gets);
+    }
+
+    public List<T> scan(List<? extends T> queries) throws IOException {
+        Scan scan = toScan(queries);
+        return scan(scan);
+    }
+
+    public void mutate(Collection<? extends T> objs) throws IOException {
+        List<Mutation> mutations = toMutations(objs);
+        Result[] results = new Result[mutations.size()];
+
+        try (Connection connection = connector.connect();
+             Table table = connection.getTable(tableName)
+        ) {
+            table.batch(mutations, results);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException("Interrupted while mutating", e);
+        }
+    }
+
+    public void mutate(T obj) throws IOException {
+        mutate(singleton(obj));
+    }
+
+    public List<T> getMany(List<Get> gets) throws IOException {
         try (Connection connection = connector.connect();
              Table table = connection.getTable(tableName)
         ) {
@@ -50,8 +95,9 @@ public class HBaseSchemaConnector<T> implements HBasePojoScanBuilder<T>, HBasePo
         }
     }
 
+    @Override
     public Optional<T> get(Get get) throws IOException {
-        List<T> result = this.get(singletonList(get));
+        List<T> result = this.getMany(singletonList(get));
         if (result.isEmpty()) {
             return Optional.empty();
         } else {
@@ -59,6 +105,7 @@ public class HBaseSchemaConnector<T> implements HBasePojoScanBuilder<T>, HBasePo
         }
     }
 
+    @Override
     public List<T> scan(Scan scan) throws IOException {
         List<T> objs = new ArrayList<>();
 
@@ -78,24 +125,6 @@ public class HBaseSchemaConnector<T> implements HBasePojoScanBuilder<T>, HBasePo
         }
 
         return objs;
-    }
-
-    public void mutate(Collection<? extends T> objs) throws IOException {
-        List<Mutation> mutations = toMutations(objs);
-        Result[] results = new Result[mutations.size()];
-
-        try (Connection connection = connector.connect();
-             Table table = connection.getTable(tableName)
-        ) {
-            table.batch(mutations, results);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new IllegalStateException("Interrupted while mutating", e);
-        }
-    }
-
-    public void mutate(T obj) throws IOException {
-        mutate(singleton(obj));
     }
 
     @Override

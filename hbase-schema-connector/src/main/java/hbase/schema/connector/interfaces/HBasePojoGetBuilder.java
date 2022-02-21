@@ -6,8 +6,10 @@ import hbase.schema.connector.HBaseSchemaUtils;
 import org.apache.hadoop.hbase.client.Get;
 import org.apache.hadoop.hbase.filter.Filter;
 
+import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.SortedSet;
 
 import static java.util.stream.Collectors.toList;
@@ -15,9 +17,10 @@ import static java.util.stream.Collectors.toList;
 /**
  * Interface to effectively build, execute and parse a Get POJO query
  */
-@FunctionalInterface
 public interface HBasePojoGetBuilder<T> {
     Get toGet(T query);
+
+    Optional<T> get(Get get) throws IOException;
 
     default List<Get> toGets(Collection<? extends T> queries) {
         return queries.stream().map(this::toGet).collect(toList());

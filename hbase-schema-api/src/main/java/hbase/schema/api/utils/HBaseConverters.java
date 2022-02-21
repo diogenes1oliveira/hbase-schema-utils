@@ -47,6 +47,20 @@ public final class HBaseConverters {
         };
     }
 
+    public static <T> HBaseLongConverter<T> longConverter(Function<Long, T> fromLong) {
+        return new HBaseLongConverter<T>() {
+            @Override
+            public Function<T, Long> toLong() {
+                throw new UnsupportedOperationException("write-only field");
+            }
+
+            @Override
+            public Function<Long, T> fromLong() {
+                throw new UnsupportedOperationException("write-only field");
+            }
+        };
+    }
+
     public static HBaseBytesConverter<String> utf8Converter() {
         return bytesConverter(
                 s -> s.getBytes(StandardCharsets.UTF_8), bytes -> new String(bytes, StandardCharsets.UTF_8)

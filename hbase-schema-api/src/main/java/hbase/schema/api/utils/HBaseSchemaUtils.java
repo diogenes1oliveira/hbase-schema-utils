@@ -1,17 +1,16 @@
 package hbase.schema.api.utils;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
-import org.apache.hadoop.hbase.client.Get;
-import org.apache.hadoop.hbase.client.Scan;
-import org.apache.hadoop.hbase.filter.Filter;
-import org.apache.hadoop.hbase.filter.MultiRowRangeFilter;
 import org.apache.hadoop.hbase.util.Bytes;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.TreeMap;
+import java.util.TreeSet;
 
 import static java.util.Arrays.asList;
-import static java.util.Collections.unmodifiableSortedMap;
-import static java.util.Collections.unmodifiableSortedSet;
 
 /**
  * Generic utility aid methods
@@ -36,64 +35,54 @@ public final class HBaseSchemaUtils {
     }
 
     /**
-     * Builds a new map keyed by binary bytes
-     *
-     * @param <T> value type
-     * @return map sorted by bytes values using {@link Bytes#BYTES_COMPARATOR}
-     */
-    public static <T> SortedMap<byte[], T> sortedByteMap() {
-        return new TreeMap<>(Bytes.BYTES_COMPARATOR);
-    }
-
-    /**
-     * Builds a new set keyed by binary bytes
-     *
-     * @return set sorted by bytes values using {@link Bytes#BYTES_COMPARATOR}
-     */
-    public static SortedSet<byte[]> sortedByteSet() {
-        return new TreeSet<>(Bytes.BYTES_COMPARATOR);
-    }
-
-    /**
      * Builds a new set keyed by binary bytes,
      *
      * @return set sorted by bytes values using {@link Bytes#BYTES_COMPARATOR}
      */
-    public static SortedSet<byte[]> frozenSortedByteSet(byte[]... values) {
-        SortedSet<byte[]> set = sortedByteSet();
+    public static TreeSet<byte[]> asBytesTreeSet(byte[]... values) {
+        TreeSet<byte[]> set = new TreeSet<>(Bytes.BYTES_COMPARATOR);
         set.addAll(asList(values));
-        return unmodifiableSortedSet(set);
+        return set;
+    }
+
+    public static <T> TreeMap<byte[], T> asBytesTreeMap() {
+        return new TreeMap<>(Bytes.BYTES_COMPARATOR);
+    }
+
+    public static <T> TreeMap<byte[], T> asBytesTreeMap(byte[] key, T value) {
+        TreeMap<byte[], T> map = new TreeMap<>(Bytes.BYTES_COMPARATOR);
+        map.put(key, value);
+        return map;
+    }
+
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    public static <T> TreeMap<byte[], T> asBytesTreeMap(byte[] firstKey, @NonNull T firstValue, Object... otherKeysAndValues) {
+        Class<T> valueClass = (Class) firstValue.getClass();
+        return asBytesTreeMap(valueClass, firstKey, firstValue, otherKeysAndValues);
     }
 
     @SuppressWarnings("unchecked")
-    private static <T> SortedMap<byte[], T> frozenSortedByteMapGeneric(Object... keysAndValues) {
-        if (keysAndValues.length % 2 != 0) {
-            throw new IllegalStateException("Key without value");
+    public static <T> TreeMap<byte[], T> asBytesTreeMap(Class<T> valueClass,
+                                                        byte[] firstKey,
+                                                        T firstValue,
+                                                        Object... otherKeysAndValues) {
+        if (otherKeysAndValues.length % 2 != 0) {
+            int lastKeyIndex = (otherKeysAndValues.length - 1) / 2;
+            throw new IllegalArgumentException("Key #" + lastKeyIndex + " doesn't have a value");
         }
-        SortedMap<byte[], T> map = sortedByteMap();
+        TreeMap<byte[], T> map = new TreeMap<>(Bytes.BYTES_COMPARATOR);
+        map.put(firstKey, firstValue);
 
-        for (int i = 0; i < keysAndValues.length; i += 2) {
-            byte[] key = (byte[]) keysAndValues[i];
-            T value = (T) keysAndValues[i + 1];
-            map.put(key, value);
+        for (int i = 0; i < otherKeysAndValues.length; i += 2) {
+            byte[] key = (byte[]) otherKeysAndValues[i];
+            Object value = otherKeysAndValues[i + 1];
+            if (value != null && !valueClass.isAssignableFrom(value.getClass())) {
+                throw new IllegalArgumentException("Invalid value type");
+            }
+            map.put(key, (T) value);
         }
-        return unmodifiableSortedMap(map);
-    }
 
-    public static <T> SortedMap<byte[], T> frozenSortedByteMap() {
-        return frozenSortedByteMapGeneric();
-    }
-
-    public static SortedMap<byte[], byte[]> frozenSortedByteMap(byte[] key, byte[] value) {
-        return frozenSortedByteMapGeneric(key, value);
-    }
-
-    public static SortedMap<byte[], Long> frozenSortedByteMap(byte[] key, Long value) {
-        return frozenSortedByteMapGeneric(key, value);
-    }
-
-    public static <T> TreeMap<byte[], T> bytesTreeMap() {
-        return new TreeMap<>(Bytes.BYTES_COMPARATOR);
+        return map;
     }
 
     @SuppressWarnings("unchecked")
@@ -146,51 +135,4 @@ public final class HBaseSchemaUtils {
         }
     }
 
-    public static void addFilters(Get get,
-                                  byte[] family,
-                                  SortedSet<byte[]> qualifiers,
-                                  SortedSet<byte[]> qualifierPrefixes,
-                                  @Nullable Filter filter) {
-        if (qualifierPrefixes.isEmpty()) {
-            for (byte[] qualifier : qualifiers) {
-                get.addColumn(family, qualifier);
-            }
-        } else {
-            get.addFamily(family);
-        }
-        if (filter != null) {
-            get.setFilter(filter);
-        }
-    }
-
-    public static void addFilters(Scan scan,
-                                  byte[] family,
-                                  SortedSet<byte[]> qualifiers,
-                                  SortedSet<byte[]> qualifierPrefixes,
-                                  Filter filter) {
-        if (qualifierPrefixes.isEmpty()) {
-            for (byte[] qualifier : qualifiers) {
-                scan.addColumn(family, qualifier);
-            }
-        } else {
-            scan.addFamily(family);
-        }
-        scan.setFilter(filter);
-    }
-
-    public static MultiRowRangeFilter toMultiRowRangeFilter(Iterator<byte[]> it) {
-        List<MultiRowRangeFilter.RowRange> ranges = new ArrayList<>();
-
-        while (it.hasNext()) {
-            byte[] prefixStart = it.next();
-            if (prefixStart == null) {
-                throw new IllegalArgumentException("No search key generated for query");
-            }
-            byte[] prefixStop = Bytes.incrementBytes(prefixStart, 1);
-            MultiRowRangeFilter.RowRange range = new MultiRowRangeFilter.RowRange(prefixStart, true, prefixStop, false);
-            ranges.add(range);
-        }
-
-        return new MultiRowRangeFilter(ranges);
-    }
 }

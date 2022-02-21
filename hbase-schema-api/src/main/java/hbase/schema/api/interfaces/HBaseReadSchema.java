@@ -11,7 +11,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.SortedSet;
 
-import static hbase.schema.api.utils.HBaseSchemaUtils.sortedByteSet;
+import static hbase.schema.api.utils.HBaseSchemaUtils.asBytesTreeSet;
+
 
 /**
  * Interface to parse data from a HBase Result into a POJO object
@@ -55,7 +56,7 @@ public interface HBaseReadSchema<T> extends HBaseFilterGenerator<T> {
      * @return set of qualifier bytes
      */
     default SortedSet<byte[]> getQualifiers(T query) {
-        return sortedByteSet();
+        return asBytesTreeSet();
     }
 
     /**
@@ -64,7 +65,7 @@ public interface HBaseReadSchema<T> extends HBaseFilterGenerator<T> {
      * @return set of qualifier prefix bytes
      */
     default SortedSet<byte[]> getQualifierPrefixes(T query) {
-        return sortedByteSet();
+        return asBytesTreeSet();
     }
 
     /**

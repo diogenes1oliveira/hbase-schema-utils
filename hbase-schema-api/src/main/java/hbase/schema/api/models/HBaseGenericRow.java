@@ -1,21 +1,25 @@
 package hbase.schema.api.models;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
+import org.apache.hadoop.hbase.shaded.org.apache.commons.lang.builder.ToStringBuilder;
+import org.apache.hadoop.hbase.shaded.org.apache.commons.lang.builder.ToStringStyle;
+import org.apache.hadoop.hbase.util.Bytes;
 
-import java.util.SortedMap;
+import java.time.Instant;
+import java.util.NavigableMap;
 
-import static hbase.schema.api.utils.HBaseSchemaUtils.sortedByteMap;
+import static hbase.schema.api.utils.HBaseSchemaUtils.asBytesTreeMap;
 
 public class HBaseGenericRow {
     private byte[] rowKey;
     private Long timestampMs;
-    private SortedMap<byte[], byte[]> bytesCells;
-    private SortedMap<byte[], Long> longCells;
+    private NavigableMap<byte[], byte[]> bytesCells;
+    private NavigableMap<byte[], Long> longCells;
 
     public HBaseGenericRow(byte[] rowKey,
                            @Nullable Long timestampMs,
-                           SortedMap<byte[], byte[]> bytesCells,
-                           @Nullable SortedMap<byte[], Long> longCells) {
+                           NavigableMap<byte[], byte[]> bytesCells,
+                           @Nullable NavigableMap<byte[], Long> longCells) {
         this.rowKey = rowKey;
         this.timestampMs = timestampMs;
         this.bytesCells = bytesCells;
@@ -24,13 +28,16 @@ public class HBaseGenericRow {
 
     public HBaseGenericRow(byte[] rowKey,
                            @Nullable Long timestampMs,
-                           SortedMap<byte[], byte[]> bytesCells) {
-        this(rowKey, timestampMs, bytesCells, sortedByteMap());
+                           NavigableMap<byte[], byte[]> bytesCells) {
+        this(rowKey, timestampMs, bytesCells, asBytesTreeMap());
     }
 
     public HBaseGenericRow(byte[] rowKey,
-                           SortedMap<byte[], byte[]> bytesCells) {
+                           NavigableMap<byte[], byte[]> bytesCells) {
         this(rowKey, null, bytesCells);
+    }
+    public HBaseGenericRow(byte[] rowKey) {
+        this(rowKey, null, asBytesTreeMap());
     }
 
     public byte[] getRowKey() {
@@ -50,20 +57,33 @@ public class HBaseGenericRow {
         this.timestampMs = timestampMs;
     }
 
-    public SortedMap<byte[], byte[]> getBytesCells() {
+    public NavigableMap<byte[], byte[]> getBytesCells() {
         return bytesCells;
     }
 
-    public void setBytesCells(SortedMap<byte[], byte[]> bytesCells) {
+    public void setBytesCells(NavigableMap<byte[], byte[]> bytesCells) {
         this.bytesCells = bytesCells;
     }
 
     @Nullable
-    public SortedMap<byte[], Long> getLongCells() {
+    public NavigableMap<byte[], Long> getLongCells() {
         return longCells;
     }
 
-    public void setLongCells(@Nullable SortedMap<byte[], Long> longCells) {
+    public void setLongCells(@Nullable NavigableMap<byte[], Long> longCells) {
         this.longCells = longCells;
     }
+
+    @Override
+    public String toString() {
+        Instant timestamp = timestampMs != null ? Instant.ofEpochMilli(timestampMs) : null;
+
+        return new ToStringBuilder(this, ToStringStyle.SHORT_PREFIX_STYLE)
+                .append("row_key", Bytes.toStringBinary(rowKey))
+                .append("timestamp", timestamp)
+                .append("bytes", new PrettyBytesMap(bytesCells))
+                .append("longs", new PrettyLongMap(longCells))
+                .toString();
+    }
+
 }

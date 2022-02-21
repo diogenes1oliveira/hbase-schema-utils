@@ -37,9 +37,9 @@ public abstract class AbstractHBasePojoWriteSchema<T> implements HBaseWriteSchem
             HBaseCellsMapper<T> cellsMapper = obj -> {
                 byte[] value = bytesMapper.getBytes(obj);
                 if (value != null) {
-                    return frozenSortedByteMap(qualifier, value);
+                    return asBytesTreeMap(qualifier, value);
                 } else {
-                    return frozenSortedByteMap();
+                    return asBytesTreeMap();
                 }
             };
             mappers.add(cellsMapper);
@@ -57,7 +57,7 @@ public abstract class AbstractHBasePojoWriteSchema<T> implements HBaseWriteSchem
             HBaseLongMapper<T> longMapper = pojoDeltaField.mapper();
             HBaseLongsMapper<T> cellsMapper = obj -> {
                 Long value = longMapper.getLong(obj);
-                return frozenSortedByteMap(qualifier, value);
+                return asBytesTreeMap(qualifier, value);
             };
             mappers.add(cellsMapper);
         }
@@ -96,9 +96,9 @@ public abstract class AbstractHBasePojoWriteSchema<T> implements HBaseWriteSchem
         // DEFAULT
         byte[] commonPrefix = findCommonPrefix(getQualifiers(query));
         if (commonPrefix != null) {
-            return frozenSortedByteSet(commonPrefix);
+            return asBytesTreeSet(commonPrefix);
         } else {
-            return frozenSortedByteSet();
+            return asBytesTreeSet();
         }
     }
 

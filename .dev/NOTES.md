@@ -15,3 +15,4 @@ Realistas:
 - Pacote separado para as interfaces;
 - FAzer uns schemas que sempre lançam unsupportedoperation para não ter que usar nulo em testes;
 - Verificar um timeout no contextlock para não dar erro eterno em caso de uso errado do contexto;
+- Tiemstamp shouldn't be nullable, really;

@@ -9,16 +9,18 @@ import hbase.schema.api.models.HBaseTypedLongField;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
-import java.util.List;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.NavigableMap;
 import java.util.TreeMap;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import static hbase.schema.api.utils.HBaseBytesMappingUtils.*;
-import static hbase.schema.api.utils.HBaseSchemaUtils.bytesTreeMap;
-import static java.util.stream.Collectors.toList;
+import static hbase.schema.api.utils.HBaseBytesMappingUtils.bytesMapper;
+import static hbase.schema.api.utils.HBaseBytesMappingUtils.instantLongMapper;
+import static hbase.schema.api.utils.HBaseBytesMappingUtils.longMapper;
+import static hbase.schema.api.utils.HBaseSchemaUtils.asBytesTreeMap;
+import static java.util.stream.Collectors.toMap;
 
 public class HBasePojoWriteSchemaBuilder<T> {
     private final Supplier<T> objectSupplier;
@@ -78,13 +80,20 @@ public class HBasePojoWriteSchemaBuilder<T> {
     ) {
         return withDeltaField(name, longMapper(fieldGetter, fieldLongConverter.toLong()));
     }
+//
+//    public <F> HBasePojoWriteSchemaBuilder<T> withDeltaField(
+//            String name, Function<T, Long> longGetter
+//    ) {
+//        HBaseLongMapper<T> mapper = longMapper(longGetter, Function.identity());
+//        return withDeltaField(name, mapper);
+//    }
 
     public AbstractHBasePojoWriteSchema<T> build() {
         if (rowKeyMapper == null) {
             throw new IllegalStateException("No row key mapper was set");
         }
-        TreeMap<byte[], HBaseTypedBytesField<T>> valueFields = mapValues(valueBuilders, HBaseTypedBytesField.Builder::build);
-        TreeMap<byte[], HBaseTypedLongField<T>> deltaFields = mapValues(deltaBuilders, HBaseTypedLongField.Builder::build);
+        TreeMap<byte[], HBaseTypedBytesField<T>> valueFields = mapValuesStringMap(valueBuilders, HBaseTypedBytesField.Builder::build);
+        TreeMap<byte[], HBaseTypedLongField<T>> deltaFields = mapValuesStringMap(deltaBuilders, HBaseTypedLongField.Builder::build);
 
         return new AbstractHBasePojoWriteSchema<T>() {
             @Override
@@ -114,8 +123,8 @@ public class HBasePojoWriteSchemaBuilder<T> {
         };
     }
 
-    private static <T, U> TreeMap<byte[], U> mapValues(Map<String, T> input, Function<T, U> mapper) {
-        TreeMap<byte[], U> output = bytesTreeMap();
+    private static <T, U> TreeMap<byte[], U> mapValuesStringMap(Map<String, T> input, Function<T, U> mapper) {
+        TreeMap<byte[], U> output = asBytesTreeMap();
         for (Map.Entry<String, T> entry : input.entrySet()) {
             byte[] key = entry.getKey().getBytes(StandardCharsets.UTF_8);
             T inputValue = entry.getValue();
@@ -123,5 +132,13 @@ public class HBasePojoWriteSchemaBuilder<T> {
             output.put(key, mappedValue);
         }
         return output;
+    }
+
+    public static <K, V, U> LinkedHashMap<K, V> mapBytesMap(Map<byte[], U> input,
+                                                            Function<byte[], K> keyMapper,
+                                                            Function<U, V> valueMapper) {
+        return input.entrySet()
+                    .stream()
+                    .collect(toMap(e -> keyMapper.apply(e.getKey()), e -> valueMapper.apply(e.getValue()), (a, b) -> a, LinkedHashMap::new));
     }
 }

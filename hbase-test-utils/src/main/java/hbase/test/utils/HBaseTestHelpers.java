@@ -1,11 +1,18 @@
 package hbase.test.utils;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hbase.connector.HBaseConnector;
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.TableNotDisabledException;
 import org.apache.hadoop.hbase.TableNotEnabledException;
 import org.apache.hadoop.hbase.TableNotFoundException;
-import org.apache.hadoop.hbase.client.*;
+import org.apache.hadoop.hbase.client.Admin;
+import org.apache.hadoop.hbase.client.ColumnFamilyDescriptor;
+import org.apache.hadoop.hbase.client.ColumnFamilyDescriptorBuilder;
+import org.apache.hadoop.hbase.client.Connection;
+import org.apache.hadoop.hbase.client.TableDescriptor;
+import org.apache.hadoop.hbase.client.TableDescriptorBuilder;
+import org.apache.hadoop.hbase.util.Bytes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,6 +22,7 @@ import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Properties;
+import java.util.TreeMap;
 
 import static java.util.Arrays.asList;
 import static java.util.Arrays.stream;
@@ -220,8 +228,14 @@ public final class HBaseTestHelpers {
         return props;
     }
 
-    private static double millisSince(long t0Nanos) {
+    public static double millisSince(long t0Nanos) {
         long delta = System.nanoTime() - t0Nanos;
         return delta / 1.0e6;
     }
+
+
+    public static byte[] utf8ToBytes(String s) {
+        return s == null ? null : s.getBytes(StandardCharsets.UTF_8);
+    }
+
 }

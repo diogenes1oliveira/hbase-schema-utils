@@ -10,7 +10,7 @@ import java.util.SortedMap;
 import java.util.SortedSet;
 
 import static hbase.schema.api.utils.HBaseSchemaUtils.findCommonPrefix;
-import static hbase.schema.api.utils.HBaseSchemaUtils.frozenSortedByteSet;
+import static hbase.schema.api.utils.HBaseSchemaUtils.asBytesTreeSet;
 import static java.util.Collections.*;
 
 public abstract class AbstractHBaseBytesMapSchema implements HBaseReadSchema<SortedMap<byte[], byte[]>>, HBaseWriteSchema<SortedMap<byte[], byte[]>> {
@@ -59,7 +59,7 @@ public abstract class AbstractHBaseBytesMapSchema implements HBaseReadSchema<Sor
     public SortedSet<byte[]> getQualifierPrefixes(SortedMap<byte[], byte[]> query) {
         byte[] commonPrefix = findCommonPrefix(getQualifiers(query));
         if (commonPrefix != null) {
-            return frozenSortedByteSet(commonPrefix);
+            return asBytesTreeSet(commonPrefix);
         } else {
             return null;
         }

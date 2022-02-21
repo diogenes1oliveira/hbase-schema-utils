@@ -15,9 +15,10 @@ import static hbase.schema.connector.HBaseSchemaUtils.toMultiRowRangeFilter;
 /**
  * Interface to effectively build, execute and parse a Scan POJO query
  */
-@FunctionalInterface
 public interface HBasePojoScanBuilder<T> {
     Scan toScan(List<? extends T> queries) throws IOException;
+
+    List<T> scan(Scan scan) throws IOException;
 
     default void selectColumns(Scan scan, T query, byte[] family, HBaseReadSchema<T> readSchema) {
         SortedSet<byte[]> qualifiers = readSchema.getQualifiers(query);
