@@ -6,14 +6,12 @@ import hbase.schema.api.interfaces.HBaseWriteSchema;
 import hbase.schema.api.interfaces.converters.*;
 
 import java.util.List;
-import java.util.Set;
 import java.util.SortedMap;
 import java.util.SortedSet;
 
 import static hbase.schema.api.utils.HBaseSchemaUtils.findCommonPrefix;
 import static hbase.schema.api.utils.HBaseSchemaUtils.frozenSortedByteSet;
-import static java.util.Collections.emptyList;
-import static java.util.Collections.singletonList;
+import static java.util.Collections.*;
 
 public abstract class AbstractHBaseBytesMapSchema implements HBaseReadSchema<SortedMap<byte[], byte[]>>, HBaseWriteSchema<SortedMap<byte[], byte[]>> {
     @Override
@@ -23,6 +21,11 @@ public abstract class AbstractHBaseBytesMapSchema implements HBaseReadSchema<Sor
     public abstract HBaseLongMapper<SortedMap<byte[], byte[]>> getTimestampGenerator();
 
     public abstract SortedSet<byte[]> getMappedFields();
+
+    @Override
+    public SortedMap<byte[], byte[]> newInstance() {
+        return emptySortedMap();
+    }
 
     @Override
     public HBaseBytesParser<SortedMap<byte[], byte[]>> getRowKeyParser() {

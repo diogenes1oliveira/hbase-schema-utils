@@ -47,6 +47,8 @@ public interface HBaseReadSchema<T> extends HBaseFilterGenerator<T> {
      */
     List<HBaseCellParser<T>> getCellParsers();
 
+    T newInstance();
+
     /**
      * Set of fixed qualifiers to read data from in a Get or a Put
      *

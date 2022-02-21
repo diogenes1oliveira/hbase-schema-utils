@@ -36,6 +36,11 @@ public class HBaseGenericRowSchema implements HBaseReadSchema<HBaseGenericRow>, 
     }
 
     @Override
+    public HBaseGenericRow newInstance() {
+        return new HBaseGenericRow(new byte[0], sortedByteMap());
+    }
+
+    @Override
     public HBaseLongMapper<HBaseGenericRow> getTimestampGenerator() {
         return HBaseGenericRow::getTimestampMs;
     }

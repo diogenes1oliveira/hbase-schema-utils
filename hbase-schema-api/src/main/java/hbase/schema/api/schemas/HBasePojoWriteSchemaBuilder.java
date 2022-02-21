@@ -11,15 +11,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 
-import static hbase.schema.api.utils.HBaseBytesMappingUtils.bytesMapper;
-import static hbase.schema.api.utils.HBaseBytesMappingUtils.instantLongMapper;
-import static hbase.schema.api.utils.HBaseBytesMappingUtils.longMapper;
+import static hbase.schema.api.utils.HBaseBytesMappingUtils.*;
 
 public class HBasePojoWriteSchemaBuilder<T> {
     private HBaseBytesMapper<T> rowKeyMapper = null;
     private HBaseLongMapper<T> timestampMapper = instantLongMapper(obj -> Instant.now());
-    private List<Pair<String, HBaseBytesMapper<T>>> valueFields = new ArrayList<>();
-    private List<Pair<String, HBaseLongMapper<T>>> deltaFields = new ArrayList<>();
+    private final List<Pair<String, HBaseBytesMapper<T>>> valueFields = new ArrayList<>();
+    private final List<Pair<String, HBaseLongMapper<T>>> deltaFields = new ArrayList<>();
 
     public HBasePojoWriteSchemaBuilder<T> withRowKey(HBaseBytesMapper<T> rowKeyMapper) {
         this.rowKeyMapper = rowKeyMapper;
