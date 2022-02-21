@@ -48,12 +48,12 @@ public abstract class AbstractHBaseBytesMapSchema implements HBaseReadSchema<Sor
     }
 
     @Override
-    public Set<byte[]> getQualifiers(SortedMap<byte[], byte[]> query) {
+    public SortedSet<byte[]> getQualifiers(SortedMap<byte[], byte[]> query) {
         return getMappedFields();
     }
 
     @Override
-    public Set<byte[]> getQualifierPrefixes(SortedMap<byte[], byte[]> query) {
+    public SortedSet<byte[]> getQualifierPrefixes(SortedMap<byte[], byte[]> query) {
         byte[] commonPrefix = findCommonPrefix(getQualifiers(query));
         if (commonPrefix != null) {
             return frozenSortedByteSet(commonPrefix);

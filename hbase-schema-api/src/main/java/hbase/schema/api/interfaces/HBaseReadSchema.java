@@ -9,6 +9,7 @@ import org.apache.hadoop.hbase.filter.FilterList;
 
 import java.util.List;
 import java.util.Set;
+import java.util.SortedSet;
 
 import static hbase.schema.api.utils.HBaseSchemaUtils.sortedByteSet;
 
@@ -51,7 +52,7 @@ public interface HBaseReadSchema<T> extends HBaseFilterGenerator<T> {
      *
      * @return set of qualifier bytes
      */
-    default Set<byte[]> getQualifiers(T query) {
+    default SortedSet<byte[]> getQualifiers(T query) {
         return sortedByteSet();
     }
 
@@ -60,7 +61,7 @@ public interface HBaseReadSchema<T> extends HBaseFilterGenerator<T> {
      *
      * @return set of qualifier prefix bytes
      */
-    default Set<byte[]> getQualifierPrefixes(T query) {
+    default SortedSet<byte[]> getQualifierPrefixes(T query) {
         return sortedByteSet();
     }
 

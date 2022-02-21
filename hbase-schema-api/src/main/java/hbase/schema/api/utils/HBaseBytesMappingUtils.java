@@ -21,14 +21,14 @@ public final class HBaseBytesMappingUtils {
         // utility class
     }
 
-    static <T, F> HBaseBytesMapper<T> bytesMapper(Function<T, F> mapper, Function<F, byte[]> converter) {
+    public static <T, F> HBaseBytesMapper<T> bytesMapper(Function<T, F> mapper, Function<F, byte[]> converter) {
         return obj -> {
             F value = mapper.apply(obj);
             return value != null ? converter.apply(value) : null;
         };
     }
 
-    static <T, F> HBaseLongMapper<T> longMapper(Function<T, F> mapper, Function<F, Long> converter) {
+    public static <T, F> HBaseLongMapper<T> longMapper(Function<T, F> mapper, Function<F, Long> converter) {
         return obj -> {
             F value = mapper.apply(obj);
             return value != null ? converter.apply(value) : null;

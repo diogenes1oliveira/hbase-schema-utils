@@ -6,7 +6,7 @@ import hbase.schema.api.interfaces.converters.HBaseBytesParser;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import java.util.SortedSet;
 
 import static hbase.schema.api.utils.HBaseSchemaUtils.frozenSortedByteSet;
 import static java.util.Collections.singletonList;
@@ -16,7 +16,7 @@ import static java.util.Collections.singletonList;
  */
 @FunctionalInterface
 public interface HBaseBytesMapReadSchema<T> extends HBaseReadSchema<Map<byte[], byte[]>> {
-    Set<byte[]> EMPTY = frozenSortedByteSet(new byte[0]);
+    SortedSet<byte[]> EMPTY = frozenSortedByteSet(new byte[0]);
 
     /**
      * Generates a row key based on the map values
@@ -89,7 +89,7 @@ public interface HBaseBytesMapReadSchema<T> extends HBaseReadSchema<Map<byte[], 
      *
      * @return set of qualifier prefix bytes
      */
-    default Set<byte[]> getQualifierPrefixes(Map<byte[], byte[]> query) {
+    default SortedSet<byte[]> getQualifierPrefixes(Map<byte[], byte[]> query) {
         return EMPTY;
     }
 

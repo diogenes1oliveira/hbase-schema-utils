@@ -1,8 +1,11 @@
 package hbase.schema.api.schemas;
 
 import hbase.schema.api.interfaces.HBaseWriteSchema;
-import hbase.schema.api.interfaces.converters.*;
-import org.apache.hadoop.hbase.util.Triple;
+import hbase.schema.api.interfaces.converters.HBaseBytesMapper;
+import hbase.schema.api.interfaces.converters.HBaseCellsMapper;
+import hbase.schema.api.interfaces.converters.HBaseLongMapper;
+import hbase.schema.api.interfaces.converters.HBaseLongsMapper;
+import org.apache.hadoop.hbase.util.Pair;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -11,9 +14,9 @@ import java.util.List;
 import static hbase.schema.api.utils.HBaseSchemaUtils.frozenSortedByteMap;
 
 public abstract class AbstractHBasePojoWriteSchema<T> implements HBaseWriteSchema<T> {
-    public abstract List<Triple<String, HBaseBytesParser<T>, HBaseBytesMapper<T>>> getPojoValueFields();
+    public abstract List<Pair<String, HBaseBytesMapper<T>>> getPojoValueFields();
 
-    public abstract List<Triple<String, HBaseLongParser<T>, HBaseLongMapper<T>>> getPojoDeltaFields();
+    public abstract List<Pair<String, HBaseLongMapper<T>>> getPojoDeltaFields();
 
     @Override
     public abstract HBaseBytesMapper<T> getRowKeyGenerator();
@@ -25,9 +28,9 @@ public abstract class AbstractHBasePojoWriteSchema<T> implements HBaseWriteSchem
     public List<HBaseCellsMapper<T>> getPutGenerators() {
         List<HBaseCellsMapper<T>> mappers = new ArrayList<>();
 
-        for (Triple<String, HBaseBytesParser<T>, HBaseBytesMapper<T>> pojoValueField : getPojoValueFields()) {
+        for (Pair<String, HBaseBytesMapper<T>> pojoValueField : getPojoValueFields()) {
             byte[] qualifier = pojoValueField.getFirst().getBytes(StandardCharsets.UTF_8);
-            HBaseBytesMapper<T> bytesMapper = pojoValueField.getThird();
+            HBaseBytesMapper<T> bytesMapper = pojoValueField.getSecond();
             HBaseCellsMapper<T> cellsMapper = obj -> {
                 byte[] value = bytesMapper.getBytes(obj);
                 if (value != null) {
@@ -46,9 +49,9 @@ public abstract class AbstractHBasePojoWriteSchema<T> implements HBaseWriteSchem
     public List<HBaseLongsMapper<T>> getIncrementGenerators() {
         List<HBaseLongsMapper<T>> mappers = new ArrayList<>();
 
-        for (Triple<String, HBaseLongParser<T>, HBaseLongMapper<T>> pojoDeltaField : getPojoDeltaFields()) {
+        for (Pair<String, HBaseLongMapper<T>> pojoDeltaField : getPojoDeltaFields()) {
             byte[] qualifier = pojoDeltaField.getFirst().getBytes(StandardCharsets.UTF_8);
-            HBaseLongMapper<T> longMapper = pojoDeltaField.getThird();
+            HBaseLongMapper<T> longMapper = pojoDeltaField.getSecond();
             HBaseLongsMapper<T> cellsMapper = obj -> {
                 Long value = longMapper.getLong(obj);
                 return frozenSortedByteMap(qualifier, value);
@@ -59,20 +62,21 @@ public abstract class AbstractHBasePojoWriteSchema<T> implements HBaseWriteSchem
         return mappers;
     }
 
-
-    public static <T> Triple<String, HBaseBytesParser<T>, HBaseBytesMapper<T>> pojoValueField(
-            String name,
-            HBaseBytesParser<T> parser,
-            HBaseBytesMapper<T> mapper
-    ) {
-        return Triple.create(name, parser, mapper);
+    public static <T> HBasePojoWriteSchemaBuilder<T> newBuilder(Class<T> type) {
+        return new HBasePojoWriteSchemaBuilder<>();
     }
 
-    public static <T> Triple<String, HBaseLongParser<T>, HBaseLongMapper<T>> pojoDeltaField(
+    public static <T> Pair<String, HBaseBytesMapper<T>> pojoValueField(
             String name,
-            HBaseLongParser<T> parser,
+            HBaseBytesMapper<T> mapper
+    ) {
+        return Pair.newPair(name, mapper);
+    }
+
+    public static <T> Pair<String, HBaseLongMapper<T>> pojoDeltaField(
+            String name,
             HBaseLongMapper<T> mapper
     ) {
-        return Triple.create(name, parser, mapper);
+        return Pair.newPair(name, mapper);
     }
 }

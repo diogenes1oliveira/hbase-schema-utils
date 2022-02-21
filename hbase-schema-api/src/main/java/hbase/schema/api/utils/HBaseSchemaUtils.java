@@ -1,9 +1,21 @@
 package hbase.schema.api.utils;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
+import hbase.schema.api.interfaces.converters.HBaseBytesMapper;
+import org.apache.hadoop.hbase.client.Get;
+import org.apache.hadoop.hbase.client.Scan;
+import org.apache.hadoop.hbase.filter.Filter;
+import org.apache.hadoop.hbase.filter.MultiRowRangeFilter;
 import org.apache.hadoop.hbase.util.Bytes;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
+import java.util.SortedMap;
+import java.util.SortedSet;
+import java.util.TreeMap;
+import java.util.TreeSet;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.unmodifiableSortedMap;
@@ -138,4 +150,51 @@ public final class HBaseSchemaUtils {
         }
     }
 
+    public static void addFilters(Get get,
+                                  byte[] family,
+                                  SortedSet<byte[]> qualifiers,
+                                  SortedSet<byte[]> qualifierPrefixes,
+                                  @Nullable Filter filter) {
+        if (qualifierPrefixes.isEmpty()) {
+            for (byte[] qualifier : qualifiers) {
+                get.addColumn(family, qualifier);
+            }
+        } else {
+            get.addFamily(family);
+        }
+        if (filter != null) {
+            get.setFilter(filter);
+        }
+    }
+
+    public static void addFilters(Scan scan,
+                                  byte[] family,
+                                  SortedSet<byte[]> qualifiers,
+                                  SortedSet<byte[]> qualifierPrefixes,
+                                  Filter filter) {
+        if (qualifierPrefixes.isEmpty()) {
+            for (byte[] qualifier : qualifiers) {
+                scan.addColumn(family, qualifier);
+            }
+        } else {
+            scan.addFamily(family);
+        }
+        scan.setFilter(filter);
+    }
+
+    public static MultiRowRangeFilter toMultiRowRangeFilter(Iterator<byte[]> it) {
+        List<MultiRowRangeFilter.RowRange> ranges = new ArrayList<>();
+
+        while(it.hasNext()) {
+            byte[] prefixStart = it.next();
+            if (prefixStart == null) {
+                throw new IllegalArgumentException("No search key generated for query");
+            }
+            byte[] prefixStop = Bytes.incrementBytes(prefixStart, 1);
+            MultiRowRangeFilter.RowRange range = new MultiRowRangeFilter.RowRange(prefixStart, true, prefixStop, false);
+            ranges.add(range);
+        }
+
+        return new MultiRowRangeFilter(ranges);
+    }
 }

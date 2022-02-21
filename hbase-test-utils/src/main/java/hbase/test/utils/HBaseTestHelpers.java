@@ -1,5 +1,6 @@
 package hbase.test.utils;
 
+import hbase.connector.HBaseConnector;
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.TableNotDisabledException;
 import org.apache.hadoop.hbase.TableNotEnabledException;
@@ -7,6 +8,7 @@ import org.apache.hadoop.hbase.TableNotFoundException;
 import org.apache.hadoop.hbase.client.Admin;
 import org.apache.hadoop.hbase.client.ColumnFamilyDescriptor;
 import org.apache.hadoop.hbase.client.ColumnFamilyDescriptorBuilder;
+import org.apache.hadoop.hbase.client.Connection;
 import org.apache.hadoop.hbase.client.TableDescriptor;
 import org.apache.hadoop.hbase.client.TableDescriptorBuilder;
 import org.slf4j.Logger;
@@ -14,6 +16,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Properties;
@@ -43,14 +46,42 @@ public final class HBaseTestHelpers {
      * @return table descriptor
      */
     public static TableDescriptor newTableDescriptor(String name, String... columnFamilies) {
+        return newTableDescriptor(TableName.valueOf(name), columnFamilies);
+    }
+
+    public static TableDescriptor newTableDescriptor(TableName tableName, String... columnFamilies) {
         List<ColumnFamilyDescriptor> familyDescriptors = stream(columnFamilies)
                 .map(HBaseTestHelpers::newColumnFamilyDescriptor)
                 .collect(toList());
-        TableName tableName = TableName.valueOf(name);
         return TableDescriptorBuilder
                 .newBuilder(tableName)
                 .setColumnFamilies(familyDescriptors)
                 .build();
+    }
+
+    public static void createTable(Admin admin, TableDescriptor descriptor) {
+        try {
+            admin.createTable(descriptor);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
+
+    public static void createTable(Connection connection, TableDescriptor descriptor) {
+        try (Admin admin = connection.getAdmin()) {
+            admin.createTable(descriptor);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
+
+    public static void createTable(HBaseConnector connector, TableDescriptor descriptor) {
+        try (Connection connection = connector.connect();
+             Admin admin = connection.getAdmin()) {
+            admin.createTable(descriptor);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
     }
 
     /**
