@@ -16,4 +16,9 @@ public interface HBaseBytesMapper<T> {
     @Nullable
     byte[] getBytes(T obj);
 
+    static <T> HBaseBytesMapper<T> readOnly() {
+        return obj -> {
+            throw new UnsupportedOperationException("Read-only field");
+        };
+    }
 }

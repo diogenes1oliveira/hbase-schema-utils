@@ -1,5 +1,6 @@
 package hbase.test.utils;
 
+import edu.umd.cs.findbugs.annotations.Nullable;
 import hbase.connector.HBaseConnector;
 import hbase.test.utils.interfaces.HBaseTestInstance;
 import org.apache.hadoop.hbase.TableName;
@@ -41,18 +42,20 @@ public class HBaseTestJunitExtension implements
     public void beforeAll(ExtensionContext extensionContext) throws IOException {
         testInstance = HBaseTestInstanceSingleton.instance();
         properties = testInstance.start();
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            try {
-                testInstance.close();
-            } catch (Exception e) {
-                LOGGER.error("Failed to close test instance", e);
-            }
-        }));
+//        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+//            try {
+//                testInstance.close();
+//            } catch (Exception e) {
+//                LOGGER.error("Failed to close test instance", e);
+//            }
+//        }));
     }
 
     @Override
-    public void afterAll(ExtensionContext extensionContext) throws IOException {
+    public void afterAll(@Nullable ExtensionContext extensionContext) throws IOException {
+        LOGGER.info("terminating test instance");
         testInstance.close();
+        LOGGER.info("test instance terminated");
     }
 
     @Override

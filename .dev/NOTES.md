@@ -13,4 +13,5 @@ Realistas:
 - Abstract provavelmente devia ser interface;
 - Consertar o builder, criar a estrutura para o write pojo
 - Pacote separado para as interfaces;
-- 
+- FAzer uns schemas que sempre lançam unsupportedoperation para não ter que usar nulo em testes;
+- Verificar um timeout no contextlock para não dar erro eterno em caso de uso errado do contexto;

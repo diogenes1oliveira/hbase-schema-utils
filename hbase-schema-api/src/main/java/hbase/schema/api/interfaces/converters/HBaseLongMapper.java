@@ -33,4 +33,9 @@ public interface HBaseLongMapper<T> extends HBaseBytesMapper<T> {
         }
     }
 
+    static <T> HBaseLongMapper<T> readOnly() {
+        return obj -> {
+            throw new UnsupportedOperationException("Read-only field");
+        };
+    }
 }

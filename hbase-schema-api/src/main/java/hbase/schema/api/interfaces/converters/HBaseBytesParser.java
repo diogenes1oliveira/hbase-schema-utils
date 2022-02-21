@@ -24,4 +24,10 @@ public interface HBaseBytesParser<T> {
 
         };
     }
+
+    static <T> HBaseBytesParser<T> writeOnly() {
+        return (obj, bytes) -> {
+            throw new UnsupportedOperationException("Write-only field");
+        };
+    }
 }

@@ -12,14 +12,10 @@ import org.apache.hadoop.hbase.client.*;
 import org.apache.hadoop.hbase.filter.Filter;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.SortedMap;
+import java.util.*;
 
 import static java.util.Arrays.stream;
-import static java.util.Collections.emptyList;
-import static java.util.Collections.singletonList;
+import static java.util.Collections.*;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
 
@@ -41,7 +37,6 @@ public class HBaseSchemaConnector<T> implements HBasePojoScanBuilder<T>, HBasePo
         this.tableName = tableName;
         this.family = family;
     }
-
 
     public List<T> get(List<Get> gets) throws IOException {
         try (Connection connection = connector.connect();
@@ -85,7 +80,8 @@ public class HBaseSchemaConnector<T> implements HBasePojoScanBuilder<T>, HBasePo
         return objs;
     }
 
-    public void mutate(List<Mutation> mutations) throws IOException {
+    public void mutate(Collection<? extends T> objs) throws IOException {
+        List<Mutation> mutations = toMutations(objs);
         Result[] results = new Result[mutations.size()];
 
         try (Connection connection = connector.connect();
@@ -96,6 +92,10 @@ public class HBaseSchemaConnector<T> implements HBasePojoScanBuilder<T>, HBasePo
             Thread.currentThread().interrupt();
             throw new IllegalStateException("Interrupted while mutating", e);
         }
+    }
+
+    public void mutate(T obj) throws IOException {
+        mutate(singleton(obj));
     }
 
     @Override

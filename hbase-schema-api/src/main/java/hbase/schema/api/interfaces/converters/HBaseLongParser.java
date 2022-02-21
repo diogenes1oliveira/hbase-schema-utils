@@ -44,4 +44,10 @@ public interface HBaseLongParser<T> extends HBaseBytesParser<T> {
 
         };
     }
+
+    static <T> HBaseLongParser<T> writeOnly() {
+        return (obj, l) -> {
+            throw new UnsupportedOperationException("Write-only field");
+        };
+    }
 }

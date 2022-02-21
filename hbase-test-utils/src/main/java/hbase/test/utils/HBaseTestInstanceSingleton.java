@@ -1,14 +1,11 @@
 package hbase.test.utils;
 
 import hbase.test.utils.interfaces.HBaseTestInstance;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Properties;
-import java.util.ServiceLoader;
+import java.util.*;
 
 import static hbase.test.utils.HBaseTestHelpers.loadPropsFromResource;
 
@@ -16,6 +13,8 @@ import static hbase.test.utils.HBaseTestHelpers.loadPropsFromResource;
  * Manages a global HBase test instance configured via System properties or environment variables
  */
 public class HBaseTestInstanceSingleton {
+    private static final Logger LOGGER = LoggerFactory.getLogger(HBaseTestInstanceSingleton.class);
+
     /**
      * Name of the System property to get the instance name from
      */
@@ -42,7 +41,7 @@ public class HBaseTestInstanceSingleton {
      */
     public static HBaseTestInstance instance() {
         if (!initialized) {
-            getName()
+            getName(System.getProperties(), System.getenv(), true)
                     .ifPresent(name -> instance = createInstance(name));
             initialized = true;
         }
@@ -53,7 +52,7 @@ public class HBaseTestInstanceSingleton {
      * Gets the instance name from System properties or environment variables
      */
     public static Optional<String> getName() {
-        return getName(System.getProperties(), System.getenv());
+        return getName(System.getProperties(), System.getenv(), false);
     }
 
     /**
@@ -66,7 +65,7 @@ public class HBaseTestInstanceSingleton {
     }
 
     // package-private, just for tests
-    static Optional<String> getName(Properties systemProps, Map<String, String> env) {
+    static Optional<String> getName(Properties systemProps, Map<String, String> env, boolean doLog) {
         String propName = systemProps.getProperty(PROPERTY_NAME, "").trim();
         String envName = env.getOrDefault(ENV_NAME, "").trim();
         String resourceName = "";
@@ -78,24 +77,36 @@ public class HBaseTestInstanceSingleton {
             // ignore
         }
 
-        if (!propName.isEmpty()) {
-            return Optional.of(propName);
-        } else if (!envName.isEmpty()) {
+        if (!envName.isEmpty()) {
+            if (doLog) {
+                LOGGER.info("Using {}={} from environment", ENV_NAME, envName);
+            }
             return Optional.of(envName);
+        } else if (!propName.isEmpty()) {
+            if (doLog) {
+                LOGGER.info("Using {}={} from system properties", PROPERTY_NAME, propName);
+            }
+            return Optional.of(propName);
         } else if (!resourceName.isEmpty()) {
+            if (doLog) {
+                LOGGER.info("Using {}={} from classpath:{}", PROPERTY_NAME, resourceName, RESOURCE_NAME);
+            }
             return Optional.of(resourceName);
         } else {
+            if (doLog) {
+                LOGGER.info("No configured test instance");
+            }
             return Optional.empty();
         }
     }
 
     private static HBaseTestInstance createInstance(String name) {
         return availableInstances.stream()
-                                 .filter(instance -> name.equals(instance.name()))
-                                 .findFirst()
-                                 .orElseThrow(() ->
-                                         new IllegalStateException("No instance named '" + name + "' is available")
-                                 );
+                .filter(instance -> name.equals(instance.name()))
+                .findFirst()
+                .orElseThrow(() ->
+                        new IllegalStateException("No instance named '" + name + "' is available")
+                );
     }
 
 }

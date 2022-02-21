@@ -5,12 +5,7 @@ import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.TableNotDisabledException;
 import org.apache.hadoop.hbase.TableNotEnabledException;
 import org.apache.hadoop.hbase.TableNotFoundException;
-import org.apache.hadoop.hbase.client.Admin;
-import org.apache.hadoop.hbase.client.ColumnFamilyDescriptor;
-import org.apache.hadoop.hbase.client.ColumnFamilyDescriptorBuilder;
-import org.apache.hadoop.hbase.client.Connection;
-import org.apache.hadoop.hbase.client.TableDescriptor;
-import org.apache.hadoop.hbase.client.TableDescriptorBuilder;
+import org.apache.hadoop.hbase.client.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,7 +41,22 @@ public final class HBaseTestHelpers {
      * @return table descriptor
      */
     public static TableDescriptor newTableDescriptor(String name, String... columnFamilies) {
-        return newTableDescriptor(TableName.valueOf(name), columnFamilies);
+        byte[][] familyBytes = new byte[columnFamilies.length][];
+        for (int i = 0; i < columnFamilies.length; ++i) {
+            familyBytes[i] = columnFamilies[i].getBytes(StandardCharsets.UTF_8);
+        }
+
+        return newTableDescriptor(TableName.valueOf(name), familyBytes);
+    }
+
+    public static TableDescriptor newTableDescriptor(TableName tableName, byte[]... columnFamilies) {
+        List<ColumnFamilyDescriptor> familyDescriptors = stream(columnFamilies)
+                .map(HBaseTestHelpers::newColumnFamilyDescriptor)
+                .collect(toList());
+        return TableDescriptorBuilder
+                .newBuilder(tableName)
+                .setColumnFamilies(familyDescriptors)
+                .build();
     }
 
     public static TableDescriptor newTableDescriptor(TableName tableName, String... columnFamilies) {
@@ -61,7 +71,10 @@ public final class HBaseTestHelpers {
 
     public static void createTable(Admin admin, TableDescriptor descriptor) {
         try {
+            long t0 = System.nanoTime();
+            LOGGER.info("Creating table {}", descriptor.getTableName());
             admin.createTable(descriptor);
+            LOGGER.info("Table {} created in {}ms", descriptor.getTableName(), millisSince(t0));
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
@@ -69,7 +82,7 @@ public final class HBaseTestHelpers {
 
     public static void createTable(Connection connection, TableDescriptor descriptor) {
         try (Admin admin = connection.getAdmin()) {
-            admin.createTable(descriptor);
+            createTable(admin, descriptor);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
@@ -78,7 +91,7 @@ public final class HBaseTestHelpers {
     public static void createTable(HBaseConnector connector, TableDescriptor descriptor) {
         try (Connection connection = connector.connect();
              Admin admin = connection.getAdmin()) {
-            admin.createTable(descriptor);
+            createTable(admin, descriptor);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
@@ -88,7 +101,14 @@ public final class HBaseTestHelpers {
      * Creates a new standard UTF-8 encoded column family descriptor
      */
     public static ColumnFamilyDescriptor newColumnFamilyDescriptor(String familyName) {
-        return ColumnFamilyDescriptorBuilder.newBuilder(familyName.getBytes(StandardCharsets.UTF_8)).build();
+        return newColumnFamilyDescriptor(familyName.getBytes(StandardCharsets.UTF_8));
+    }
+
+    /**
+     * Creates a new standard UTF-8 encoded column family descriptor
+     */
+    public static ColumnFamilyDescriptor newColumnFamilyDescriptor(byte[] family) {
+        return ColumnFamilyDescriptorBuilder.newBuilder(family).build();
     }
 
     /**
@@ -98,12 +118,20 @@ public final class HBaseTestHelpers {
      * @param names names of the tables to drop
      */
     public static void safeDropTables(Admin admin, String... names) {
+        long t0 = System.nanoTime();
+        LOGGER.warn("Dropping all temp tables");
         asList(names).parallelStream().forEach(name -> {
             LOGGER.warn("Dropping table {}", name);
             TableName tableName = TableName.valueOf(name);
-            safeDisableTable(admin, tableName, DEFAULT_RETRY_COUNT);
-            safeDeleteTable(admin, tableName, DEFAULT_RETRY_COUNT);
+            try {
+                safeDisableTable(admin, tableName, DEFAULT_RETRY_COUNT);
+                safeDeleteTable(admin, tableName, DEFAULT_RETRY_COUNT);
+            } catch (RuntimeException e) {
+                LOGGER.error("Failed to drop table", e);
+            }
+            LOGGER.warn("Table dropped: {}", name);
         });
+        LOGGER.warn("All temp tables were dropped within {}ms", millisSince(t0));
     }
 
     /**
@@ -167,6 +195,7 @@ public final class HBaseTestHelpers {
         try {
             Thread.sleep(millis);
         } catch (InterruptedException e) {
+            LOGGER.warn("Thread interrupted while sleeping", e);
             Thread.currentThread().interrupt();
             throw new IllegalStateException("Thread interrupted while sleeping", e);
         }
@@ -189,5 +218,10 @@ public final class HBaseTestHelpers {
         }
 
         return props;
+    }
+
+    private static double millisSince(long t0Nanos) {
+        long delta = System.nanoTime() - t0Nanos;
+        return delta / 1.0e6;
     }
 }

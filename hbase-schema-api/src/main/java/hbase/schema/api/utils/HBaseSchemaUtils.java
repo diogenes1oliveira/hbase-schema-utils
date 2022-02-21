@@ -1,21 +1,13 @@
 package hbase.schema.api.utils;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
-import hbase.schema.api.interfaces.converters.HBaseBytesMapper;
 import org.apache.hadoop.hbase.client.Get;
 import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.filter.Filter;
 import org.apache.hadoop.hbase.filter.MultiRowRangeFilter;
 import org.apache.hadoop.hbase.util.Bytes;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
-import java.util.SortedMap;
-import java.util.SortedSet;
-import java.util.TreeMap;
-import java.util.TreeSet;
+import java.util.*;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.unmodifiableSortedMap;
@@ -98,6 +90,10 @@ public final class HBaseSchemaUtils {
 
     public static SortedMap<byte[], Long> frozenSortedByteMap(byte[] key, Long value) {
         return frozenSortedByteMapGeneric(key, value);
+    }
+
+    public static <T> TreeMap<byte[], T> bytesTreeMap() {
+        return new TreeMap<>(Bytes.BYTES_COMPARATOR);
     }
 
     @SuppressWarnings("unchecked")
@@ -185,7 +181,7 @@ public final class HBaseSchemaUtils {
     public static MultiRowRangeFilter toMultiRowRangeFilter(Iterator<byte[]> it) {
         List<MultiRowRangeFilter.RowRange> ranges = new ArrayList<>();
 
-        while(it.hasNext()) {
+        while (it.hasNext()) {
             byte[] prefixStart = it.next();
             if (prefixStart == null) {
                 throw new IllegalArgumentException("No search key generated for query");

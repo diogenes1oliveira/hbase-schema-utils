@@ -46,7 +46,8 @@ public interface HBasePojoMutationBuilder<T> {
         boolean incrementHasData = false;
 
         for (HBaseCellsMapper<T> mapper : writeSchema.getPutGenerators()) {
-            for (Map.Entry<byte[], byte[]> entry : mapper.getBytes(obj).entrySet()) {
+            Map<byte[], byte[]> cellsValues = mapper.getBytes(obj);
+            for (Map.Entry<byte[], byte[]> entry : cellsValues.entrySet()) {
                 byte[] qualifier = entry.getKey();
                 byte[] value = entry.getValue();
                 if (value != null) {

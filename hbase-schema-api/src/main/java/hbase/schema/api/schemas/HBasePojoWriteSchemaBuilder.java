@@ -4,20 +4,32 @@ import hbase.schema.api.interfaces.converters.HBaseBytesConverter;
 import hbase.schema.api.interfaces.converters.HBaseBytesMapper;
 import hbase.schema.api.interfaces.converters.HBaseLongConverter;
 import hbase.schema.api.interfaces.converters.HBaseLongMapper;
-import org.apache.hadoop.hbase.util.Pair;
+import hbase.schema.api.models.HBaseTypedBytesField;
+import hbase.schema.api.models.HBaseTypedLongField;
 
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.NavigableMap;
+import java.util.TreeMap;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 import static hbase.schema.api.utils.HBaseBytesMappingUtils.*;
+import static hbase.schema.api.utils.HBaseSchemaUtils.bytesTreeMap;
+import static java.util.stream.Collectors.toList;
 
 public class HBasePojoWriteSchemaBuilder<T> {
+    private final Supplier<T> objectSupplier;
     private HBaseBytesMapper<T> rowKeyMapper = null;
     private HBaseLongMapper<T> timestampMapper = instantLongMapper(obj -> Instant.now());
-    private final List<Pair<String, HBaseBytesMapper<T>>> valueFields = new ArrayList<>();
-    private final List<Pair<String, HBaseLongMapper<T>>> deltaFields = new ArrayList<>();
+    private final TreeMap<String, HBaseTypedBytesField.Builder<T>> valueBuilders = new TreeMap<>();
+    private final TreeMap<String, HBaseTypedLongField.Builder<T>> deltaBuilders = new TreeMap<>();
+
+    public HBasePojoWriteSchemaBuilder(Supplier<T> objectSupplier) {
+        this.objectSupplier = objectSupplier;
+    }
 
     public HBasePojoWriteSchemaBuilder<T> withRowKey(HBaseBytesMapper<T> rowKeyMapper) {
         this.rowKeyMapper = rowKeyMapper;
@@ -42,7 +54,8 @@ public class HBasePojoWriteSchemaBuilder<T> {
     public HBasePojoWriteSchemaBuilder<T> withValueField(
             String name, HBaseBytesMapper<T> mapper
     ) {
-        valueFields.add(Pair.newPair(name, mapper));
+        HBaseTypedBytesField.Builder<T> builder = valueBuilders.computeIfAbsent(name, HBaseTypedBytesField.Builder::new);
+        builder.withMapper(mapper);
         return this;
     }
 
@@ -55,7 +68,8 @@ public class HBasePojoWriteSchemaBuilder<T> {
     public HBasePojoWriteSchemaBuilder<T> withDeltaField(
             String name, HBaseLongMapper<T> mapper
     ) {
-        valueFields.add(Pair.newPair(name, mapper));
+        HBaseTypedLongField.Builder<T> builder = deltaBuilders.computeIfAbsent(name, HBaseTypedLongField.Builder::new);
+        builder.withMapper(mapper);
         return this;
     }
 
@@ -69,14 +83,17 @@ public class HBasePojoWriteSchemaBuilder<T> {
         if (rowKeyMapper == null) {
             throw new IllegalStateException("No row key mapper was set");
         }
+        TreeMap<byte[], HBaseTypedBytesField<T>> valueFields = mapValues(valueBuilders, HBaseTypedBytesField.Builder::build);
+        TreeMap<byte[], HBaseTypedLongField<T>> deltaFields = mapValues(deltaBuilders, HBaseTypedLongField.Builder::build);
+
         return new AbstractHBasePojoWriteSchema<T>() {
             @Override
-            public List<Pair<String, HBaseBytesMapper<T>>> getPojoValueFields() {
+            public NavigableMap<byte[], HBaseTypedBytesField<T>> getPojoValueFields() {
                 return valueFields;
             }
 
             @Override
-            public List<Pair<String, HBaseLongMapper<T>>> getPojoDeltaFields() {
+            public NavigableMap<byte[], HBaseTypedLongField<T>> getPojoDeltaFields() {
                 return deltaFields;
             }
 
@@ -89,6 +106,22 @@ public class HBasePojoWriteSchemaBuilder<T> {
             public HBaseLongMapper<T> getTimestampGenerator() {
                 return timestampMapper;
             }
+
+            @Override
+            public T newInstance() {
+                return objectSupplier.get();
+            }
         };
+    }
+
+    private static <T, U> TreeMap<byte[], U> mapValues(Map<String, T> input, Function<T, U> mapper) {
+        TreeMap<byte[], U> output = bytesTreeMap();
+        for (Map.Entry<String, T> entry : input.entrySet()) {
+            byte[] key = entry.getKey().getBytes(StandardCharsets.UTF_8);
+            T inputValue = entry.getValue();
+            U mappedValue = mapper.apply(inputValue);
+            output.put(key, mappedValue);
+        }
+        return output;
     }
 }

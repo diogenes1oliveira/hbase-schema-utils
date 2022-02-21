@@ -2,6 +2,7 @@ package testutils;
 
 public class DummyPojo {
     public byte[] bytesField;
+    public String stringField;
     public String id;
     public long counterField;
 
@@ -11,6 +12,14 @@ public class DummyPojo {
 
     public void setBytesField(byte[] bytesField) {
         this.bytesField = bytesField;
+    }
+
+    public String getStringField() {
+        return stringField;
+    }
+
+    public void setStringField(String stringField) {
+        this.stringField = stringField;
     }
 
     public String getId() {
