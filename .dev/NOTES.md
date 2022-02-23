@@ -10,9 +10,10 @@ Realistas:
 
 - Verificar pacote org.apache.hadoop.fs.shell.find.Result
 - Checar interrupted;
-- Abstract provavelmente devia ser interface;
 - Consertar o builder, criar a estrutura para o write pojo
 - Pacote separado para as interfaces;
 - FAzer uns schemas que sempre lançam unsupportedoperation para não ter que usar nulo em testes;
 - Verificar um timeout no contextlock para não dar erro eterno em caso de uso errado do contexto;
 - Tiemstamp shouldn't be nullable, really;
+
+- Abstract provavelmente devia ser interface => melhor não, deixa um SchemaProvider cuidar disso

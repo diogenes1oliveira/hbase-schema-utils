@@ -9,6 +9,8 @@
     <file url="file://$PROJECT_DIR$/hbase-schema-api/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/hbase-schema-connector/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/hbase-schema-connector/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/hbase-service-utils/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/hbase-service-utils/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/hbase-test-utils/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/hbase-test-utils/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/src/main/java" charset="UTF-8" />
