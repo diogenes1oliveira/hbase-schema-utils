@@ -31,12 +31,12 @@ public class HBaseFunctionalMutationSchema<T> implements HBaseMutationSchema<T> 
     }
 
     @Override
-    public long buildTimestamp(T object) {
+    public Long buildTimestamp(T object) {
         return timestampBuilder.apply(object, null);
     }
 
     @Override
-    public long buildTimestamp(T object, byte[] qualifier) {
+    public Long buildTimestamp(T object, byte[] qualifier) {
         Long cellTimestamp = timestampBuilder.apply(object, qualifier);
         if (cellTimestamp == null) {
             return buildTimestamp(object);

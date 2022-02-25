@@ -8,11 +8,14 @@ import java.util.Map;
 import java.util.NavigableMap;
 
 public interface HBaseMutationSchema<T> {
+    @Nullable
     byte[] buildRowKey(T object);
 
-    long buildTimestamp(T object);
+    @Nullable
+    Long buildTimestamp(T object);
 
-    default long buildTimestamp(T object, byte[] qualifier) {
+    @Nullable
+    default Long buildTimestamp(T object, byte[] qualifier) {
         return buildTimestamp(object);
     }
 
@@ -22,13 +25,17 @@ public interface HBaseMutationSchema<T> {
 
     @Nullable
     default Put toPut(T object, byte[] family) {
+        byte[] rowKey = buildRowKey(object);
+        Long timestamp = buildTimestamp(object);
+
+        if (rowKey == null || timestamp == null) {
+            return null;
+        }
         NavigableMap<byte[], byte[]> cellValues = buildCellValues(object);
         if (cellValues.isEmpty()) {
             return null;
         }
 
-        byte[] rowKey = buildRowKey(object);
-        long timestamp = buildTimestamp(object);
         Put put = new Put(rowKey);
 
         for (Map.Entry<byte[], byte[]> entry : cellValues.entrySet()) {
@@ -40,12 +47,17 @@ public interface HBaseMutationSchema<T> {
 
     @Nullable
     default Increment toIncrement(T object, byte[] family) {
+        byte[] rowKey = buildRowKey(object);
+        Long timestamp = buildTimestamp(object);
+
+        if (rowKey == null || timestamp == null) {
+            return null;
+        }
         NavigableMap<byte[], Long> longValues = buildCellIncrements(object);
         if (longValues.isEmpty()) {
             return null;
         }
 
-        byte[] rowKey = buildRowKey(object);
         Increment increment = new Increment(rowKey);
 
         for (Map.Entry<byte[], Long> entry : longValues.entrySet()) {

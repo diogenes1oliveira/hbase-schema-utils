@@ -11,12 +11,4 @@ public interface HBaseResultParser<T> {
     }
 
     void setFromResult(T obj, NavigableMap<byte[], byte[]> cellsMap);
-
-    default void setFromCell(T obj, byte[] qualifier, byte[] value) {
-        // nothing to do by default
-    }
-
-    default void setFromPrefix(T obj, byte[] prefix, NavigableMap<byte[], byte[]> cellsMap) {
-        // nothing to do by default
-    }
 }

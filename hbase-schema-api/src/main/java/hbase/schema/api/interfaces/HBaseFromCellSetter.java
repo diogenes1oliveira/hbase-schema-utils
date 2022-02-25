@@ -6,7 +6,7 @@ package hbase.schema.api.interfaces;
  * @param <T> POJO type
  */
 @FunctionalInterface
-public interface HBaseCellParser<T> {
+public interface HBaseFromCellSetter<T> {
     /**
      * @param pojo      POJO object
      * @param qualifier column qualifier
