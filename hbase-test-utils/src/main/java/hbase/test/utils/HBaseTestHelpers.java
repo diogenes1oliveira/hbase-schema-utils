@@ -1,6 +1,5 @@
 package hbase.test.utils;
 
-import edu.umd.cs.findbugs.annotations.NonNull;
 import hbase.connector.HBaseConnector;
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.TableNotDisabledException;
@@ -12,7 +11,6 @@ import org.apache.hadoop.hbase.client.ColumnFamilyDescriptorBuilder;
 import org.apache.hadoop.hbase.client.Connection;
 import org.apache.hadoop.hbase.client.TableDescriptor;
 import org.apache.hadoop.hbase.client.TableDescriptorBuilder;
-import org.apache.hadoop.hbase.util.Bytes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,7 +20,6 @@ import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Properties;
-import java.util.TreeMap;
 
 import static java.util.Arrays.asList;
 import static java.util.Arrays.stream;
@@ -236,6 +233,10 @@ public final class HBaseTestHelpers {
 
     public static byte[] utf8ToBytes(String s) {
         return s == null ? null : s.getBytes(StandardCharsets.UTF_8);
+    }
+
+    public static String bytesToUtf8(byte[] bytes) {
+        return bytes == null ? null : new String(bytes, StandardCharsets.UTF_8);
     }
 
 }

@@ -3,8 +3,8 @@ package hbase.schema.api.utils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
-import hbase.schema.api.interfaces.HBaseFromBytesMapSetter;
-import hbase.schema.api.interfaces.HBaseFromBytesSetter;
+import hbase.schema.api.interfaces.HBaseBytesMapSetter;
+import hbase.schema.api.interfaces.HBaseBytesSetter;
 import org.apache.hadoop.hbase.client.Get;
 import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.filter.MultiRowRangeFilter;
@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.NavigableMap;
 import java.util.SortedSet;
 import java.util.TreeMap;
@@ -24,6 +25,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import static hbase.schema.api.utils.HBaseFunctionals.mapToTreeMap;
 import static java.util.Arrays.asList;
 
 /**
@@ -98,17 +100,6 @@ public final class HBaseSchemaUtils {
 
         return map;
     }
-
-    @SuppressWarnings("unchecked")
-    public static <T> T verifiedCast(Class<T> type, Object value) {
-        if (value == null) {
-            return null;
-        } else if (!type.isAssignableFrom(value.getClass())) {
-            throw new IllegalArgumentException("Invalid object type");
-        }
-        return (T) value;
-    }
-
 
     @Nullable
     public static byte[] findCommonPrefix(Collection<byte[]> bytesCollection) {
@@ -214,6 +205,10 @@ public final class HBaseSchemaUtils {
         }
     }
 
+    public static String utf8FromBytes(byte[] value) {
+        return new String(value, StandardCharsets.UTF_8);
+    }
+
     public static <O, F> Function<O, byte[]> bytesGetter(Function<O, F> getter, Function<F, byte[]> converter) {
         return obj -> {
             F value = getter.apply(obj);
@@ -285,21 +280,28 @@ public final class HBaseSchemaUtils {
         };
     }
 
-    public static <O> HBaseFromBytesSetter<O> stringSetter(BiConsumer<O, String> setter) {
+    public static <O> HBaseBytesSetter<O> stringSetter(BiConsumer<O, String> setter) {
         return (obj, bytes) -> {
             String value = new String(bytes, StandardCharsets.UTF_8);
             setter.accept(obj, value);
         };
     }
 
-    public static <O, F> HBaseFromBytesSetter<O> stringSetter(BiConsumer<O, F> setter, Function<String, F> converter) {
+    public static <O, F> HBaseBytesSetter<O> stringSetter(BiConsumer<O, F> setter, Function<String, F> converter) {
         return (obj, bytes) -> {
             String value = new String(bytes, StandardCharsets.UTF_8);
             setter.accept(obj, converter.apply(value));
         };
     }
 
-    public static <O> HBaseFromBytesSetter<O> jsonSetter(ObjectMapper mapper) {
+    public static <O> HBaseBytesMapSetter<O> stringMapSetter(BiConsumer<O, Map<String, String>> setter) {
+        return (obj, bytesMap) -> {
+            Map<String, String> stringMap = mapToTreeMap(bytesMap, HBaseSchemaUtils::utf8FromBytes, HBaseSchemaUtils::utf8FromBytes);
+            setter.accept(obj, stringMap);
+        };
+    }
+
+    public static <O> HBaseBytesSetter<O> jsonSetter(ObjectMapper mapper) {
         return (obj, bytes) -> {
             try {
                 mapper.readerForUpdating(obj).readValue(bytes);
@@ -309,23 +311,23 @@ public final class HBaseSchemaUtils {
         };
     }
 
-    public static <O> HBaseFromBytesSetter<O> longSetter(BiConsumer<O, Long> setter) {
+    public static <O> HBaseBytesSetter<O> longSetter(BiConsumer<O, Long> setter) {
         return (obj, bytes) -> {
             Long value = Bytes.toLong(bytes);
             setter.accept(obj, value);
         };
     }
 
-    public static <O, F> HBaseFromBytesSetter<O> longSetter(BiConsumer<O, F> setter, Function<Long, F> converter) {
+    public static <O, F> HBaseBytesSetter<O> longSetter(BiConsumer<O, F> setter, Function<Long, F> converter) {
         return (obj, bytes) -> {
             Long value = Bytes.toLong(bytes);
             setter.accept(obj, converter.apply(value));
         };
     }
 
-    public static <T, I> HBaseFromBytesMapSetter<T> listColumnSetter(
+    public static <T, I> HBaseBytesMapSetter<T> listColumnSetter(
             BiConsumer<T, List<I>> listSetter,
-            HBaseFromBytesSetter<I> bytesSetter,
+            HBaseBytesSetter<I> bytesSetter,
             Supplier<I> constructor
     ) {
         return (obj, bytesMap) -> {

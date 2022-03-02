@@ -1,69 +1,102 @@
 package hbase.schema.api.schemas;
 
-import hbase.schema.api.interfaces.HBaseFromBytesMapSetter;
-import hbase.schema.api.interfaces.HBaseFromBytesSetter;
+import hbase.schema.api.interfaces.HBaseBytesMapSetter;
+import hbase.schema.api.interfaces.HBaseBytesSetter;
 import hbase.schema.api.interfaces.HBaseResultParser;
-import org.apache.hadoop.hbase.util.Bytes;
 
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 import java.util.NavigableMap;
+import java.util.NavigableSet;
 import java.util.function.Supplier;
 
-import static hbase.schema.api.utils.HBaseFunctionals.mapBytesKeys;
+import static hbase.schema.api.utils.HBaseSchemaUtils.asBytesTreeMap;
 
+/**
+ * Builder for {@link HBaseResultParser} objects, providing a fluent API to add fields and field prefixes to be parsed
+ *
+ * @param <T> result object instance
+ */
 public class HBaseResultParserBuilder<T> {
     private final Supplier<T> constructor;
-    private HBaseFromBytesSetter<T> fromRowKeySetter = HBaseFromBytesSetter.dummy();
-    private final List<HBaseFromBytesMapSetter<T>> fromBytesMapSetters = new ArrayList<>();
+    private HBaseBytesSetter<T> fromRowKeySetter = HBaseBytesSetter.dummy();
+    private final NavigableMap<byte[], HBaseBytesSetter<T>> cellSetters = asBytesTreeMap();
+    private final NavigableMap<byte[], HBaseBytesMapSetter<T>> prefixSetters = asBytesTreeMap();
 
+    /**
+     * Instantiate a new builder
+     *
+     * @param constructor supplier of a new result instance
+     */
     public HBaseResultParserBuilder(Supplier<T> constructor) {
         this.constructor = constructor;
     }
 
-    public HBaseResultParserBuilder<T> fromRowKey(HBaseFromBytesSetter<T> bytesSetter) {
+    /**
+     * Sets up the parsing of the row key
+     *
+     * @param bytesSetter lambda to populate the result object with data from the row key
+     * @return this builder
+     */
+    public HBaseResultParserBuilder<T> fromRowKey(HBaseBytesSetter<T> bytesSetter) {
         this.fromRowKeySetter = bytesSetter;
         return this;
     }
 
-    public HBaseResultParserBuilder<T> fromColumn(byte[] qualifier, HBaseFromBytesSetter<T> bytesSetter) {
-        fromBytesMapSetters.add((obj, bytesMap) -> {
-            byte[] value = bytesMap.get(qualifier);
-            if (value != null) {
-                bytesSetter.setFromBytes(obj, value);
-            }
-        });
+    /**
+     * Sets up the parsing of a fixed column
+     *
+     * @param qualifier   fixed column qualifier bytes
+     * @param bytesSetter lambda to populate the result object with data from the given column
+     * @return this builder
+     */
+    public HBaseResultParserBuilder<T> fromColumn(byte[] qualifier, HBaseBytesSetter<T> bytesSetter) {
+        cellSetters.put(qualifier, bytesSetter);
         return this;
     }
 
-    public HBaseResultParserBuilder<T> fromColumn(String qualifier, HBaseFromBytesSetter<T> bytesSetter) {
+    /**
+     * Sets up the parsing of a fixed column
+     *
+     * @param qualifier   fixed column qualifier UTF-8 string
+     * @param bytesSetter lambda to populate the result object with binary data from the given column
+     * @return this builder
+     */
+    public HBaseResultParserBuilder<T> fromColumn(String qualifier, HBaseBytesSetter<T> bytesSetter) {
         return fromColumn(qualifier.getBytes(StandardCharsets.UTF_8), bytesSetter);
     }
 
-    public HBaseResultParserBuilder<T> fromPrefix(byte[] prefix, HBaseFromBytesMapSetter<T> bytesMapSetter) {
-        byte[] prefixBefore = Bytes.incrementBytes(prefix, -1L);
-        byte[] prefixAfter = Bytes.incrementBytes(prefix, +1L);
-
-        fromBytesMapSetters.add((obj, bytesMap) -> {
-            NavigableMap<byte[], byte[]> prefixBytesMap = bytesMap.subMap(
-                    prefixBefore, false, prefixAfter, false
-            );
-            if (!prefixBytesMap.isEmpty()) {
-                NavigableMap<byte[], byte[]> unprefixedBytesMap = mapBytesKeys(prefixBytesMap, qualifier -> unprefix(qualifier, prefix));
-                bytesMapSetter.setFromBytes(obj, unprefixedBytesMap);
-            }
-        });
+    /**
+     * Sets up the parsing of a set of columns with the given prefix
+     *
+     * @param prefix         cells qualifier prefix bytes
+     * @param bytesMapSetter lambda to populate the result object with data from the given prefixes. This setter
+     *                       will receive the data without such prefix
+     * @return this builder
+     */
+    public HBaseResultParserBuilder<T> fromPrefix(byte[] prefix, HBaseBytesMapSetter<T> bytesMapSetter) {
+        prefixSetters.put(prefix, bytesMapSetter);
         return this;
     }
 
-    public <F> HBaseResultParserBuilder<T> fromPrefix(String prefix, HBaseFromBytesMapSetter<T> bytesMapSetter) {
+    /**
+     * Sets up the parsing of a set of columns with the given prefix
+     *
+     * @param prefix         cells qualifier prefix UTF-8 string
+     * @param bytesMapSetter lambda to populate the result object with data from the given prefixes. This setter
+     *                       will receive the data without such prefix
+     * @return this builder
+     */
+    public <F> HBaseResultParserBuilder<T> fromPrefix(String prefix, HBaseBytesMapSetter<T> bytesMapSetter) {
         return fromPrefix(prefix.getBytes(StandardCharsets.UTF_8), bytesMapSetter);
     }
 
+    /**
+     * Builds the new instance of the result parser
+     *
+     * @return new result parser instance
+     */
     public HBaseResultParser<T> build() {
-        return new HBaseResultParser<T>() {
+        return new AbstractHBaseResultParser<T>() {
             @Override
             public T newInstance() {
                 return constructor.get();
@@ -75,16 +108,27 @@ public class HBaseResultParserBuilder<T> {
             }
 
             @Override
-            public void setFromResult(T obj, NavigableMap<byte[], byte[]> cellsMap) {
-                for (HBaseFromBytesMapSetter<T> setter : fromBytesMapSetters) {
-                    setter.setFromBytes(obj, cellsMap);
+            public NavigableSet<byte[]> getPrefixes() {
+                return prefixSetters.navigableKeySet();
+            }
+
+            @Override
+            public void setFromCell(T obj, byte[] qualifier, byte[] value) {
+                HBaseBytesSetter<T> setter = cellSetters.get(qualifier);
+                if (setter != null) {
+                    setter.setFromBytes(obj, value);
+                }
+            }
+
+            @Override
+            public void setFromPrefix(T obj, byte[] prefix, NavigableMap<byte[], byte[]> cellsFromPrefix) {
+                HBaseBytesMapSetter<T> setter = prefixSetters.get(prefix);
+                if (setter != null) {
+                    setter.setFromBytes(obj, cellsFromPrefix);
                 }
             }
         };
     }
 
-    private static byte[] unprefix(byte[] value, byte[] prefix) {
-        return Arrays.copyOfRange(value, prefix.length, value.length);
-    }
 
 }

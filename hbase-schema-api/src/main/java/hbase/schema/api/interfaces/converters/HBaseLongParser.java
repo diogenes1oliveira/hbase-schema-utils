@@ -33,21 +33,4 @@ public interface HBaseLongParser<T> extends HBaseBytesParser<T> {
         }
     }
 
-    /**
-     * Returns a no-op parser
-     *
-     * @param <T> input object type
-     * @return new dummy long parser
-     */
-    static <T> HBaseLongParser<T> dummy() {
-        return (obj, l) -> {
-
-        };
-    }
-
-    static <T> HBaseLongParser<T> writeOnly() {
-        return (obj, l) -> {
-            throw new UnsupportedOperationException("Write-only field");
-        };
-    }
 }
