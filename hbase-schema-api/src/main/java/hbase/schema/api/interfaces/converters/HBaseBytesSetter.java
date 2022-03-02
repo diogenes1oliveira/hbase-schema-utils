@@ -1,4 +1,4 @@
-package hbase.schema.api.interfaces;
+package hbase.schema.api.interfaces.converters;
 
 @FunctionalInterface
 public interface HBaseBytesSetter<T> {

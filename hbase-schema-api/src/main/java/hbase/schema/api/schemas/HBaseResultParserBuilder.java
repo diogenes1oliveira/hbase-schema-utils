@@ -1,7 +1,7 @@
 package hbase.schema.api.schemas;
 
-import hbase.schema.api.interfaces.HBaseBytesMapSetter;
-import hbase.schema.api.interfaces.HBaseBytesSetter;
+import hbase.schema.api.interfaces.converters.HBaseBytesMapSetter;
+import hbase.schema.api.interfaces.converters.HBaseBytesSetter;
 import hbase.schema.api.interfaces.HBaseResultParser;
 
 import java.nio.charset.StandardCharsets;
@@ -91,7 +91,7 @@ public class HBaseResultParserBuilder<T> {
     }
 
     /**
-     * Builds the new instance of the result parser
+     * Builds a new instance of the result parser
      *
      * @return new result parser instance
      */

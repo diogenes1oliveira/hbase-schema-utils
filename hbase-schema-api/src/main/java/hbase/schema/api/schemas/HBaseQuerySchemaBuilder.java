@@ -1,6 +1,8 @@
 package hbase.schema.api.schemas;
 
 import hbase.schema.api.interfaces.HBaseQuerySchema;
+import hbase.schema.api.interfaces.converters.HBaseBytesGetter;
+import hbase.schema.api.interfaces.converters.HBaseIntegerGetter;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
@@ -12,36 +14,75 @@ import static hbase.schema.api.utils.HBaseSchemaUtils.asBytesTreeSet;
 import static hbase.schema.api.utils.HBaseSchemaUtils.verifyNonNull;
 import static java.util.Optional.ofNullable;
 
+/**
+ * Builder for {@link HBaseQuerySchema} objects, providing a fluent API to add fields and field prefixes to be fetched
+ *
+ * @param <T> query object instance
+ */
 public class HBaseQuerySchemaBuilder<T> {
-    private Function<T, byte[]> rowKeyGetter = null;
-    private Function<T, byte[]> scanKeyGetter = null;
+    private HBaseBytesGetter<T> rowKeyGetter = null;
+    private HBaseBytesGetter<T> scanKeyGetter = null;
     private Function<T, SortedSet<byte[]>> qualifiersGetter = null;
     private Function<T, SortedSet<byte[]>> prefixesGetter = null;
     @SuppressWarnings({"FieldMayBeFinal", "rawtypes"})
     private static final Function EMPTY = fixedFunction(asBytesTreeSet());
 
-    public HBaseQuerySchemaBuilder<T> withRowKey(Function<T, byte[]> getter) {
+    /**
+     * Generates the row key to be used in a Get request
+     *
+     * @param getter lambda to build a Get row key from the object
+     * @return this builder
+     */
+    public HBaseQuerySchemaBuilder<T> withRowKey(HBaseBytesGetter<T> getter) {
         this.rowKeyGetter = getter;
         return this;
     }
 
-    public HBaseQuerySchemaBuilder<T> withScanKey(Function<T, byte[]> getter) {
+    /**
+     * Generates the search key to be used in a Scan request
+     *
+     * @param getter lambda to build a Scan search key from the object
+     * @return this builder
+     */
+    public HBaseQuerySchemaBuilder<T> withScanKey(HBaseBytesGetter<T> getter) {
         this.scanKeyGetter = getter;
         return this;
     }
 
+    /**
+     * Sets the search key size to be used in a Scan request
+     *
+     * @param size search key size
+     * @return this builder
+     */
     public HBaseQuerySchemaBuilder<T> withScanKeySize(int size) {
         return withScanKeySize(query -> size);
     }
 
-    public HBaseQuerySchemaBuilder<T> withScanKeySize(Function<T, Integer> sizeGetter) {
+    /**
+     * Sets the search key size to be used in a Scan request
+     *
+     * @param sizeGetter lambda to get the Scan search key size from the object
+     * @return this builder
+     */
+    public HBaseQuerySchemaBuilder<T> withScanKeySize(HBaseIntegerGetter<T> sizeGetter) {
         return withScanKey(query -> {
-            byte[] rowKey = rowKeyGetter.apply(query);
-            int size = sizeGetter.apply(query);
+            byte[] rowKey = rowKeyGetter.getBytes(query);
+            Integer size = sizeGetter.getInteger(query);
+            if (rowKey == null || size == null) {
+                return null;
+            }
             return Arrays.copyOfRange(rowKey, 0, size);
         });
     }
 
+    /**
+     * Sets the fixed qualifiers to be fetched in the query results
+     *
+     * @param first fixed {@code byte[]} qualifier
+     * @param rest  other qualifiers
+     * @return this builder
+     */
     public HBaseQuerySchemaBuilder<T> withQualifiers(byte[] first, byte[]... rest) {
         SortedSet<byte[]> qualifiers = asBytesTreeSet(rest);
         qualifiers.add(first);
@@ -50,6 +91,13 @@ public class HBaseQuerySchemaBuilder<T> {
         return this;
     }
 
+    /**
+     * Sets the fixed qualifiers to be fetched in the query results
+     *
+     * @param first fixed UTF-8 qualifier
+     * @param rest  other qualifiers
+     * @return this builder
+     */
     public HBaseQuerySchemaBuilder<T> withQualifiers(String first, String... rest) {
         SortedSet<byte[]> qualifiers = toBytesSet(first, rest);
 
@@ -57,6 +105,13 @@ public class HBaseQuerySchemaBuilder<T> {
         return this;
     }
 
+    /**
+     * Sets the qualifier prefixes to be fetched in the query results
+     *
+     * @param first fixed {@code byte[]} prefix
+     * @param rest  other prefixes
+     * @return this builder
+     */
     public HBaseQuerySchemaBuilder<T> withPrefixes(byte[] first, byte[]... rest) {
         SortedSet<byte[]> prefixes = asBytesTreeSet(rest);
         prefixes.add(first);
@@ -65,6 +120,13 @@ public class HBaseQuerySchemaBuilder<T> {
         return this;
     }
 
+    /**
+     * Sets the qualifier prefixes to be fetched in the query results
+     *
+     * @param first fixed UTF-8 prefix
+     * @param rest  other prefixes
+     * @return this builder
+     */
     public HBaseQuerySchemaBuilder<T> withPrefixes(String first, String... rest) {
         SortedSet<byte[]> prefixes = toBytesSet(first, rest);
 
@@ -72,6 +134,11 @@ public class HBaseQuerySchemaBuilder<T> {
         return this;
     }
 
+    /**
+     * Builds a new instance of the query schema
+     *
+     * @return new query schema instance
+     */
     @SuppressWarnings("unchecked")
     public HBaseQuerySchema<T> build() {
         verifyNonNull("no row key generator is set", rowKeyGetter);
@@ -86,12 +153,12 @@ public class HBaseQuerySchemaBuilder<T> {
         return new HBaseQuerySchema<T>() {
             @Override
             public byte[] buildRowKey(T query) {
-                return rowKeyGetter.apply(query);
+                return rowKeyGetter.getBytes(query);
             }
 
             @Override
             public byte[] buildScanKey(T query) {
-                return scanKeyGetter.apply(query);
+                return scanKeyGetter.getBytes(query);
             }
 
             @Override
