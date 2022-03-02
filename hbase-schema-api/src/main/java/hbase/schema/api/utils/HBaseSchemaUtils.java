@@ -3,8 +3,10 @@ package hbase.schema.api.utils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
+import hbase.schema.api.interfaces.converters.HBaseBytesGetter;
 import hbase.schema.api.interfaces.converters.HBaseBytesMapSetter;
 import hbase.schema.api.interfaces.converters.HBaseBytesSetter;
+import hbase.schema.api.interfaces.converters.HBaseLongGetter;
 import org.apache.hadoop.hbase.client.Get;
 import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.filter.MultiRowRangeFilter;
@@ -205,25 +207,29 @@ public final class HBaseSchemaUtils {
         }
     }
 
+    public static byte[] utf8ToBytes(String s) {
+        return s.getBytes(StandardCharsets.UTF_8);
+    }
+
     public static String utf8FromBytes(byte[] value) {
         return new String(value, StandardCharsets.UTF_8);
     }
 
-    public static <O, F> Function<O, byte[]> bytesGetter(Function<O, F> getter, Function<F, byte[]> converter) {
+    public static <O, F> HBaseBytesGetter<O> bytesGetter(Function<O, F> getter, Function<F, byte[]> converter) {
         return obj -> {
             F value = getter.apply(obj);
             return value != null ? converter.apply(value) : null;
         };
     }
 
-    public static <O> Function<O, byte[]> stringGetter(Function<O, String> getter) {
+    public static <O> HBaseBytesGetter<O> stringGetter(Function<O, String> getter) {
         return obj -> {
             String value = getter.apply(obj);
             return value != null ? value.getBytes(StandardCharsets.UTF_8) : null;
         };
     }
 
-    public static <O, F> Function<O, byte[]> stringGetter(Function<O, F> getter, Function<F, String> converter) {
+    public static <O, F> HBaseBytesGetter<O> stringGetter(Function<O, F> getter, Function<F, String> converter) {
         return obj -> {
             F value = getter.apply(obj);
             return value != null ? converter.apply(value).getBytes(StandardCharsets.UTF_8) : null;
@@ -231,7 +237,7 @@ public final class HBaseSchemaUtils {
     }
 
 
-    public static <O> Function<O, byte[]> jsonGetter(ObjectMapper mapper) {
+    public static <O> HBaseBytesGetter<O> jsonGetter(ObjectMapper mapper) {
         return obj -> {
             try {
                 return mapper.writeValueAsBytes(obj);
@@ -241,14 +247,14 @@ public final class HBaseSchemaUtils {
         };
     }
 
-    public static <O, F> Function<O, Long> longGetter(Function<O, F> getter, Function<F, Long> converter) {
+    public static <O, F> HBaseLongGetter<O> longGetter(Function<O, F> getter, Function<F, Long> converter) {
         return obj -> {
             F value = getter.apply(obj);
             return value != null ? converter.apply(value) : null;
         };
     }
 
-    public static <O> Function<O, Long> booleanGetter(Function<O, Boolean> getter) {
+    public static <O> HBaseLongGetter<O> booleanGetter(Function<O, Boolean> getter) {
         return obj -> {
             Boolean value = getter.apply(obj);
             if (value == null) {

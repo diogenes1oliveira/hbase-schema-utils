@@ -3,14 +3,15 @@ package hbase.schema.api.schemas;
 import hbase.schema.api.interfaces.HBaseQuerySchema;
 import hbase.schema.api.interfaces.converters.HBaseBytesGetter;
 import hbase.schema.api.interfaces.converters.HBaseIntegerGetter;
+import hbase.schema.api.utils.HBaseSchemaUtils;
 
-import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.SortedSet;
 import java.util.function.Function;
 
 import static hbase.schema.api.utils.HBaseFunctionals.fixedFunction;
 import static hbase.schema.api.utils.HBaseSchemaUtils.asBytesTreeSet;
+import static hbase.schema.api.utils.HBaseSchemaUtils.utf8ToBytes;
 import static hbase.schema.api.utils.HBaseSchemaUtils.verifyNonNull;
 import static java.util.Optional.ofNullable;
 
@@ -99,10 +100,7 @@ public class HBaseQuerySchemaBuilder<T> {
      * @return this builder
      */
     public HBaseQuerySchemaBuilder<T> withQualifiers(String first, String... rest) {
-        SortedSet<byte[]> qualifiers = toBytesSet(first, rest);
-
-        this.qualifiersGetter = query -> qualifiers;
-        return this;
+        return withQualifiers(utf8ToBytes(first), utf8ToBytesArray(rest));
     }
 
     /**
@@ -128,10 +126,7 @@ public class HBaseQuerySchemaBuilder<T> {
      * @return this builder
      */
     public HBaseQuerySchemaBuilder<T> withPrefixes(String first, String... rest) {
-        SortedSet<byte[]> prefixes = toBytesSet(first, rest);
-
-        this.prefixesGetter = query -> prefixes;
-        return this;
+        return withPrefixes(utf8ToBytes(first), utf8ToBytesArray(rest));
     }
 
     /**
@@ -173,13 +168,9 @@ public class HBaseQuerySchemaBuilder<T> {
         };
     }
 
-    private static SortedSet<byte[]> toBytesSet(String first, String... rest) {
-        SortedSet<byte[]> set = asBytesTreeSet(first.getBytes(StandardCharsets.UTF_8));
-
-        for (String s : rest) {
-            set.add(s.getBytes(StandardCharsets.UTF_8));
-        }
-
-        return set;
+    private static byte[][] utf8ToBytesArray(String... strings) {
+        return Arrays.stream(strings)
+                     .map(HBaseSchemaUtils::utf8ToBytes)
+                     .toArray(byte[][]::new);
     }
 }
