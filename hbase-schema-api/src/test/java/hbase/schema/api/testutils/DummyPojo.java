@@ -10,6 +10,7 @@ import java.util.Map;
 public class DummyPojo {
     private String id;
     private String field;
+    private Long longField;
     private Map<String, String> map1;
     private Map<String, String> map2;
 
@@ -62,6 +63,19 @@ public class DummyPojo {
 
     public DummyPojo withMap2(Map<String, String> map2) {
         this.map2 = map2;
+        return this;
+    }
+
+    public Long getLong() {
+        return longField;
+    }
+
+    public void setLong(Long l) {
+        this.longField = l;
+    }
+
+    public DummyPojo withLong(Long l) {
+        this.longField = l;
         return this;
     }
 

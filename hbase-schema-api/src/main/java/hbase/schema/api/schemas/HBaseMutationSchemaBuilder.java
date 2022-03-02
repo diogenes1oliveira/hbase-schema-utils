@@ -27,6 +27,7 @@ public class HBaseMutationSchemaBuilder<T> {
     private static final byte[] EMPTY = new byte[0];
     private HBaseBytesGetter<T> rowKeyBuilder = null;
     private HBaseLongGetter<T> timestampBuilder = null;
+    private HBaseLongGetter<T> currentTimestampBuilder = null;
 
     private final List<HBaseBytesMapGetter<T>> valueBuilders = new ArrayList<>();
     private final List<HBaseLongMapGetter<T>> deltaBuilders = new ArrayList<>();
@@ -39,6 +40,10 @@ public class HBaseMutationSchemaBuilder<T> {
      * @return this builder
      */
     public HBaseMutationSchemaBuilder<T> withRowKey(HBaseBytesGetter<T> getter) {
+        if (currentTimestampBuilder == null) {
+            throw new IllegalStateException("You need to set a timestamp for the row key");
+        }
+        this.timestampBuilder = currentTimestampBuilder;
         this.rowKeyBuilder = getter;
         return this;
     }
@@ -50,19 +55,19 @@ public class HBaseMutationSchemaBuilder<T> {
      * @return this builder
      */
     public HBaseMutationSchemaBuilder<T> withTimestamp(HBaseLongGetter<T> getter) {
-        this.timestampBuilder = getter;
+        this.currentTimestampBuilder = getter;
         return this;
     }
 
     /**
-     * Sets up a set of cells to be inserted as HBase values
+     * Sets up a set of cells to be inserted as HBase Puts
      *
      * @param prefix qualifier prefix bytes
      * @param getter lambda to extract a map of (qualifier suffix -> cell value) from the object
      * @return this builder
      */
     public HBaseMutationSchemaBuilder<T> withValues(byte[] prefix, HBaseBytesMapGetter<T> getter) {
-        timestampBuilders.put(prefix, timestampBuilder);
+        timestampBuilders.put(prefix, currentTimestampBuilder);
         valueBuilders.add(obj -> {
             NavigableMap<byte[], byte[]> valuesMap = asBytesTreeMap();
 
@@ -128,7 +133,7 @@ public class HBaseMutationSchemaBuilder<T> {
      * @return this builder
      */
     public HBaseMutationSchemaBuilder<T> withDeltas(byte[] prefix, HBaseLongMapGetter<T> getter) {
-        timestampBuilders.put(prefix, timestampBuilder);
+        timestampBuilders.put(prefix, currentTimestampBuilder);
         deltaBuilders.add(obj -> {
             NavigableMap<byte[], Long> valuesMap = asBytesTreeMap();
 
@@ -153,8 +158,8 @@ public class HBaseMutationSchemaBuilder<T> {
      * @param getter lambda to extract a map of (qualifier suffix -> increment value) from the object
      * @return this builder
      */
-    public HBaseMutationSchemaBuilder<T> withDeltas(String prefix, HBaseBytesMapGetter<T> getter) {
-        return withValues(prefix.getBytes(StandardCharsets.UTF_8), getter);
+    public HBaseMutationSchemaBuilder<T> withDeltas(String prefix, HBaseLongMapGetter<T> getter) {
+        return withDeltas(prefix.getBytes(StandardCharsets.UTF_8), getter);
     }
 
     /**
@@ -239,7 +244,7 @@ public class HBaseMutationSchemaBuilder<T> {
         if (qualifier == null) {
             return timestampBuilder.getLong(object);
         }
-        Map.Entry<byte[], HBaseLongGetter<T>> entry = timestampBuilders.ceilingEntry(qualifier);
+        Map.Entry<byte[], HBaseLongGetter<T>> entry = timestampBuilders.floorEntry(qualifier);
         if (entry == null) {
             return timestampBuilder.getLong(object);
         }
