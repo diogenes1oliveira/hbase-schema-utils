@@ -9,7 +9,6 @@ import java.util.Arrays;
 import java.util.SortedSet;
 import java.util.function.Function;
 
-import static hbase.schema.api.utils.HBaseFunctionals.fixedFunction;
 import static hbase.schema.api.utils.HBaseSchemaUtils.asBytesTreeSet;
 import static hbase.schema.api.utils.HBaseSchemaUtils.utf8ToBytes;
 import static hbase.schema.api.utils.HBaseSchemaUtils.verifyNonNull;
@@ -25,8 +24,6 @@ public class HBaseQuerySchemaBuilder<T> {
     private HBaseBytesGetter<T> scanKeyGetter = null;
     private Function<T, SortedSet<byte[]>> qualifiersGetter = null;
     private Function<T, SortedSet<byte[]>> prefixesGetter = null;
-    @SuppressWarnings({"FieldMayBeFinal", "rawtypes"})
-    private static final Function EMPTY = fixedFunction(asBytesTreeSet());
 
     /**
      * Generates the row key to be used in a Get request
@@ -134,7 +131,6 @@ public class HBaseQuerySchemaBuilder<T> {
      *
      * @return new query schema instance
      */
-    @SuppressWarnings("unchecked")
     public HBaseQuerySchema<T> build() {
         verifyNonNull("no row key generator is set", rowKeyGetter);
         verifyNonNull("needs qualifiers or prefixes", qualifiersGetter, prefixesGetter);
@@ -142,8 +138,8 @@ public class HBaseQuerySchemaBuilder<T> {
             scanKeyGetter = rowKeyGetter;
         }
 
-        qualifiersGetter = ofNullable(qualifiersGetter).orElse(EMPTY);
-        prefixesGetter = ofNullable(prefixesGetter).orElse(EMPTY);
+        qualifiersGetter = ofNullable(qualifiersGetter).orElse(obj -> asBytesTreeSet());
+        prefixesGetter = ofNullable(prefixesGetter).orElse(obj -> asBytesTreeSet());
 
         return new HBaseQuerySchema<T>() {
             @Override

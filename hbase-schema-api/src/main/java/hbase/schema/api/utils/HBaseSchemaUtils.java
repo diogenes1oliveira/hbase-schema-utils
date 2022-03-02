@@ -7,20 +7,15 @@ import hbase.schema.api.interfaces.converters.HBaseBytesGetter;
 import hbase.schema.api.interfaces.converters.HBaseBytesMapSetter;
 import hbase.schema.api.interfaces.converters.HBaseBytesSetter;
 import hbase.schema.api.interfaces.converters.HBaseLongGetter;
-import org.apache.hadoop.hbase.client.Get;
-import org.apache.hadoop.hbase.client.Scan;
-import org.apache.hadoop.hbase.filter.MultiRowRangeFilter;
 import org.apache.hadoop.hbase.util.Bytes;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.NavigableMap;
-import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.function.BiConsumer;
@@ -36,20 +31,6 @@ import static java.util.Arrays.asList;
 public final class HBaseSchemaUtils {
     private HBaseSchemaUtils() {
         // utility class
-    }
-
-    /**
-     * Converts the binary value array into a Long instance
-     *
-     * @param value binary value
-     * @return converted long value
-     * @throws IllegalArgumentException value null or not with 8 bytes
-     */
-    public static long bytesToLong(byte[] value) {
-        if (value == null || value.length != 8) {
-            throw new IllegalArgumentException("Invalid Long value");
-        }
-        return Bytes.toLong(value);
     }
 
     /**
@@ -141,49 +122,6 @@ public final class HBaseSchemaUtils {
             return prefix;
         }
     }
-
-    public static MultiRowRangeFilter toMultiRowRangeFilter(Iterator<byte[]> it) {
-        List<MultiRowRangeFilter.RowRange> ranges = new ArrayList<>();
-
-        while (it.hasNext()) {
-            byte[] prefixStart = it.next();
-            if (prefixStart == null) {
-                throw new IllegalArgumentException("No search key generated for query");
-            }
-            byte[] prefixStop = Bytes.incrementBytes(prefixStart, 1);
-            MultiRowRangeFilter.RowRange range = new MultiRowRangeFilter.RowRange(prefixStart, true, prefixStop, false);
-            ranges.add(range);
-        }
-
-        return new MultiRowRangeFilter(ranges);
-    }
-
-    public static void selectColumns(Scan scan,
-                                     byte[] family,
-                                     SortedSet<byte[]> qualifiers,
-                                     SortedSet<byte[]> prefixes) {
-        if (prefixes.isEmpty()) {
-            for (byte[] qualifier : qualifiers) {
-                scan.addColumn(family, qualifier);
-            }
-        } else {
-            scan.addFamily(family);
-        }
-    }
-
-    public static void selectColumns(Get get,
-                                     byte[] family,
-                                     SortedSet<byte[]> qualifiers,
-                                     SortedSet<byte[]> prefixes) {
-        if (prefixes.isEmpty()) {
-            for (byte[] qualifier : qualifiers) {
-                get.addColumn(family, qualifier);
-            }
-        } else {
-            get.addFamily(family);
-        }
-    }
-
 
     public static void verifyNonNull(String message, Object... objs) {
         for (Object obj : objs) {

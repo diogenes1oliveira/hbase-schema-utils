@@ -2,22 +2,12 @@ package hbase.schema.api.utils;
 
 import java.util.Comparator;
 import java.util.Map;
-import java.util.NavigableMap;
 import java.util.TreeMap;
-import java.util.function.BiConsumer;
 import java.util.function.Function;
-
-import static hbase.schema.api.utils.HBaseSchemaUtils.asBytesTreeMap;
 
 public final class HBaseFunctionals {
     private HBaseFunctionals() {
         // utility class
-    }
-
-    public static <T, U> BiConsumer<T, U> dummyBiConsumer() {
-        return (t, u) -> {
-
-        };
     }
 
     public static <T, V> Function<T, V> fixedFunction(V value) {
@@ -48,18 +38,6 @@ public final class HBaseFunctionals {
         for (Map.Entry<K1, V1> entry : input.entrySet()) {
             K2 k = keyMapper.apply(entry.getKey());
             V2 v = valueMapper.apply(entry.getValue());
-            result.put(k, v);
-        }
-
-        return result;
-    }
-
-    public static NavigableMap<byte[], byte[]> mapBytesKeys(NavigableMap<byte[], byte[]> input, Function<byte[], byte[]> keyMapper) {
-        NavigableMap<byte[], byte[]> result = asBytesTreeMap();
-
-        for (Map.Entry<byte[], byte[]> entry : result.entrySet()) {
-            byte[] k = keyMapper.apply(entry.getKey());
-            byte[] v = entry.getValue();
             result.put(k, v);
         }
 
