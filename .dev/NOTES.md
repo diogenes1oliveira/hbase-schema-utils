@@ -10,10 +10,10 @@ Realistas:
 
 - Verificar pacote org.apache.hadoop.fs.shell.find.Result
 - Checar interrupted;
-- Consertar o builder, criar a estrutura para o write pojo
 - Pacote separado para as interfaces;
-- FAzer uns schemas que sempre lançam unsupportedoperation para não ter que usar nulo em testes;
 - Verificar um timeout no contextlock para não dar erro eterno em caso de uso errado do contexto;
-- Tiemstamp shouldn't be nullable, really;
 
 - Abstract provavelmente devia ser interface => melhor não, deixa um SchemaProvider cuidar disso
+- Tiemstamp shouldn't be nullable, really; => it can, best to deal with optional fields
+- Fazer uns schemas que sempre lançam unsupportedoperation para não ter que usar nulo em testes não mais necessário => não precisa no 
+  novo formato;
