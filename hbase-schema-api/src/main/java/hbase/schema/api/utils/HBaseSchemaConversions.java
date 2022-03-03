@@ -39,10 +39,24 @@ public final class HBaseSchemaConversions {
     }
 
     /**
+     * Function to encode the string as UTF-8 bytes
+     */
+    public static Function<String, byte[]> utf8ToBytes() {
+        return HBaseSchemaConversions::utf8ToBytes;
+    }
+
+    /**
      * Decodes the UTF-8 bytes into a string
      */
     public static String utf8FromBytes(byte[] value) {
         return new String(value, StandardCharsets.UTF_8);
+    }
+
+    /**
+     * Function to decode the string from UTF-8 bytes
+     */
+    public static Function<byte[], String> utf8FromBytes() {
+        return HBaseSchemaConversions::utf8FromBytes;
     }
 
     /**
