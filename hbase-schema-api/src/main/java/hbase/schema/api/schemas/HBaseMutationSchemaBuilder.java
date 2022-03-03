@@ -1,12 +1,12 @@
 package hbase.schema.api.schemas;
 
-import edu.umd.cs.findbugs.annotations.Nullable;
 import hbase.schema.api.interfaces.HBaseMutationSchema;
 import hbase.schema.api.interfaces.converters.HBaseBytesGetter;
 import hbase.schema.api.interfaces.converters.HBaseBytesMapGetter;
 import hbase.schema.api.interfaces.converters.HBaseLongGetter;
 import hbase.schema.api.interfaces.converters.HBaseLongMapGetter;
-import org.apache.hadoop.hbase.shaded.org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.ArrayUtils;
+import org.jetbrains.annotations.Nullable;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -202,9 +202,8 @@ public class HBaseMutationSchemaBuilder<T> {
         verifyNonEmpty("No value or delta builder", valueBuilders, deltaBuilders);
 
         return new HBaseMutationSchema<T>() {
-            @Nullable
             @Override
-            public byte[] buildRowKey(T object) {
+            public byte @Nullable [] buildRowKey(T object) {
                 return rowKeyBuilder.getBytes(object);
             }
 
@@ -240,7 +239,7 @@ public class HBaseMutationSchemaBuilder<T> {
         };
     }
 
-    private Long buildCellTimestamp(T object, @Nullable byte[] qualifier) {
+    private Long buildCellTimestamp(T object, byte @Nullable [] qualifier) {
         if (qualifier == null) {
             return timestampBuilder.getLong(object);
         }

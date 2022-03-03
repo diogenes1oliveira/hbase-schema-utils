@@ -1,8 +1,15 @@
 package hbase.schema.api.interfaces.converters;
 
-import edu.umd.cs.findbugs.annotations.Nullable;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.function.Function;
+
+import static java.util.Optional.ofNullable;
 
 public interface HBaseBytesGetter<T> {
-    @Nullable
-    byte[] getBytes(T obj);
+    byte @Nullable [] getBytes(T obj);
+
+    static <T, F> HBaseBytesGetter<T> bytesGetter(Function<T, F> getter, Function<F, byte[]> converter) {
+        return obj -> ofNullable(getter.apply(obj)).map(converter).orElse(null);
+    }
 }

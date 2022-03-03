@@ -10,11 +10,6 @@ public final class HBaseFunctionals {
         // utility class
     }
 
-    public static <T, V> Function<T, V> fixedFunction(V value) {
-        return obj -> value;
-    }
-
-
     public static <K1, V1, K2 extends Comparable<K2>, V2> TreeMap<K2, V2> mapToTreeMap(Map<K1, V1> input,
                                                                                        Function<K1, K2> keyMapper,
                                                                                        Function<V1, V2> valueMapper) {

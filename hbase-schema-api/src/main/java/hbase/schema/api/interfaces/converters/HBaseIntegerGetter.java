@@ -1,6 +1,6 @@
 package hbase.schema.api.interfaces.converters;
 
-import edu.umd.cs.findbugs.annotations.Nullable;
+import org.jetbrains.annotations.Nullable;
 
 public interface HBaseIntegerGetter<T> {
     @Nullable

@@ -1,9 +1,9 @@
 package hbase.schema.api.models;
 
-import edu.umd.cs.findbugs.annotations.Nullable;
-import org.apache.hadoop.hbase.shaded.org.apache.commons.lang.builder.ToStringBuilder;
-import org.apache.hadoop.hbase.shaded.org.apache.commons.lang.builder.ToStringStyle;
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
 import org.apache.hadoop.hbase.util.Bytes;
+import org.jetbrains.annotations.Nullable;
 
 import java.time.Instant;
 import java.util.NavigableMap;
@@ -36,6 +36,7 @@ public class HBaseGenericRow {
                            NavigableMap<byte[], byte[]> bytesCells) {
         this(rowKey, null, bytesCells);
     }
+
     public HBaseGenericRow(byte[] rowKey) {
         this(rowKey, null, asBytesTreeMap());
     }

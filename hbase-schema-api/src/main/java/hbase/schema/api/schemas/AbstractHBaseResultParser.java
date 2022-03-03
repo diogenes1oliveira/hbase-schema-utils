@@ -1,7 +1,7 @@
 package hbase.schema.api.schemas;
 
-import edu.umd.cs.findbugs.annotations.Nullable;
 import hbase.schema.api.interfaces.HBaseResultParser;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;
 import java.util.Map;
@@ -98,8 +98,7 @@ public abstract class AbstractHBaseResultParser<T> implements HBaseResultParser<
         }
     }
 
-    @Nullable
-    private static byte[] removePrefix(byte[] arr, @Nullable byte[] prefix) {
+    private static byte @Nullable [] removePrefix(byte[] arr, byte @Nullable [] prefix) {
         if (prefix == null) {
             return null;
         }

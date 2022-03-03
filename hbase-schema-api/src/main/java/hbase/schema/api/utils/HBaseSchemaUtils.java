@@ -1,13 +1,13 @@
 package hbase.schema.api.utils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import edu.umd.cs.findbugs.annotations.NonNull;
-import edu.umd.cs.findbugs.annotations.Nullable;
 import hbase.schema.api.interfaces.converters.HBaseBytesGetter;
 import hbase.schema.api.interfaces.converters.HBaseBytesMapSetter;
 import hbase.schema.api.interfaces.converters.HBaseBytesSetter;
 import hbase.schema.api.interfaces.converters.HBaseLongGetter;
 import org.apache.hadoop.hbase.util.Bytes;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -55,7 +55,7 @@ public final class HBaseSchemaUtils {
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
-    public static <T> TreeMap<byte[], T> asBytesTreeMap(byte[] firstKey, @NonNull T firstValue, Object... otherKeysAndValues) {
+    public static <T> TreeMap<byte[], T> asBytesTreeMap(byte[] firstKey, @NotNull T firstValue, Object... otherKeysAndValues) {
         Class<T> valueClass = (Class) firstValue.getClass();
         return asBytesTreeMap(valueClass, firstKey, firstValue, otherKeysAndValues);
     }
@@ -84,8 +84,7 @@ public final class HBaseSchemaUtils {
         return map;
     }
 
-    @Nullable
-    public static byte[] findCommonPrefix(Collection<byte[]> bytesCollection) {
+    public static byte @Nullable [] findCommonPrefix(Collection<byte[]> bytesCollection) {
         List<Byte> common = new ArrayList<>();
 
         for (int i = 0; ; i++) {
@@ -153,13 +152,6 @@ public final class HBaseSchemaUtils {
         return new String(value, StandardCharsets.UTF_8);
     }
 
-    public static <O, F> HBaseBytesGetter<O> bytesGetter(Function<O, F> getter, Function<F, byte[]> converter) {
-        return obj -> {
-            F value = getter.apply(obj);
-            return value != null ? converter.apply(value) : null;
-        };
-    }
-
     public static <O> HBaseBytesGetter<O> stringGetter(Function<O, String> getter) {
         return obj -> {
             String value = getter.apply(obj);
@@ -182,13 +174,6 @@ public final class HBaseSchemaUtils {
             } catch (IOException e) {
                 throw new IllegalArgumentException("Couldn't deserialize the payload from JSON", e);
             }
-        };
-    }
-
-    public static <O, F> HBaseLongGetter<O> longGetter(Function<O, F> getter, Function<F, Long> converter) {
-        return obj -> {
-            F value = getter.apply(obj);
-            return value != null ? converter.apply(value) : null;
         };
     }
 

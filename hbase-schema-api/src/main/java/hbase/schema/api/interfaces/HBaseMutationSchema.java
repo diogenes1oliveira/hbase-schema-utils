@@ -1,12 +1,11 @@
 package hbase.schema.api.interfaces;
 
-import edu.umd.cs.findbugs.annotations.Nullable;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.NavigableMap;
 
 public interface HBaseMutationSchema<T> {
-    @Nullable
-    byte[] buildRowKey(T object);
+    byte @Nullable [] buildRowKey(T object);
 
     @Nullable
     Long buildTimestamp(T object);

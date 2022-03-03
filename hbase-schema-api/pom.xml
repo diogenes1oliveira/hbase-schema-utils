@@ -23,7 +23,8 @@
         <!-- main dependencies -->
         <dependency>
             <groupId>org.apache.hbase</groupId>
-            <artifactId>hbase-shaded-client</artifactId>
+            <artifactId>hbase-client</artifactId>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>commons-codec</groupId>
@@ -34,12 +35,14 @@
             <artifactId>commons-lang3</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.github.diogenes1oliveira</groupId>
-            <artifactId>hbase-connector</artifactId>
-        </dependency>
-        <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.jetbrains</groupId>
+            <artifactId>annotations</artifactId>
+            <optional>true</optional>
         </dependency>
         <!-- test dependencies -->
         <dependency>
