@@ -1,4 +1,4 @@
-package hbase.schema.connector;
+package hbase.schema.connector.services;
 
 import hbase.connector.HBaseConnector;
 import hbase.schema.api.interfaces.HBaseMutationSchema;

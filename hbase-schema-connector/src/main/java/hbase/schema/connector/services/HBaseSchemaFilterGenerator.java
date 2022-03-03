@@ -1,4 +1,4 @@
-package hbase.schema.connector;
+package hbase.schema.connector.services;
 
 import hbase.schema.api.interfaces.HBaseQuerySchema;
 import hbase.schema.connector.interfaces.HBaseFilterGenerator;

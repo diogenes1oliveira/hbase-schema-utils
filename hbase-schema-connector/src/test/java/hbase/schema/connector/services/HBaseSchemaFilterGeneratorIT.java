@@ -1,8 +1,7 @@
-package hbase.schema.connector;
+package hbase.schema.connector.services;
 
 import hbase.connector.HBaseConnector;
 import hbase.schema.api.interfaces.HBaseQuerySchema;
-import hbase.schema.api.interfaces.converters.HBaseBytesMapSetter;
 import hbase.schema.api.schemas.HBaseQuerySchemaBuilder;
 import hbase.test.utils.HBaseTestJunitExtension;
 import org.apache.hadoop.hbase.TableName;
@@ -21,12 +20,9 @@ import testutils.DummyPojo;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.NavigableMap;
 import java.util.TreeMap;
 
-import static hbase.schema.api.interfaces.converters.HBaseBytesMapSetter.bytesMapSetter;
 import static hbase.schema.api.utils.HBaseSchemaConversions.stringGetter;
-import static hbase.schema.api.utils.HBaseSchemaConversions.utf8FromBytes;
 import static hbase.schema.api.utils.HBaseSchemaConversions.utf8ToBytes;
 import static hbase.schema.api.utils.HBaseSchemaUtils.asStringMap;
 import static hbase.test.utils.HBaseTestHelpers.createTable;
