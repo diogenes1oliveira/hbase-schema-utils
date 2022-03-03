@@ -35,17 +35,16 @@ import static testutils.HBaseSchemaConnectorTestHelpers.toUtf8Map;
 
 @ExtendWith(HBaseTestJunitExtension.class)
 class HBaseSchemaFilterGeneratorIT {
+    byte[] family = new byte[]{'f'};
+    TableName tempTable;
+
     HBaseQuerySchema<DummyPojo> prefixQuerySchema = new HBaseQuerySchemaBuilder<DummyPojo>()
             .withRowKey(stringGetter(DummyPojo::getId))
             .withScanKeySize(4)
             .withPrefixes("p-")
             .build();
 
-
-    HBaseSchemaFilterGenerator<DummyPojo> prefixFilterGenerator = new HBaseSchemaFilterGenerator<>(prefixQuerySchema);
-
-    byte[] family = new byte[]{'f'};
-    TableName tempTable;
+    HBaseSchemaFilterGenerator<DummyPojo> prefixFilterGenerator = new HBaseSchemaFilterGenerator<>(family, prefixQuerySchema);
 
     @BeforeEach
     void setUp(TableName tempTable, HBaseConnector connector) {
@@ -71,11 +70,11 @@ class HBaseSchemaFilterGeneratorIT {
             table.put(asList(put1, put2, put3));
         }
 
-        Filter filter = prefixFilterGenerator.toFilter(asList(
-                new DummyPojo().withId("row1-query"),
-                new DummyPojo().withId("row2-query")
-        ));
-        Scan scan = new Scan().setFilter(filter).addFamily(family);
+        DummyPojo query1 = new DummyPojo().withId("row1-query");
+        DummyPojo query2 = new DummyPojo().withId("row2-query");
+        Filter filter = prefixFilterGenerator.toFilter(asList(query1, query2));
+        Scan scan = new Scan().setFilter(filter);
+        prefixFilterGenerator.selectColumns(query1, scan);
         List<TreeMap<String, String>> results = new ArrayList<>();
 
         try (Connection connection = connector.connect();

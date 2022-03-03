@@ -1,5 +1,7 @@
 package hbase.schema.connector.interfaces;
 
+import org.apache.hadoop.hbase.client.Get;
+import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.filter.Filter;
 import org.apache.hadoop.hbase.filter.FilterList;
 import org.jetbrains.annotations.Nullable;
@@ -11,7 +13,6 @@ import java.util.List;
  *
  * @param <T> query object type
  */
-@FunctionalInterface
 public interface HBaseFilterGenerator<T> {
     /**
      * Creates a HBase filter from a query object
@@ -34,4 +35,20 @@ public interface HBaseFilterGenerator<T> {
 
         return list;
     }
+
+    /**
+     * Selects the columns returned in a Get query
+     *
+     * @param query query object
+     * @param get   HBase Get instance
+     */
+    void selectColumns(T query, Get get);
+
+    /**
+     * Selects the columns returned in a Scan query
+     *
+     * @param query query object
+     * @param scan  HBase Scan instance
+     */
+    void selectColumns(T query, Scan scan);
 }

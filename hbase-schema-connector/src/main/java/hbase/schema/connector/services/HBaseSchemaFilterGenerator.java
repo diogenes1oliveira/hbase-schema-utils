@@ -2,6 +2,8 @@ package hbase.schema.connector.services;
 
 import hbase.schema.api.interfaces.HBaseQuerySchema;
 import hbase.schema.connector.interfaces.HBaseFilterGenerator;
+import org.apache.hadoop.hbase.client.Get;
+import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.filter.ColumnPrefixFilter;
 import org.apache.hadoop.hbase.filter.Filter;
 import org.apache.hadoop.hbase.filter.FilterList;
@@ -18,12 +20,14 @@ import java.util.List;
  * @param <T> query object type
  */
 public class HBaseSchemaFilterGenerator<T> implements HBaseFilterGenerator<T> {
+    private final byte[] family;
     private final HBaseQuerySchema<T> querySchema;
 
     /**
      * @param querySchema query schema object
      */
-    public HBaseSchemaFilterGenerator(HBaseQuerySchema<T> querySchema) {
+    public HBaseSchemaFilterGenerator(byte[] family, HBaseQuerySchema<T> querySchema) {
+        this.family = family;
         this.querySchema = querySchema;
     }
 
@@ -83,4 +87,26 @@ public class HBaseSchemaFilterGenerator<T> implements HBaseFilterGenerator<T> {
         }
     }
 
+    @Override
+    public void selectColumns(T query, Get get) {
+        if (querySchema.getPrefixes(query).isEmpty()) {
+            for (byte[] qualifier : querySchema.getQualifiers(query)) {
+                get.addColumn(family, qualifier);
+            }
+        } else {
+            get.addFamily(family);
+        }
+    }
+
+    @Override
+    public void selectColumns(T query, Scan scan) {
+        if (querySchema.getPrefixes(query).isEmpty()) {
+            for (byte[] qualifier : querySchema.getQualifiers(query)) {
+                scan.addColumn(family, qualifier);
+            }
+        } else {
+            scan.addFamily(family);
+        }
+
+    }
 }
