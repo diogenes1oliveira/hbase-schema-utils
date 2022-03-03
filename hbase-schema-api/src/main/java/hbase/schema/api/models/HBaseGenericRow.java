@@ -1,89 +1,104 @@
 package hbase.schema.api.models;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.jetbrains.annotations.Nullable;
 
 import java.time.Instant;
-import java.util.NavigableMap;
+import java.util.Collection;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
-import static hbase.schema.api.utils.HBaseSchemaUtils.asBytesTreeMap;
+import static java.util.Collections.emptyList;
 
+/**
+ * Data for a complete HBase row
+ */
 public class HBaseGenericRow {
+    private static final byte[] EMPTY = new byte[0];
+
     private byte[] rowKey;
-    private Long timestampMs;
-    private NavigableMap<byte[], byte[]> bytesCells;
-    private NavigableMap<byte[], Long> longCells;
+    private final Long timestamp;
+    private final SortedSet<HBaseValueCell> valueCells;
+    private final SortedSet<HBaseLongCell> longCells;
 
-    public HBaseGenericRow(byte[] rowKey,
-                           @Nullable Long timestampMs,
-                           NavigableMap<byte[], byte[]> bytesCells,
-                           @Nullable NavigableMap<byte[], Long> longCells) {
+    /**
+     * @param rowKey     {@link #getRowKey()}
+     * @param timestamp  {@link #getTimestamp()}
+     * @param valueCells {@link #getValueCells()}
+     * @param longCells  {@link #getLongCells()}
+     */
+    @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
+    public HBaseGenericRow(@JsonProperty("row_key") byte[] rowKey,
+                           @JsonProperty("timestamp") @Nullable Long timestamp,
+                           @JsonProperty("values") Collection<HBaseValueCell> valueCells,
+                           @JsonProperty("longs") Collection<HBaseLongCell> longCells) {
         this.rowKey = rowKey;
-        this.timestampMs = timestampMs;
-        this.bytesCells = bytesCells;
-        this.longCells = longCells;
+        this.timestamp = timestamp;
+        this.valueCells = new TreeSet<>(valueCells);
+        this.longCells = new TreeSet<>(longCells);
     }
 
-    public HBaseGenericRow(byte[] rowKey,
-                           @Nullable Long timestampMs,
-                           NavigableMap<byte[], byte[]> bytesCells) {
-        this(rowKey, timestampMs, bytesCells, asBytesTreeMap());
+    /**
+     * Default constructor
+     */
+    public HBaseGenericRow() {
+        this(EMPTY, null, emptyList(), emptyList());
     }
 
-    public HBaseGenericRow(byte[] rowKey,
-                           NavigableMap<byte[], byte[]> bytesCells) {
-        this(rowKey, null, bytesCells);
-    }
-
-    public HBaseGenericRow(byte[] rowKey) {
-        this(rowKey, null, asBytesTreeMap());
-    }
-
+    /**
+     * Row key bytes
+     */
+    @JsonProperty("row_key")
     public byte[] getRowKey() {
         return rowKey;
     }
 
+    /**
+     * {@link #getRowKey()}
+     */
+    @JsonIgnore
     public void setRowKey(byte[] rowKey) {
         this.rowKey = rowKey;
     }
 
-    @Nullable
-    public Long getTimestampMs() {
-        return timestampMs;
+    /**
+     * Row timestamp in milliseconds
+     */
+    @JsonProperty("timestamp")
+    public Long getTimestamp() {
+        return timestamp;
     }
 
-    public void setTimestampMs(@Nullable Long timestampMs) {
-        this.timestampMs = timestampMs;
+    /**
+     * Row {@code byte[]} cells
+     */
+    @JsonProperty("values")
+    public SortedSet<HBaseValueCell> getValueCells() {
+        return valueCells;
     }
 
-    public NavigableMap<byte[], byte[]> getBytesCells() {
-        return bytesCells;
-    }
-
-    public void setBytesCells(NavigableMap<byte[], byte[]> bytesCells) {
-        this.bytesCells = bytesCells;
-    }
-
-    @Nullable
-    public NavigableMap<byte[], Long> getLongCells() {
+    /**
+     * Row {@code Long} cells
+     */
+    @JsonProperty("longs")
+    public SortedSet<HBaseLongCell> getLongCells() {
         return longCells;
-    }
-
-    public void setLongCells(@Nullable NavigableMap<byte[], Long> longCells) {
-        this.longCells = longCells;
     }
 
     @Override
     public String toString() {
-        Instant timestamp = timestampMs != null ? Instant.ofEpochMilli(timestampMs) : null;
+        Instant timestamp = this.timestamp != null ? Instant.ofEpochMilli(this.timestamp) : null;
 
         return new ToStringBuilder(this, ToStringStyle.SHORT_PREFIX_STYLE)
                 .append("row_key", Bytes.toStringBinary(rowKey))
                 .append("timestamp", timestamp)
-                .append("bytes", new PrettyBytesMap(bytesCells))
-                .append("longs", new PrettyLongMap(longCells))
+                .append("values", valueCells)
+                .append("longs", longCells)
                 .toString();
     }
 

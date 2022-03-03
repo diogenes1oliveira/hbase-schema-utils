@@ -15,13 +15,24 @@ public final class HBaseSchemaUtils {
     }
 
     /**
-     * Builds a new set keyed by binary bytes,
+     * Builds a new set keyed by binary bytes
      *
+     * @param values array of values to be added to the set
      * @return set sorted by bytes values using {@link Bytes#BYTES_COMPARATOR}
      */
     public static TreeSet<byte[]> asBytesTreeSet(byte[]... values) {
+        return asBytesTreeSet(asList(values));
+    }
+
+    /**
+     * Builds a new set keyed by binary bytes
+     *
+     * @param values collection of values to be added to the set
+     * @return set sorted by bytes values using {@link Bytes#BYTES_COMPARATOR}
+     */
+    public static TreeSet<byte[]> asBytesTreeSet(Collection<byte[]> values) {
         TreeSet<byte[]> set = new TreeSet<>(Bytes.BYTES_COMPARATOR);
-        set.addAll(asList(values));
+        set.addAll(values);
         return set;
     }
 
