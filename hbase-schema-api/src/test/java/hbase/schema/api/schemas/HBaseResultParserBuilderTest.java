@@ -11,9 +11,9 @@ import java.util.stream.Stream;
 
 import static hbase.schema.api.testutils.HBaseUtils.asStringMap;
 import static hbase.schema.api.testutils.HBaseUtils.bytes;
-import static hbase.schema.api.utils.HBaseSchemaUtils.asBytesTreeMap;
 import static hbase.schema.api.utils.HBaseConversions.stringMapSetter;
 import static hbase.schema.api.utils.HBaseConversions.stringSetter;
+import static hbase.schema.api.utils.HBaseSchemaUtils.asBytesTreeMap;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 
@@ -30,8 +30,7 @@ class HBaseResultParserBuilderTest {
     @MethodSource("provideCases")
     void doesParseAccordingly(byte[] rowKey, NavigableMap<byte[], byte[]> cellsMap, DummyPojo expected) {
         DummyPojo actual = resultParser.newInstance();
-        resultParser.setFromRowKey(actual, rowKey);
-        resultParser.setFromResult(actual, cellsMap);
+        resultParser.setFromResult(actual, rowKey, cellsMap);
 
         assertThat(actual, equalTo(expected));
     }

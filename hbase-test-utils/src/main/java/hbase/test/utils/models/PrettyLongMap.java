@@ -1,4 +1,4 @@
-package hbase.schema.api.models;
+package hbase.test.utils.models;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
 import org.apache.hadoop.hbase.util.Bytes;

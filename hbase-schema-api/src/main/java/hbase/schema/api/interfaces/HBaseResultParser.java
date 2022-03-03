@@ -16,22 +16,11 @@ public interface HBaseResultParser<T> {
     T newInstance();
 
     /**
-     * Populates the object with data from the row key
-     * <p>
-     * The default implementation does nothing
-     *
-     * @param obj    result object instance
-     * @param rowKey row key bytes
-     */
-    default void setFromRowKey(T obj, byte[] rowKey) {
-        // nothing to do by default
-    }
-
-    /**
      * Populates the object with data from HBase
      *
      * @param obj         result object instance
+     * @param rowKey      row key bytes
      * @param resultCells cells fetched from HBase, in a mapping (qualifier -> cell value)
      */
-    void setFromResult(T obj, NavigableMap<byte[], byte[]> resultCells);
+    void setFromResult(T obj, byte[] rowKey, NavigableMap<byte[], byte[]> resultCells);
 }

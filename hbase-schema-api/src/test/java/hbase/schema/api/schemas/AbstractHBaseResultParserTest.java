@@ -66,8 +66,7 @@ class AbstractHBaseResultParserTest {
         );
 
         DummyPojo result = parser.newInstance();
-        parser.setFromRowKey(result, utf8ToBytes("row key"));
-        parser.setFromResult(result, resultCells);
+        parser.setFromResult(result, utf8ToBytes("row key"), resultCells);
 
         assertThat(result.getId(), equalTo("row key"));
         assertThat(result.getField(), equalTo("field value"));

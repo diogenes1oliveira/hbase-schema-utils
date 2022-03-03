@@ -1,4 +1,4 @@
-package hbase.schema.api.models;
+package hbase.test.utils.models;
 
 import org.apache.hadoop.hbase.util.Bytes;
 import org.jetbrains.annotations.Nullable;

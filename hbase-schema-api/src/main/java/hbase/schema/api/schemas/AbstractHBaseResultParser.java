@@ -25,7 +25,6 @@ public abstract class AbstractHBaseResultParser<T> implements HBaseResultParser<
      * @param obj    result object instance
      * @param rowKey row key bytes
      */
-    @Override
     public void setFromRowKey(T obj, byte[] rowKey) {
         // nothing to do, by default
     }
@@ -74,7 +73,7 @@ public abstract class AbstractHBaseResultParser<T> implements HBaseResultParser<
      * @param resultCells map of (qualifier -> cell value) fetched from HBase
      */
     @Override
-    public void setFromResult(T obj, NavigableMap<byte[], byte[]> resultCells) {
+    public void setFromResult(T obj, byte[] rowKey, NavigableMap<byte[], byte[]> resultCells) {
         NavigableSet<byte[]> prefixes = getPrefixes();
         NavigableMap<byte[], NavigableMap<byte[], byte[]>> prefixMap = asBytesTreeMap();
 
