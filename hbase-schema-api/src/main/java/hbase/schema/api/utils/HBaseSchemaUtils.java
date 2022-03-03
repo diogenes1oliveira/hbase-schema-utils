@@ -4,6 +4,7 @@ import org.apache.hadoop.hbase.util.Bytes;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
@@ -91,6 +92,30 @@ public final class HBaseSchemaUtils {
                 throw new ClassCastException("Invalid value type");
             }
             map.put(key, (T) value);
+        }
+
+        return map;
+    }
+
+    /**
+     * Creates a string map from an array of keys and values (similar to {@code Map.of()} in Java 9)
+     *
+     * @param keysAndValues array [key1, value1, key2, value2, ...]
+     * @return map of (key -> value)
+     * @throws IllegalArgumentException key without corresponding value
+     */
+    public static LinkedHashMap<String, String> asStringMap(String... keysAndValues) {
+        if (keysAndValues.length % 2 != 0) {
+            int lastKeyIndex = (keysAndValues.length - 1) / 2;
+            throw new IllegalArgumentException("Key #" + lastKeyIndex + " doesn't have a value");
+        }
+
+        LinkedHashMap<String, String> map = new LinkedHashMap<>();
+
+        for (int i = 0; i < keysAndValues.length; i += 2) {
+            String key = keysAndValues[i];
+            String value = keysAndValues[i + 1];
+            map.put(key, value);
         }
 
         return map;

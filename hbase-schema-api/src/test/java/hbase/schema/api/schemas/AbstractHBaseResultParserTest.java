@@ -10,10 +10,10 @@ import java.util.NavigableMap;
 import java.util.NavigableSet;
 
 import static hbase.schema.api.interfaces.converters.HBaseBytesMapSetter.bytesMapSetter;
-import static hbase.schema.api.testutils.HBaseUtils.asStringMap;
 import static hbase.schema.api.utils.HBaseSchemaConversions.utf8ToBytes;
 import static hbase.schema.api.utils.HBaseSchemaUtils.asBytesTreeMap;
 import static hbase.schema.api.utils.HBaseSchemaUtils.asBytesTreeSet;
+import static hbase.schema.api.utils.HBaseSchemaUtils.asStringMap;
 import static hbase.test.utils.HBaseTestHelpers.fromUtf8;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;

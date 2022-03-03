@@ -3,6 +3,7 @@ package hbase.schema.api.utils;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import hbase.schema.api.interfaces.converters.HBaseBytesGetter;
+import hbase.schema.api.interfaces.converters.HBaseBytesMapGetter;
 import hbase.schema.api.interfaces.converters.HBaseBytesSetter;
 import hbase.schema.api.interfaces.converters.HBaseLongGetter;
 import hbase.schema.api.testutils.DummyPojo;
@@ -11,9 +12,12 @@ import org.junit.jupiter.api.Test;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Map;
 
 import static hbase.schema.api.interfaces.converters.HBaseLongGetter.longGetter;
+import static hbase.schema.api.utils.HBaseSchemaConversions.utf8ToBytes;
+import static hbase.schema.api.utils.HBaseSchemaUtils.asStringMap;
 import static java.util.Collections.singletonMap;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
@@ -99,5 +103,18 @@ class HBaseSchemaConversionsTest {
         DummyPojo output = new DummyPojo();
         setter.setFromBytes(output, inputJson);
         assertThat(output, equalTo(input));
+    }
+
+    @Test
+    void listColumnGetter_DoesYieldListOfCells() {
+        HBaseBytesMapGetter<DummyPojo> getter = HBaseSchemaConversions.listColumnGetter(
+                pojo -> new ArrayList<>(pojo.getMap1().entrySet()),
+                entry -> utf8ToBytes(entry.getKey()),
+                entry -> utf8ToBytes(entry.getValue())
+        );
+
+        DummyPojo input = new DummyPojo().withMap1(asStringMap("k1", "v1", "k2", "v2"));
+
+//        getter.getBytesMap()
     }
 }

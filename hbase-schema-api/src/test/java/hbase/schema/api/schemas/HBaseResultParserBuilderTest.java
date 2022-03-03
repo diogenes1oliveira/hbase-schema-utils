@@ -9,11 +9,11 @@ import org.junit.jupiter.params.provider.MethodSource;
 import java.util.NavigableMap;
 import java.util.stream.Stream;
 
-import static hbase.schema.api.testutils.HBaseUtils.asStringMap;
-import static hbase.schema.api.testutils.HBaseUtils.bytes;
 import static hbase.schema.api.utils.HBaseSchemaConversions.stringMapSetter;
 import static hbase.schema.api.utils.HBaseSchemaConversions.stringSetter;
+import static hbase.schema.api.utils.HBaseSchemaConversions.utf8ToBytes;
 import static hbase.schema.api.utils.HBaseSchemaUtils.asBytesTreeMap;
+import static hbase.schema.api.utils.HBaseSchemaUtils.asStringMap;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 
@@ -38,13 +38,13 @@ class HBaseResultParserBuilderTest {
     static Stream<Arguments> provideCases() {
         return Stream.of(
                 Arguments.of(
-                        bytes("my row key"),
+                        utf8ToBytes("my row key"),
                         asBytesTreeMap(
-                                bytes("field"), bytes("value"),
-                                bytes("fieldOther"), bytes("other value"),
-                                bytes("p1"), bytes("v1"),
-                                bytes("p2"), bytes("v2"),
-                                bytes("q"), bytes("v")
+                                utf8ToBytes("field"), utf8ToBytes("value"),
+                                utf8ToBytes("fieldOther"), utf8ToBytes("other value"),
+                                utf8ToBytes("p1"), utf8ToBytes("v1"),
+                                utf8ToBytes("p2"), utf8ToBytes("v2"),
+                                utf8ToBytes("q"), utf8ToBytes("v")
                         ),
                         new DummyPojo()
                                 .withId("my row key")
