@@ -2,7 +2,7 @@ package hbase.schema.api.schemas;
 
 import hbase.schema.api.interfaces.converters.HBaseBytesMapSetter;
 import hbase.schema.api.interfaces.converters.HBaseBytesSetter;
-import hbase.schema.api.interfaces.HBaseResultParser;
+import hbase.schema.api.interfaces.HBaseResultParserSchema;
 
 import java.nio.charset.StandardCharsets;
 import java.util.NavigableMap;
@@ -12,7 +12,7 @@ import java.util.function.Supplier;
 import static hbase.schema.api.utils.HBaseSchemaUtils.asBytesTreeMap;
 
 /**
- * Builder for {@link HBaseResultParser} objects, providing a fluent API to add fields and field prefixes to be parsed
+ * Builder for {@link HBaseResultParserSchema} objects, providing a fluent API to add fields and field prefixes to be parsed
  *
  * @param <T> result object instance
  */
@@ -95,8 +95,8 @@ public class HBaseResultParserBuilder<T> {
      *
      * @return new result parser instance
      */
-    public HBaseResultParser<T> build() {
-        return new AbstractHBaseResultParser<T>() {
+    public HBaseResultParserSchema<T> build() {
+        return new AbstractHBaseResultParserSchema<T>() {
             @Override
             public T newInstance() {
                 return constructor.get();

@@ -2,7 +2,7 @@ package hbase.schema.api.schemas;
 
 import hbase.schema.api.interfaces.HBaseMutationSchema;
 import hbase.schema.api.interfaces.HBaseQuerySchema;
-import hbase.schema.api.interfaces.HBaseResultParser;
+import hbase.schema.api.interfaces.HBaseResultParserSchema;
 import hbase.schema.api.interfaces.HBaseSchema;
 import hbase.schema.api.models.HBaseGenericRow;
 import hbase.schema.api.models.HBaseValueCell;
@@ -63,7 +63,7 @@ public class HBaseGenericRowSchema implements HBaseSchema<HBaseGenericRow, HBase
      * Schema to parse query results
      */
     @Override
-    public HBaseResultParser<HBaseGenericRow> resultParser() {
+    public HBaseResultParserSchema<HBaseGenericRow> resultParserSchema() {
         return new HBaseResultParserBuilder<>(HBaseGenericRow::new)
                 .fromRowKey(HBaseGenericRow::setRowKey)
                 .fromPrefix(EMPTY, HBaseGenericRowSchema::setCells)

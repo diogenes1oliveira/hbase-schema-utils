@@ -1,6 +1,6 @@
 package hbase.schema.api.schemas;
 
-import hbase.schema.api.interfaces.HBaseResultParser;
+import hbase.schema.api.interfaces.HBaseResultParserSchema;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;
@@ -12,11 +12,11 @@ import static hbase.schema.api.utils.HBaseSchemaUtils.asBytesTreeMap;
 import static hbase.schema.api.utils.HBaseSchemaUtils.asBytesTreeSet;
 
 /**
- * Base class to aid in the implementation of a {@link HBaseResultParser} based on single cells and cell prefixes
+ * Base class to aid in the implementation of a {@link HBaseResultParserSchema} based on single cells and cell prefixes
  *
  * @param <T> result object type
  */
-public abstract class AbstractHBaseResultParser<T> implements HBaseResultParser<T> {
+public abstract class AbstractHBaseResultParserSchema<T> implements HBaseResultParserSchema<T> {
     /**
      * Populates the object with data from the row key
      * <p>

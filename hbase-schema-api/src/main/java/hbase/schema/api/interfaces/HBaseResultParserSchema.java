@@ -7,7 +7,7 @@ import java.util.NavigableMap;
  *
  * @param <T> result object instance
  */
-public interface HBaseResultParser<T> {
+public interface HBaseResultParserSchema<T> {
     /**
      * Creates a new instance of the result object
      * <p>

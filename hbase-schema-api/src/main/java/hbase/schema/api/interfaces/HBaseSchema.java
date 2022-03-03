@@ -20,5 +20,5 @@ public interface HBaseSchema<T, R> {
     /**
      * Schema to parse fetched Results
      */
-    HBaseResultParser<R> resultParser();
+    HBaseResultParserSchema<R> resultParserSchema();
 }

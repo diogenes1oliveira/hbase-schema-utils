@@ -1,6 +1,6 @@
 package hbase.schema.api.schemas;
 
-import hbase.schema.api.interfaces.HBaseResultParser;
+import hbase.schema.api.interfaces.HBaseResultParserSchema;
 import hbase.schema.api.testutils.DummyPojo;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -17,9 +17,9 @@ import static hbase.schema.api.utils.HBaseSchemaUtils.asStringMap;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 
-class HBaseResultParserBuilderTest {
+class HBaseResultParserSchemaBuilderTest {
 
-    HBaseResultParser<DummyPojo> resultParser = new HBaseResultParserBuilder<>(DummyPojo::new)
+    HBaseResultParserSchema<DummyPojo> resultParser = new HBaseResultParserBuilder<>(DummyPojo::new)
             .fromRowKey(stringSetter(DummyPojo::setId))
             .fromColumn("field", stringSetter(DummyPojo::setField))
             .fromPrefix("p", stringMapSetter(DummyPojo::setMap1))

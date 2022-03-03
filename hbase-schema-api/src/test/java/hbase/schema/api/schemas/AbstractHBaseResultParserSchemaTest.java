@@ -1,6 +1,6 @@
 package hbase.schema.api.schemas;
 
-import hbase.schema.api.interfaces.HBaseResultParser;
+import hbase.schema.api.interfaces.HBaseResultParserSchema;
 import hbase.schema.api.testutils.DummyPojo;
 import hbase.schema.api.utils.HBaseSchemaConversions;
 import org.apache.hadoop.hbase.util.Bytes;
@@ -19,8 +19,8 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.nullValue;
 
-class AbstractHBaseResultParserTest {
-    HBaseResultParser<DummyPojo> parser = new AbstractHBaseResultParser<DummyPojo>() {
+class AbstractHBaseResultParserSchemaTest {
+    HBaseResultParserSchema<DummyPojo> parser = new AbstractHBaseResultParserSchema<DummyPojo>() {
         @Override
         public DummyPojo newInstance() {
             return new DummyPojo();
