@@ -74,6 +74,9 @@ public abstract class AbstractHBaseResultParser<T> implements HBaseResultParser<
      */
     @Override
     public void setFromResult(T obj, byte[] rowKey, NavigableMap<byte[], byte[]> resultCells) {
+
+        setFromRowKey(obj, rowKey);
+
         NavigableSet<byte[]> prefixes = getPrefixes();
         NavigableMap<byte[], NavigableMap<byte[], byte[]>> prefixMap = asBytesTreeMap();
 
