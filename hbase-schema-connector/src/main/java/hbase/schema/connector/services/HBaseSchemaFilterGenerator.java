@@ -47,6 +47,12 @@ public class HBaseSchemaFilterGenerator<T> implements HBaseFilterGenerator<T> {
                 filterList.addFilter(qualifierFilter);
             }
         }
+        for (byte[] qualifier : querySchema.getQualifiers(query)) {
+            if (qualifier.length > 0) {
+                Filter qualifierFilter = new ColumnPrefixFilter(qualifier);
+                filterList.addFilter(qualifierFilter);
+            }
+        }
         if (filterList.size() == 0) {
             return null;
         } else {

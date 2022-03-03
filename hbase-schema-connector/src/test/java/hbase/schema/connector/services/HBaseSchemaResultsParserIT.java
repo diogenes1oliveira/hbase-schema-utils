@@ -24,7 +24,7 @@ import static hbase.test.utils.HBaseTestHelpers.newTableDescriptor;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.notNullValue;
-import static testutils.HBaseSchemaConnectorTestHelpers.toUtf8Map;
+import static testutils.HBaseSchemaConnectorTestHelpers.bytesToStringMap;
 
 @ExtendWith(HBaseTestJunitExtension.class)
 class HBaseSchemaResultsParserIT {
@@ -32,7 +32,7 @@ class HBaseSchemaResultsParserIT {
     TableName tempTable;
     HBaseResultParserSchema<DummyPojo> resultParserSchema = new HBaseResultParserBuilder<>(DummyPojo::new)
             .fromRowKey(stringSetter(DummyPojo::setId))
-            .fromPrefix("p-", (obj, bytesMap) -> obj.setMap1(toUtf8Map(bytesMap)))
+            .fromPrefix("p-", (obj, bytesMap) -> obj.setMap1(bytesToStringMap(bytesMap)))
             .fromColumn("string", stringSetter(DummyPojo::setString))
             .build();
     HBaseSchemaResultsParser<DummyPojo> resultsParser = new HBaseSchemaResultsParser<>(family, resultParserSchema);

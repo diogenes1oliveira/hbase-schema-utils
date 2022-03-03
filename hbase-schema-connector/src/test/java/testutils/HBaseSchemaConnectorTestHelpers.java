@@ -14,7 +14,7 @@ public final class HBaseSchemaConnectorTestHelpers {
         // utility class
     }
 
-    public static TreeMap<String, String> toUtf8Map(NavigableMap<byte[], byte[]> cells) {
+    public static TreeMap<String, String> bytesToStringMap(NavigableMap<byte[], byte[]> cells) {
         HBaseBytesMapSetter<TreeMap<String, String>> setter = bytesMapSetter(TreeMap::putAll, utf8FromBytes(), utf8FromBytes());
 
         TreeMap<String, String> result = new TreeMap<>();
@@ -22,7 +22,7 @@ public final class HBaseSchemaConnectorTestHelpers {
         return result;
     }
 
-    public static TreeMap<String, Long> toLongMap(NavigableMap<byte[], byte[]> cells) {
+    public static TreeMap<String, Long> bytesToLongMap(NavigableMap<byte[], byte[]> cells) {
         HBaseBytesMapSetter<TreeMap<String, Long>> setter = bytesMapSetter(TreeMap::putAll, utf8FromBytes(), Bytes::toLong);
 
         TreeMap<String, Long> result = new TreeMap<>();

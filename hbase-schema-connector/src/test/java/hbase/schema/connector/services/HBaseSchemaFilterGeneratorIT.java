@@ -31,7 +31,7 @@ import static java.util.Arrays.asList;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.nullValue;
-import static testutils.HBaseSchemaConnectorTestHelpers.toUtf8Map;
+import static testutils.HBaseSchemaConnectorTestHelpers.bytesToStringMap;
 
 @ExtendWith(HBaseTestJunitExtension.class)
 class HBaseSchemaFilterGeneratorIT {
@@ -82,7 +82,7 @@ class HBaseSchemaFilterGeneratorIT {
              ResultScanner scanner = table.getScanner(scan)) {
             for (Result result : scanner) {
                 assertThat(result.getValue(family, utf8ToBytes("dummy")), nullValue());
-                results.add(toUtf8Map(result.getFamilyMap(family)));
+                results.add(bytesToStringMap(result.getFamilyMap(family)));
             }
         }
 

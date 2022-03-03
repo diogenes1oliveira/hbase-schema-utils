@@ -30,8 +30,8 @@ import static hbase.test.utils.HBaseTestHelpers.newTableDescriptor;
 import static java.util.Collections.singletonMap;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
-import static testutils.HBaseSchemaConnectorTestHelpers.toLongMap;
-import static testutils.HBaseSchemaConnectorTestHelpers.toUtf8Map;
+import static testutils.HBaseSchemaConnectorTestHelpers.bytesToLongMap;
+import static testutils.HBaseSchemaConnectorTestHelpers.bytesToStringMap;
 
 @ExtendWith(HBaseTestJunitExtension.class)
 class HBaseSchemaMutationsGeneratorIT {
@@ -72,7 +72,7 @@ class HBaseSchemaMutationsGeneratorIT {
              Table table = connection.getTable(tempTable);
              ResultScanner scanner = table.getScanner(scan)) {
             for (Result result : scanner) {
-                results.add(toUtf8Map(result.getFamilyMap(family)));
+                results.add(bytesToStringMap(result.getFamilyMap(family)));
             }
         }
 
@@ -104,7 +104,7 @@ class HBaseSchemaMutationsGeneratorIT {
              Table table = connection.getTable(tempTable);
              ResultScanner scanner = table.getScanner(scan)) {
             for (Result result : scanner) {
-                results.add(toLongMap(result.getFamilyMap(family)));
+                results.add(bytesToLongMap(result.getFamilyMap(family)));
             }
         }
 
