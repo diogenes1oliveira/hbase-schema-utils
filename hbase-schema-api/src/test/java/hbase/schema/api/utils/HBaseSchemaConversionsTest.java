@@ -1,15 +1,20 @@
 package hbase.schema.api.utils;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import hbase.schema.api.interfaces.converters.HBaseBytesGetter;
 import hbase.schema.api.interfaces.converters.HBaseBytesSetter;
 import hbase.schema.api.interfaces.converters.HBaseLongGetter;
 import hbase.schema.api.testutils.DummyPojo;
 import org.junit.jupiter.api.Test;
 
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
+import java.util.Map;
 
 import static hbase.schema.api.interfaces.converters.HBaseLongGetter.longGetter;
+import static java.util.Collections.singletonMap;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.nullValue;
@@ -77,5 +82,22 @@ class HBaseSchemaConversionsTest {
 
         DummyPojo truePojo = new DummyPojo().withField("true");
         assertThat(getter.getLong(truePojo), equalTo(1L));
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    void jsonGetter_ConvertsJson() throws IOException {
+        ObjectMapper mapper = new ObjectMapper().setSerializationInclusion(JsonInclude.Include.NON_NULL);
+        HBaseBytesGetter<DummyPojo> getter = HBaseSchemaConversions.jsonGetter(mapper);
+        HBaseBytesSetter<DummyPojo> setter = HBaseSchemaConversions.jsonSetter(mapper);
+
+        DummyPojo input = new DummyPojo().withId("my id");
+        byte[] inputJson = getter.getBytes(input);
+        Map<String, String> inputMap = mapper.readValue(inputJson, Map.class);
+        assertThat(inputMap, equalTo(singletonMap("id", "my id")));
+
+        DummyPojo output = new DummyPojo();
+        setter.setFromBytes(output, inputJson);
+        assertThat(output, equalTo(input));
     }
 }
