@@ -2,15 +2,15 @@ package hbase.schema.api.schemas;
 
 import hbase.schema.api.interfaces.HBaseResultParser;
 import hbase.schema.api.testutils.DummyPojo;
-import hbase.test.utils.HBaseTestHelpers;
+import hbase.schema.api.utils.HBaseConversions;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.junit.jupiter.api.Test;
 
 import java.util.NavigableMap;
 import java.util.NavigableSet;
 
+import static hbase.schema.api.interfaces.converters.HBaseBytesMapSetter.bytesMapSetter;
 import static hbase.schema.api.testutils.HBaseUtils.asStringMap;
-import static hbase.schema.api.utils.HBaseFunctionals.mapToTreeMap;
 import static hbase.schema.api.utils.HBaseSchemaUtils.asBytesTreeMap;
 import static hbase.schema.api.utils.HBaseSchemaUtils.asBytesTreeSet;
 import static hbase.test.utils.HBaseTestHelpers.bytesToUtf8;
@@ -46,11 +46,8 @@ class AbstractHBaseResultParserTest {
         @Override
         public void setFromPrefix(DummyPojo obj, byte[] prefix, NavigableMap<byte[], byte[]> cellsFromPrefix) {
             if (Bytes.equals(prefix, utf8ToBytes("p1"))) {
-                obj.setMap1(mapToTreeMap(
-                        cellsFromPrefix,
-                        HBaseTestHelpers::bytesToUtf8,
-                        HBaseTestHelpers::bytesToUtf8
-                ));
+                bytesMapSetter(DummyPojo::setMap1, HBaseConversions::utf8FromBytes, HBaseConversions::utf8FromBytes)
+                        .setFromBytes(obj, cellsFromPrefix);
             }
         }
     };

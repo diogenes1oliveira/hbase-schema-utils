@@ -17,7 +17,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import static hbase.schema.api.utils.HBaseFunctionals.mapToTreeMap;
+import static hbase.schema.api.interfaces.converters.HBaseBytesMapSetter.bytesMapSetter;
 
 /**
  * Generic utility aid methods
@@ -107,10 +107,11 @@ public final class HBaseConversions {
     }
 
     public static <O> HBaseBytesMapSetter<O> stringMapSetter(BiConsumer<O, Map<String, String>> setter) {
-        return (obj, bytesMap) -> {
-            Map<String, String> stringMap = mapToTreeMap(bytesMap, HBaseConversions::utf8FromBytes, HBaseConversions::utf8FromBytes);
-            setter.accept(obj, stringMap);
-        };
+        return bytesMapSetter(
+                setter,
+                HBaseConversions::utf8FromBytes,
+                HBaseConversions::utf8FromBytes
+        );
     }
 
     public static <O> HBaseBytesSetter<O> jsonSetter(ObjectMapper mapper) {
