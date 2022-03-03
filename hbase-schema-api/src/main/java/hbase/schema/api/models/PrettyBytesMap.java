@@ -1,7 +1,7 @@
 package hbase.schema.api.models;
 
-import edu.umd.cs.findbugs.annotations.Nullable;
 import org.apache.hadoop.hbase.util.Bytes;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -9,9 +9,16 @@ import java.util.Objects;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
+/**
+ * Wraps over a {@code Map<byte[], byte[]>}, providing a printable {@link Object#toString()} and a
+ * proper {@link Object#equals(Object)} implementation
+ */
 public class PrettyBytesMap {
     private final TreeMap<byte[], byte[]> wrapped;
 
+    /**
+     * @param map input bytes map
+     */
     public PrettyBytesMap(@Nullable Map<byte[], byte[]> map) {
         if (map == null) {
             wrapped = null;
@@ -21,6 +28,9 @@ public class PrettyBytesMap {
         }
     }
 
+    /**
+     * Original map passed to the constructor
+     */
     @Nullable
     public SortedMap<byte[], byte[]> getWrapped() {
         return wrapped;

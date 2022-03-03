@@ -12,8 +12,8 @@ import java.util.stream.Stream;
 import static hbase.schema.api.testutils.HBaseUtils.asStringMap;
 import static hbase.schema.api.testutils.HBaseUtils.bytes;
 import static hbase.schema.api.utils.HBaseSchemaUtils.asBytesTreeMap;
-import static hbase.schema.api.utils.HBaseSchemaUtils.stringMapSetter;
-import static hbase.schema.api.utils.HBaseSchemaUtils.stringSetter;
+import static hbase.schema.api.utils.HBaseConversions.stringMapSetter;
+import static hbase.schema.api.utils.HBaseConversions.stringSetter;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 

@@ -9,9 +9,16 @@ import java.util.Objects;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
+/**
+ * Wraps over a {@code Map<byte[], Long>}, providing a printable {@link Object#toString()} and a
+ * proper {@link Object#equals(Object)} implementation
+ */
 public class PrettyLongMap {
     private final TreeMap<byte[], Long> wrapped;
 
+    /**
+     * @param map input bytes map
+     */
     public PrettyLongMap(@Nullable Map<byte[], Long> map) {
         if (map == null) {
             wrapped = null;
@@ -21,6 +28,9 @@ public class PrettyLongMap {
         }
     }
 
+    /**
+     * Original map passed to the constructor
+     */
     @Nullable
     public SortedMap<byte[], Long> getWrapped() {
         return wrapped;

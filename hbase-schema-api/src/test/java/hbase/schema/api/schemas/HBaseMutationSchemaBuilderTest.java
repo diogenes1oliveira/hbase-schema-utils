@@ -7,8 +7,8 @@ import hbase.schema.api.testutils.DummyPojo;
 import org.junit.jupiter.api.Test;
 
 import static hbase.schema.api.utils.HBaseSchemaUtils.asBytesTreeMap;
-import static hbase.schema.api.utils.HBaseSchemaUtils.stringGetter;
-import static hbase.schema.api.utils.HBaseSchemaUtils.utf8ToBytes;
+import static hbase.schema.api.utils.HBaseConversions.stringGetter;
+import static hbase.schema.api.utils.HBaseConversions.utf8ToBytes;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 

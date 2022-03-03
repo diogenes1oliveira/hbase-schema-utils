@@ -1,33 +1,14 @@
 package hbase.schema.api.utils;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import hbase.schema.api.interfaces.converters.HBaseBytesGetter;
-import hbase.schema.api.interfaces.converters.HBaseBytesMapSetter;
-import hbase.schema.api.interfaces.converters.HBaseBytesSetter;
-import hbase.schema.api.interfaces.converters.HBaseLongGetter;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.NavigableMap;
 import java.util.TreeMap;
 import java.util.TreeSet;
-import java.util.function.BiConsumer;
-import java.util.function.Function;
-import java.util.function.Supplier;
 
-import static hbase.schema.api.utils.HBaseFunctionals.mapToTreeMap;
 import static java.util.Arrays.asList;
 
-/**
- * Generic utility aid methods
- */
 public final class HBaseSchemaUtils {
     private HBaseSchemaUtils() {
         // utility class
@@ -84,44 +65,6 @@ public final class HBaseSchemaUtils {
         return map;
     }
 
-    public static byte @Nullable [] findCommonPrefix(Collection<byte[]> bytesCollection) {
-        List<Byte> common = new ArrayList<>();
-
-        for (int i = 0; ; i++) {
-            byte current = 0;
-            boolean first = true;
-            boolean different = false;
-            for (byte[] bytes : bytesCollection) {
-                if (bytes.length <= i) {
-                    break;
-                }
-                byte b = bytes[i];
-                if (first) {
-                    current = b;
-                    first = false;
-                } else if (b != current) {
-                    different = true;
-                    break;
-                }
-            }
-            if (!different) {
-                common.add(current);
-            } else {
-                break;
-            }
-        }
-
-        if (common.isEmpty()) {
-            return null;
-        } else {
-            byte[] prefix = new byte[common.size()];
-            for (int i = 0; i < common.size(); ++i) {
-                prefix[i] = common.get(i);
-            }
-            return prefix;
-        }
-    }
-
     public static void verifyNonNull(String message, Object... objs) {
         for (Object obj : objs) {
             if (obj != null) {
@@ -143,133 +86,4 @@ public final class HBaseSchemaUtils {
             throw new IllegalStateException(message);
         }
     }
-
-    public static byte[] utf8ToBytes(String s) {
-        return s.getBytes(StandardCharsets.UTF_8);
-    }
-
-    public static String utf8FromBytes(byte[] value) {
-        return new String(value, StandardCharsets.UTF_8);
-    }
-
-    public static <O> HBaseBytesGetter<O> stringGetter(Function<O, String> getter) {
-        return obj -> {
-            String value = getter.apply(obj);
-            return value != null ? value.getBytes(StandardCharsets.UTF_8) : null;
-        };
-    }
-
-    public static <O, F> HBaseBytesGetter<O> stringGetter(Function<O, F> getter, Function<F, String> converter) {
-        return obj -> {
-            F value = getter.apply(obj);
-            return value != null ? converter.apply(value).getBytes(StandardCharsets.UTF_8) : null;
-        };
-    }
-
-
-    public static <O> HBaseBytesGetter<O> jsonGetter(ObjectMapper mapper) {
-        return obj -> {
-            try {
-                return mapper.writeValueAsBytes(obj);
-            } catch (IOException e) {
-                throw new IllegalArgumentException("Couldn't deserialize the payload from JSON", e);
-            }
-        };
-    }
-
-    public static <O> HBaseLongGetter<O> booleanGetter(Function<O, Boolean> getter) {
-        return obj -> {
-            Boolean value = getter.apply(obj);
-            if (value == null) {
-                return null;
-            }
-            return value ? 1L : 0L;
-        };
-    }
-
-    public static <T, I> Function<T, NavigableMap<byte[], byte[]>> listColumnGetter(
-            Function<T, List<? extends I>> listGetter,
-            Function<I, byte[]> qualifierConverter,
-            Function<I, byte[]> valueConverter
-    ) {
-        return obj -> {
-            NavigableMap<byte[], byte[]> cellsMap = asBytesTreeMap();
-            List<? extends I> list = listGetter.apply(obj);
-            if (list == null || list.isEmpty()) {
-                return cellsMap;
-            }
-            for (I item : list) {
-                byte[] value = valueConverter.apply(item);
-                byte[] qualifier = qualifierConverter.apply(item);
-                if (value != null && qualifier != null) {
-                    cellsMap.put(qualifier, value);
-                }
-            }
-            return cellsMap;
-        };
-    }
-
-    public static <O> HBaseBytesSetter<O> stringSetter(BiConsumer<O, String> setter) {
-        return (obj, bytes) -> {
-            String value = new String(bytes, StandardCharsets.UTF_8);
-            setter.accept(obj, value);
-        };
-    }
-
-    public static <O, F> HBaseBytesSetter<O> stringSetter(BiConsumer<O, F> setter, Function<String, F> converter) {
-        return (obj, bytes) -> {
-            String value = new String(bytes, StandardCharsets.UTF_8);
-            setter.accept(obj, converter.apply(value));
-        };
-    }
-
-    public static <O> HBaseBytesMapSetter<O> stringMapSetter(BiConsumer<O, Map<String, String>> setter) {
-        return (obj, bytesMap) -> {
-            Map<String, String> stringMap = mapToTreeMap(bytesMap, HBaseSchemaUtils::utf8FromBytes, HBaseSchemaUtils::utf8FromBytes);
-            setter.accept(obj, stringMap);
-        };
-    }
-
-    public static <O> HBaseBytesSetter<O> jsonSetter(ObjectMapper mapper) {
-        return (obj, bytes) -> {
-            try {
-                mapper.readerForUpdating(obj).readValue(bytes);
-            } catch (IOException e) {
-                throw new IllegalArgumentException("Couldn't deserialize the payload from JSON", e);
-            }
-        };
-    }
-
-    public static <O> HBaseBytesSetter<O> longSetter(BiConsumer<O, Long> setter) {
-        return (obj, bytes) -> {
-            Long value = Bytes.toLong(bytes);
-            setter.accept(obj, value);
-        };
-    }
-
-    public static <O, F> HBaseBytesSetter<O> longSetter(BiConsumer<O, F> setter, Function<Long, F> converter) {
-        return (obj, bytes) -> {
-            Long value = Bytes.toLong(bytes);
-            setter.accept(obj, converter.apply(value));
-        };
-    }
-
-    public static <T, I> HBaseBytesMapSetter<T> listColumnSetter(
-            BiConsumer<T, List<I>> listSetter,
-            HBaseBytesSetter<I> bytesSetter,
-            Supplier<I> constructor
-    ) {
-        return (obj, bytesMap) -> {
-            List<I> itens = new ArrayList<>();
-
-            for (byte[] value : bytesMap.values()) {
-                I item = constructor.get();
-                bytesSetter.setFromBytes(item, value);
-                itens.add(item);
-            }
-
-            listSetter.accept(obj, itens);
-        };
-    }
-
 }
