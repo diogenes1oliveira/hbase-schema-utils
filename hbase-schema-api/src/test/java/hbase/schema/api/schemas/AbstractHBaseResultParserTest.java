@@ -11,10 +11,10 @@ import java.util.NavigableSet;
 
 import static hbase.schema.api.interfaces.converters.HBaseBytesMapSetter.bytesMapSetter;
 import static hbase.schema.api.testutils.HBaseUtils.asStringMap;
+import static hbase.schema.api.utils.HBaseSchemaConversions.utf8ToBytes;
 import static hbase.schema.api.utils.HBaseSchemaUtils.asBytesTreeMap;
 import static hbase.schema.api.utils.HBaseSchemaUtils.asBytesTreeSet;
-import static hbase.test.utils.HBaseTestHelpers.bytesToUtf8;
-import static hbase.test.utils.HBaseTestHelpers.utf8ToBytes;
+import static hbase.test.utils.HBaseTestHelpers.fromUtf8;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.nullValue;
@@ -33,13 +33,13 @@ class AbstractHBaseResultParserTest {
 
         @Override
         public void setFromRowKey(DummyPojo obj, byte[] rowKey) {
-            obj.setId(bytesToUtf8(rowKey));
+            obj.setId(fromUtf8(rowKey));
         }
 
         @Override
         public void setFromCell(DummyPojo obj, byte[] qualifier, byte[] value) {
             if (Bytes.equals(qualifier, utf8ToBytes("field"))) {
-                obj.setField(bytesToUtf8(value));
+                obj.setField(fromUtf8(value));
             }
         }
 

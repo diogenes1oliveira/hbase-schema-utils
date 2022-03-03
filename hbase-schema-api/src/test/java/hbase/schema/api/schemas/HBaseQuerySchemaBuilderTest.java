@@ -4,9 +4,9 @@ import hbase.schema.api.interfaces.HBaseQuerySchema;
 import hbase.schema.api.testutils.DummyPojo;
 import org.junit.jupiter.api.Test;
 
-import static hbase.schema.api.utils.HBaseSchemaUtils.asBytesTreeSet;
 import static hbase.schema.api.utils.HBaseSchemaConversions.stringGetter;
-import static hbase.test.utils.HBaseTestHelpers.utf8ToBytes;
+import static hbase.schema.api.utils.HBaseSchemaConversions.utf8ToBytes;
+import static hbase.schema.api.utils.HBaseSchemaUtils.asBytesTreeSet;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 

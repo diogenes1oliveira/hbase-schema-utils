@@ -11,6 +11,7 @@ import org.apache.hadoop.hbase.client.ColumnFamilyDescriptorBuilder;
 import org.apache.hadoop.hbase.client.Connection;
 import org.apache.hadoop.hbase.client.TableDescriptor;
 import org.apache.hadoop.hbase.client.TableDescriptorBuilder;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,6 +21,9 @@ import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Properties;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static java.util.Arrays.asList;
 import static java.util.Arrays.stream;
@@ -54,6 +58,13 @@ public final class HBaseTestHelpers {
         return newTableDescriptor(TableName.valueOf(name), familyBytes);
     }
 
+    /**
+     * Creates a new table descriptor from string values
+     *
+     * @param tableName      name of the new table
+     * @param columnFamilies binary names of the column families
+     * @return table descriptor
+     */
     public static TableDescriptor newTableDescriptor(TableName tableName, byte[]... columnFamilies) {
         List<ColumnFamilyDescriptor> familyDescriptors = stream(columnFamilies)
                 .map(HBaseTestHelpers::newColumnFamilyDescriptor)
@@ -64,6 +75,13 @@ public final class HBaseTestHelpers {
                 .build();
     }
 
+    /**
+     * Creates a new table descriptor from string values
+     *
+     * @param tableName      name of the new table
+     * @param columnFamilies UTF-8 encoded names of the column families
+     * @return table descriptor
+     */
     public static TableDescriptor newTableDescriptor(TableName tableName, String... columnFamilies) {
         List<ColumnFamilyDescriptor> familyDescriptors = stream(columnFamilies)
                 .map(HBaseTestHelpers::newColumnFamilyDescriptor)
@@ -74,6 +92,13 @@ public final class HBaseTestHelpers {
                 .build();
     }
 
+    /**
+     * Creates a table (!)
+     *
+     * @param admin      {@link Admin instance}
+     * @param descriptor table descriptor
+     * @throws UncheckedIOException failed to create the table
+     */
     public static void createTable(Admin admin, TableDescriptor descriptor) {
         try {
             long t0 = System.nanoTime();
@@ -85,6 +110,13 @@ public final class HBaseTestHelpers {
         }
     }
 
+    /**
+     * Creates a table (!)
+     *
+     * @param connection {@link Connection instance}
+     * @param descriptor table descriptor
+     * @throws UncheckedIOException failed to create the table or to get an {@link Admin} instance
+     */
     public static void createTable(Connection connection, TableDescriptor descriptor) {
         try (Admin admin = connection.getAdmin()) {
             createTable(admin, descriptor);
@@ -93,6 +125,13 @@ public final class HBaseTestHelpers {
         }
     }
 
+    /**
+     * Creates a table (!)
+     *
+     * @param connector  {@link HBaseConnector instance}
+     * @param descriptor table descriptor
+     * @throws UncheckedIOException failed to create the table or to get a {@link Connection} or {@link Admin} instance
+     */
     public static void createTable(HBaseConnector connector, TableDescriptor descriptor) {
         try (Connection connection = connector.connect();
              Admin admin = connection.getAdmin()) {
@@ -121,11 +160,16 @@ public final class HBaseTestHelpers {
      *
      * @param admin admin instance
      * @param names names of the tables to drop
+     * @throws IllegalStateException some table failed to delete
      */
     public static void safeDropTables(Admin admin, String... names) {
         long t0 = System.nanoTime();
         LOGGER.warn("Dropping all temp tables");
-        asList(names).parallelStream().forEach(name -> {
+
+        Set<String> namesSet = new TreeSet<>(asList(names));
+        Set<String> failedSet = ConcurrentHashMap.newKeySet(1);
+
+        namesSet.parallelStream().forEach(name -> {
             LOGGER.warn("Dropping table {}", name);
             TableName tableName = TableName.valueOf(name);
             try {
@@ -133,10 +177,20 @@ public final class HBaseTestHelpers {
                 safeDeleteTable(admin, tableName, DEFAULT_RETRY_COUNT);
             } catch (RuntimeException e) {
                 LOGGER.error("Failed to drop table", e);
+                failedSet.add(name);
             }
             LOGGER.warn("Table dropped: {}", name);
         });
-        LOGGER.warn("All temp tables were dropped within {}ms", millisSince(t0));
+
+        namesSet.removeAll(failedSet);
+
+        if (!namesSet.isEmpty()) {
+            LOGGER.warn("Tables {} were dropped within {}ms", namesSet, millisSince(t0));
+        }
+        if (!failedSet.isEmpty()) {
+            LOGGER.error("Failed to drop tables {}", failedSet);
+            throw new IllegalStateException("Failed to drop tables");
+        }
     }
 
     /**
@@ -225,17 +279,32 @@ public final class HBaseTestHelpers {
         return props;
     }
 
+    /**
+     * Calculates the ellapsed duration via the monotonic clock {@link System#nanoTime()}
+     *
+     * @param t0Nanos initial instant
+     * @return duration in milliseconds
+     */
     public static double millisSince(long t0Nanos) {
         long delta = System.nanoTime() - t0Nanos;
         return delta / 1.0e6;
     }
 
-
-    public static byte[] utf8ToBytes(String s) {
+    /**
+     * Encodes the string as UTF-8 {@code byte[]}
+     * <p>
+     * Both input and output are nullables
+     */
+    public static byte @Nullable [] asUtf8(@Nullable String s) {
         return s == null ? null : s.getBytes(StandardCharsets.UTF_8);
     }
 
-    public static String bytesToUtf8(byte[] bytes) {
+    /**
+     * Decodes the string from UTF-8 {@code byte[]}
+     * <p>
+     * Both input and output are nullables
+     */
+    public static @Nullable String fromUtf8(byte @Nullable [] bytes) {
         return bytes == null ? null : new String(bytes, StandardCharsets.UTF_8);
     }
 
