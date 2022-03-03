@@ -35,8 +35,8 @@ import static java.util.stream.Collectors.toList;
 public final class HBaseTestHelpers {
     private static final Logger LOGGER = LoggerFactory.getLogger(HBaseTestHelpers.class);
 
-    private static final int RETRY_MILLIS = 100;
-    private static final int DEFAULT_RETRY_COUNT = 3;
+    private static final int RETRY_MILLIS = 200;
+    private static final int DEFAULT_RETRY_COUNT = 6;
 
     private HBaseTestHelpers() {
         // utility class
@@ -207,12 +207,13 @@ public final class HBaseTestHelpers {
         }
         try {
             if (admin.isTableDisabled(tableName)) {
-                safeSleep(200);
+                safeSleep(RETRY_MILLIS);
             }
             admin.disableTable(tableName);
-        } catch (TableNotEnabledException e) {
+        } catch (TableNotEnabledException | TableNotFoundException e) {
             // done
         } catch (IOException e) {
+            LOGGER.warn("Disabling failed, " + retries + " retries remaining", e);
             safeDisableTable(admin, tableName, retries - 1);
         }
     }
