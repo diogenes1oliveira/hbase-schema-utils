@@ -1,8 +1,8 @@
 package hbase.schema.api.schemas;
 
 import hbase.schema.api.interfaces.HBaseMutationSchema;
-import hbase.schema.api.models.PrettyBytesMap;
-import hbase.schema.api.models.PrettyLongMap;
+import hbase.test.utils.models.PrettyBytesMap;
+import hbase.test.utils.models.PrettyLongMap;
 import hbase.schema.api.testutils.DummyPojo;
 import org.junit.jupiter.api.Test;
 
@@ -25,7 +25,7 @@ class HBaseMutationSchemaBuilderTest {
 
         DummyPojo pojo = new DummyPojo().withId("some-id").withLong(42L);
 
-        assertThat(new PrettyBytesMap(schema.buildCellValues(pojo)), equalTo(new PrettyBytesMap(asBytesTreeMap(
+        assertThat(new PrettyBytesMap(schema.buildPutValues(pojo)), equalTo(new PrettyBytesMap(asBytesTreeMap(
                 utf8ToBytes("prefix-key"), utf8ToBytes("value")
         ))));
     }
@@ -42,7 +42,7 @@ class HBaseMutationSchemaBuilderTest {
 
         DummyPojo pojo = new DummyPojo().withId("some-id").withLong(42L);
 
-        assertThat(new PrettyLongMap(schema.buildCellIncrements(pojo)), equalTo(new PrettyLongMap(asBytesTreeMap(
+        assertThat(new PrettyLongMap(schema.buildIncrementValues(pojo)), equalTo(new PrettyLongMap(asBytesTreeMap(
                 utf8ToBytes("prefix-key"), 43L
         ))));
     }
@@ -57,7 +57,7 @@ class HBaseMutationSchemaBuilderTest {
 
         DummyPojo pojo = new DummyPojo().withId("some-id").withLong(42L).withField("some-value");
 
-        assertThat(new PrettyBytesMap(schema.buildCellValues(pojo)), equalTo(new PrettyBytesMap(asBytesTreeMap(
+        assertThat(new PrettyBytesMap(schema.buildPutValues(pojo)), equalTo(new PrettyBytesMap(asBytesTreeMap(
                 utf8ToBytes("some-string-field"), utf8ToBytes("some-value")
         ))));
     }
@@ -72,7 +72,7 @@ class HBaseMutationSchemaBuilderTest {
 
         DummyPojo pojo = new DummyPojo().withId("some-id").withLong(42L);
 
-        assertThat(new PrettyLongMap(schema.buildCellIncrements(pojo)), equalTo(new PrettyLongMap(asBytesTreeMap(
+        assertThat(new PrettyLongMap(schema.buildIncrementValues(pojo)), equalTo(new PrettyLongMap(asBytesTreeMap(
                 utf8ToBytes("some-delta-field"), 42L
         ))));
     }
