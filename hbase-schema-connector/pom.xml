@@ -32,6 +32,14 @@
             <groupId>com.github.diogenes1oliveira</groupId>
             <artifactId>hbase-connector</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.jetbrains</groupId>
+            <artifactId>annotations</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+        </dependency>
         <!-- test dependencies -->
         <dependency>
             <groupId>com.github.diogenes1oliveira</groupId>
