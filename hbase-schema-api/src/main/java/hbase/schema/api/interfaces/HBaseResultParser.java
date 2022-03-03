@@ -23,4 +23,18 @@ public interface HBaseResultParser<T> {
      * @param resultCells cells fetched from HBase, in a mapping (qualifier -> cell value)
      */
     void setFromResult(T obj, byte[] rowKey, NavigableMap<byte[], byte[]> resultCells);
+
+    /**
+     * Builds a new object populated with data from HBase
+     * <p>
+     * The default implementation uses {@link #newInstance()} and {@link #setFromResult(T, byte[], NavigableMap)}
+     *
+     * @param rowKey      row key bytes
+     * @param resultCells cells fetched from HBase, in a mapping (qualifier -> cell value)
+     */
+    default T parseResult(byte[] rowKey, NavigableMap<byte[], byte[]> resultCells) {
+        T obj = newInstance();
+        setFromResult(obj, rowKey, resultCells);
+        return obj;
+    }
 }
