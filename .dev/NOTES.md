@@ -10,7 +10,7 @@ Realistas:
 
 - Verificar pacote org.apache.hadoop.fs.shell.find.Result
 - Checar interrupted;
-- Pacote separado para as interfaces;
+- Pacote separado para as interfaces e exceções;
 - Verificar um timeout no contextlock para não dar erro eterno em caso de uso errado do contexto;
 
 - Abstract provavelmente devia ser interface => melhor não, deixa um SchemaProvider cuidar disso
