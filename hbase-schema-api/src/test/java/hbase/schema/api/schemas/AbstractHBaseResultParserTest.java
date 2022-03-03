@@ -2,7 +2,7 @@ package hbase.schema.api.schemas;
 
 import hbase.schema.api.interfaces.HBaseResultParser;
 import hbase.schema.api.testutils.DummyPojo;
-import hbase.schema.api.utils.HBaseConversions;
+import hbase.schema.api.utils.HBaseSchemaConversions;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.junit.jupiter.api.Test;
 
@@ -46,7 +46,7 @@ class AbstractHBaseResultParserTest {
         @Override
         public void setFromPrefix(DummyPojo obj, byte[] prefix, NavigableMap<byte[], byte[]> cellsFromPrefix) {
             if (Bytes.equals(prefix, utf8ToBytes("p1"))) {
-                bytesMapSetter(DummyPojo::setMap1, HBaseConversions::utf8FromBytes, HBaseConversions::utf8FromBytes)
+                bytesMapSetter(DummyPojo::setMap1, HBaseSchemaConversions::utf8FromBytes, HBaseSchemaConversions::utf8FromBytes)
                         .setFromBytes(obj, cellsFromPrefix);
             }
         }

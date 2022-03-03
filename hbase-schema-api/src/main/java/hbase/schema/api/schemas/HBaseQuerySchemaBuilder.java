@@ -3,14 +3,14 @@ package hbase.schema.api.schemas;
 import hbase.schema.api.interfaces.HBaseQuerySchema;
 import hbase.schema.api.interfaces.converters.HBaseBytesGetter;
 import hbase.schema.api.interfaces.converters.HBaseIntegerGetter;
-import hbase.schema.api.utils.HBaseConversions;
+import hbase.schema.api.utils.HBaseSchemaConversions;
 
 import java.util.Arrays;
 import java.util.SortedSet;
 import java.util.function.Function;
 
 import static hbase.schema.api.utils.HBaseSchemaUtils.asBytesTreeSet;
-import static hbase.schema.api.utils.HBaseConversions.utf8ToBytes;
+import static hbase.schema.api.utils.HBaseSchemaConversions.utf8ToBytes;
 import static hbase.schema.api.utils.HBaseSchemaUtils.verifyNonNull;
 import static java.util.Optional.ofNullable;
 
@@ -166,7 +166,7 @@ public class HBaseQuerySchemaBuilder<T> {
 
     private static byte[][] utf8ToBytesArray(String... strings) {
         return Arrays.stream(strings)
-                     .map(HBaseConversions::utf8ToBytes)
+                     .map(HBaseSchemaConversions::utf8ToBytes)
                      .toArray(byte[][]::new);
     }
 }

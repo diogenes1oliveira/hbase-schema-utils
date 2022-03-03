@@ -23,8 +23,8 @@ import static hbase.schema.api.interfaces.converters.HBaseBytesMapSetter.bytesMa
 /**
  * Generic utility aid methods
  */
-public final class HBaseConversions {
-    private HBaseConversions() {
+public final class HBaseSchemaConversions {
+    private HBaseSchemaConversions() {
         // utility class
     }
 
@@ -50,7 +50,7 @@ public final class HBaseConversions {
      * @return lambda to extract a {@code byte[]} value from the object
      */
     public static <O> HBaseBytesGetter<O> stringGetter(Function<O, String> getter) {
-        return bytesGetter(getter, HBaseConversions::utf8ToBytes);
+        return bytesGetter(getter, HBaseSchemaConversions::utf8ToBytes);
     }
 
     /**
@@ -164,8 +164,8 @@ public final class HBaseConversions {
     public static <O> HBaseBytesMapSetter<O> stringMapSetter(BiConsumer<O, Map<String, String>> setter) {
         return bytesMapSetter(
                 setter,
-                HBaseConversions::utf8FromBytes,
-                HBaseConversions::utf8FromBytes
+                HBaseSchemaConversions::utf8FromBytes,
+                HBaseSchemaConversions::utf8FromBytes
         );
     }
 
