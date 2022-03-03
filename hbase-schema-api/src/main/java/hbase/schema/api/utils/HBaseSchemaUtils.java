@@ -82,8 +82,7 @@ public final class HBaseSchemaUtils {
             throw new IllegalArgumentException("Key #" + lastKeyIndex + " doesn't have a value");
         }
         Class<T> valueClass = (Class) firstValue.getClass();
-        TreeMap<byte[], T> map = new TreeMap<>(Bytes.BYTES_COMPARATOR);
-        map.put(firstKey, firstValue);
+        TreeMap<byte[], T> map = asBytesTreeMap(firstKey, firstValue);
 
         for (int i = 0; i < otherKeysAndValues.length; i += 2) {
             byte[] key = (byte[]) otherKeysAndValues[i];
