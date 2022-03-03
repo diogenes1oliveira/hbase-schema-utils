@@ -35,4 +35,15 @@ public interface HBaseLongGetter<T> extends HBaseBytesGetter<T> {
     static <T, F> HBaseLongGetter<T> longGetter(Function<T, F> getter, Function<F, Long> converter) {
         return obj -> ofNullable(getter.apply(obj)).map(converter).orElse(null);
     }
+
+    /**
+     * Builds a new {@link HBaseLongGetter} object from a Long field
+     *
+     * @param getter lambda to get the Long value from the object
+     * @param <T>    object type
+     * @return bytes getter instance
+     */
+    static <T> HBaseLongGetter<T> longGetter(Function<T, Long> getter) {
+        return getter::apply;
+    }
 }

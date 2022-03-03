@@ -41,7 +41,7 @@ public final class HBaseSchemaConversions {
     /**
      * Function to encode the string as UTF-8 bytes
      */
-    public static Function<String, byte[]> utf8ToBytes() {
+    public static HBaseBytesGetter<String> utf8ToBytes() {
         return HBaseSchemaConversions::utf8ToBytes;
     }
 

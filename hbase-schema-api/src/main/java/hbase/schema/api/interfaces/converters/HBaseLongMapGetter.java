@@ -60,4 +60,18 @@ public interface HBaseLongMapGetter<T> {
             return result;
         };
     }
+
+    /**
+     * Builds a new {@link HBaseLongMapGetter} object from a long map field
+     *
+     * @param getter             lambda to get the field map from the object
+     * @param qualifierConverter lambda to convert the key into a {@code byte[]} qualifier
+     * @param <T>                object type
+     * @param <K>                key type
+     * @return long map getter instance
+     */
+    static <T, K> HBaseLongMapGetter<T> longMapGetter(Function<T, ? extends Map<K, Long>> getter,
+                                                      HBaseBytesGetter<K> qualifierConverter) {
+        return longMapGetter(getter, qualifierConverter, l -> l);
+    }
 }
