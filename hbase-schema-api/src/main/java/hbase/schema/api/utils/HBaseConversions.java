@@ -17,6 +17,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import static hbase.schema.api.interfaces.converters.HBaseBytesGetter.bytesGetter;
 import static hbase.schema.api.interfaces.converters.HBaseBytesMapSetter.bytesMapSetter;
 
 /**
@@ -27,21 +28,40 @@ public final class HBaseConversions {
         // utility class
     }
 
+    /**
+     * Encodes the string as UTF-8 bytes
+     */
     public static byte[] utf8ToBytes(String s) {
         return s.getBytes(StandardCharsets.UTF_8);
     }
 
+    /**
+     * Decodes the UTF-8 bytes into a string
+     */
     public static String utf8FromBytes(byte[] value) {
         return new String(value, StandardCharsets.UTF_8);
     }
 
+    /**
+     * Gets a UTF-8 string from an object
+     *
+     * @param getter lambda to get a String value from the object
+     * @param <O>    object type
+     * @return lambda to extract a {@code byte[]} value from the object
+     */
     public static <O> HBaseBytesGetter<O> stringGetter(Function<O, String> getter) {
-        return obj -> {
-            String value = getter.apply(obj);
-            return value != null ? value.getBytes(StandardCharsets.UTF_8) : null;
-        };
+        return bytesGetter(getter, HBaseConversions::utf8ToBytes);
     }
 
+    /**
+     * Gets a field encoded as a UTF-8 string from an object
+     *
+     * @param getter    lambda to get a field value from the object
+     * @param converter converts the field into a string
+     * @param <O>       object type
+     * @param <F>       field type
+     * @return lambda to extract a {@code byte[]} value from the object
+     */
     public static <O, F> HBaseBytesGetter<O> stringGetter(Function<O, F> getter, Function<F, String> converter) {
         return obj -> {
             F value = getter.apply(obj);
@@ -49,7 +69,13 @@ public final class HBaseConversions {
         };
     }
 
-
+    /**
+     * Maps the object to a JSON value
+     *
+     * @param mapper Jackson mapper
+     * @param <O>    object type
+     * @return lambda to map the object to a {@code byte[]} JSON value
+     */
     public static <O> HBaseBytesGetter<O> jsonGetter(ObjectMapper mapper) {
         return obj -> {
             try {
@@ -60,6 +86,13 @@ public final class HBaseConversions {
         };
     }
 
+    /**
+     * Gets a boolean field in the object
+     *
+     * @param getter lambda to get the boolean field
+     * @param <O>    object type
+     * @return lambda to extract a Long value from the object: 0 for false and 1 for true
+     */
     public static <O> HBaseLongGetter<O> booleanGetter(Function<O, Boolean> getter) {
         return obj -> {
             Boolean value = getter.apply(obj);
@@ -92,6 +125,13 @@ public final class HBaseConversions {
         };
     }
 
+    /**
+     * Sets a String field in the object
+     *
+     * @param setter lambda to set the object field
+     * @param <O>    object type
+     * @return lambda to populate the object from a {@code byte[]} value
+     */
     public static <O> HBaseBytesSetter<O> stringSetter(BiConsumer<O, String> setter) {
         return (obj, bytes) -> {
             String value = new String(bytes, StandardCharsets.UTF_8);
@@ -99,6 +139,15 @@ public final class HBaseConversions {
         };
     }
 
+    /**
+     * Sets a String-conversible field in the object
+     *
+     * @param setter    lambda to set the object field
+     * @param converter lambda to convert the string into the field type
+     * @param <O>       object type
+     * @param <F>       field type
+     * @return lambda to populate the object from a {@code byte[]} value
+     */
     public static <O, F> HBaseBytesSetter<O> stringSetter(BiConsumer<O, F> setter, Function<String, F> converter) {
         return (obj, bytes) -> {
             String value = new String(bytes, StandardCharsets.UTF_8);
@@ -106,6 +155,12 @@ public final class HBaseConversions {
         };
     }
 
+    /**
+     * Sets a String map field in the object
+     *
+     * @param setter lambda to set the object map field
+     * @return lambda to populate the object from a {@code Map<byte[], byte[]>} value
+     */
     public static <O> HBaseBytesMapSetter<O> stringMapSetter(BiConsumer<O, Map<String, String>> setter) {
         return bytesMapSetter(
                 setter,
@@ -114,6 +169,13 @@ public final class HBaseConversions {
         );
     }
 
+    /**
+     * Populates the object with data from a JSON column
+     *
+     * @param mapper Jackson mapper
+     * @param <O>    object type
+     * @return lambda to populate the object with a {@code byte[]} JSON value
+     */
     public static <O> HBaseBytesSetter<O> jsonSetter(ObjectMapper mapper) {
         return (obj, bytes) -> {
             try {
@@ -124,6 +186,13 @@ public final class HBaseConversions {
         };
     }
 
+    /**
+     * Sets a Long field in the object
+     *
+     * @param setter lambda to set the object field
+     * @param <O>    object type
+     * @return lambda to populate the object from a {@code byte[]} value
+     */
     public static <O> HBaseBytesSetter<O> longSetter(BiConsumer<O, Long> setter) {
         return (obj, bytes) -> {
             Long value = Bytes.toLong(bytes);
@@ -131,11 +200,20 @@ public final class HBaseConversions {
         };
     }
 
+    /**
+     * Sets a Long field in the object
+     *
+     * @param setter    lambda to set the object field
+     * @param converter lambda to convert the Long value into the field type
+     * @param <O>       object type
+     * @param <F>       field type
+     * @return lambda to populate the object from a {@code byte[]} value
+     */
     public static <O, F> HBaseBytesSetter<O> longSetter(BiConsumer<O, F> setter, Function<Long, F> converter) {
-        return (obj, bytes) -> {
-            Long value = Bytes.toLong(bytes);
-            setter.accept(obj, converter.apply(value));
-        };
+        return longSetter((obj, l) -> {
+            F value = converter.apply(l);
+            setter.accept(obj, value);
+        });
     }
 
     public static <T, I> HBaseBytesMapSetter<T> listColumnSetter(
