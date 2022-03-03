@@ -29,7 +29,8 @@ class HBaseResultParserSchemaBuilderTest {
     @ParameterizedTest
     @MethodSource("provideCases")
     void doesParseAccordingly(byte[] rowKey, NavigableMap<byte[], byte[]> cellsMap, DummyPojo expected) {
-        DummyPojo actual = resultParser.parseResult(rowKey, cellsMap);
+        DummyPojo actual = resultParser.newInstance();
+        resultParser.setFromResult(actual, rowKey, cellsMap);
 
         assertThat(actual, equalTo(expected));
     }
