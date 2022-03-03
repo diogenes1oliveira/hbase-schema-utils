@@ -51,7 +51,7 @@ public interface HBaseMutationSchema<T> {
      * @param object object to be inserted into HBase
      * @return map of (qualifier -> cell value)
      */
-    NavigableMap<byte[], byte[]> buildCellValues(T object);
+    NavigableMap<byte[], byte[]> buildPutValues(T object);
 
     /**
      * Builds a map of Increment values based on the object fields
@@ -59,5 +59,5 @@ public interface HBaseMutationSchema<T> {
      * @param object object to be inserted into HBase
      * @return map of (qualifier -> increment value)
      */
-    NavigableMap<byte[], Long> buildCellIncrements(T object);
+    NavigableMap<byte[], Long> buildIncrementValues(T object);
 }

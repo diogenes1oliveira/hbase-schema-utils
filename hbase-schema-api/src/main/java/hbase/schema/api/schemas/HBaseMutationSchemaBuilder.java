@@ -220,7 +220,7 @@ public class HBaseMutationSchemaBuilder<T> {
             }
 
             @Override
-            public NavigableMap<byte[], byte[]> buildCellValues(T object) {
+            public NavigableMap<byte[], byte[]> buildPutValues(T object) {
                 NavigableMap<byte[], byte[]> values = asBytesTreeMap();
                 for (HBaseBytesMapGetter<T> getter : valueBuilders) {
                     values.putAll(getter.getBytesMap(object));
@@ -229,7 +229,7 @@ public class HBaseMutationSchemaBuilder<T> {
             }
 
             @Override
-            public NavigableMap<byte[], Long> buildCellIncrements(T object) {
+            public NavigableMap<byte[], Long> buildIncrementValues(T object) {
                 NavigableMap<byte[], Long> values = asBytesTreeMap();
                 for (HBaseLongMapGetter<T> getter : deltaBuilders) {
                     values.putAll(getter.getLongMap(object));
