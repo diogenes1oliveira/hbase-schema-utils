@@ -4,22 +4,28 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import hbase.schema.api.interfaces.converters.HBaseBytesGetter;
 import hbase.schema.api.interfaces.converters.HBaseBytesMapGetter;
+import hbase.schema.api.interfaces.converters.HBaseBytesMapSetter;
 import hbase.schema.api.interfaces.converters.HBaseBytesSetter;
 import hbase.schema.api.interfaces.converters.HBaseLongGetter;
 import hbase.schema.api.testutils.DummyPojo;
+import hbase.test.utils.HBaseTestHelpers;
+import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.Map;
+import java.util.NavigableMap;
 
 import static hbase.schema.api.interfaces.converters.HBaseLongGetter.longGetter;
 import static hbase.schema.api.utils.HBaseSchemaConversions.utf8ToBytes;
-import static hbase.schema.api.utils.HBaseSchemaUtils.asStringMap;
+import static hbase.schema.api.utils.HBaseSchemaUtils.asBytesTreeMap;
+import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonMap;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.nullValue;
 
@@ -108,13 +114,49 @@ class HBaseSchemaConversionsTest {
     @Test
     void listColumnGetter_DoesYieldListOfCells() {
         HBaseBytesMapGetter<DummyPojo> getter = HBaseSchemaConversions.listColumnGetter(
-                pojo -> new ArrayList<>(pojo.getMap1().entrySet()),
-                entry -> utf8ToBytes(entry.getKey()),
-                entry -> utf8ToBytes(entry.getValue())
+                DummyPojo::getListField,
+                s -> utf8ToBytes("item-" + s),
+                s -> utf8ToBytes("value-" + s)
         );
+        DummyPojo input = new DummyPojo().withListField(asList("1", "2"));
 
-        DummyPojo input = new DummyPojo().withMap1(asStringMap("k1", "v1", "k2", "v2"));
+        NavigableMap<byte[], byte[]> bytesMap = getter.getBytesMap(input);
 
-//        getter.getBytesMap()
+        assertThat(bytesMap.size(), equalTo(2));
+        assertThat(bytesMap.get(utf8ToBytes("item-1")), equalTo(utf8ToBytes("value-1")));
+        assertThat(bytesMap.get(utf8ToBytes("item-2")), equalTo(utf8ToBytes("value-2")));
     }
+
+    @Test
+    void listColumnGetter_HandlesNulls() {
+        HBaseBytesMapGetter<DummyPojo> getter = HBaseSchemaConversions.listColumnGetter(
+                DummyPojo::getListField,
+                s -> StringUtils.isEmpty(s) ? null : utf8ToBytes(s),
+                HBaseTestHelpers::asUtf8
+        );
+        DummyPojo pojoNullList = new DummyPojo();
+        DummyPojo pojoEmptyList = new DummyPojo().withListField(emptyList());
+        DummyPojo pojoNullValues = new DummyPojo().withListField(asList(null, ""));
+
+        assertThat(getter.getBytesMap(pojoNullList).keySet(), empty());
+        assertThat(getter.getBytesMap(pojoEmptyList).keySet(), empty());
+        assertThat(getter.getBytesMap(pojoNullValues).keySet(), empty());
+    }
+
+    @Test
+    void listColumnSetter_DoesBuildListOfCells() {
+        HBaseBytesMapSetter<DummyPojo> setter = HBaseSchemaConversions.listColumnSetter(
+                DummyPojo::setListField,
+                HBaseSchemaConversions::utf8FromBytes
+        );
+        DummyPojo input = new DummyPojo();
+
+        setter.setFromBytes(input, asBytesTreeMap(
+                utf8ToBytes("k1"), utf8ToBytes("v1"),
+                utf8ToBytes("k2"), utf8ToBytes("v2")
+        ));
+
+        assertThat(input.getListField(), equalTo(asList("v1", "v2")));
+    }
+
 }

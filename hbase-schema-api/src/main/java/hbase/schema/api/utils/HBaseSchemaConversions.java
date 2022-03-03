@@ -130,7 +130,7 @@ public final class HBaseSchemaConversions {
      *
      * @param listGetter         gets the list field from the object
      * @param qualifierConverter converts the item to a qualifier
-     * @param valueConverter     converts the item to a cell value
+     * @param itemConverter      converts the item to a cell value
      * @param <T>                object type
      * @param <I>                item type
      * @return lambda to map the object field to a map (qualifier -> cell value)
@@ -138,7 +138,7 @@ public final class HBaseSchemaConversions {
     public static <T, I> HBaseBytesMapGetter<T> listColumnGetter(
             Function<T, List<? extends I>> listGetter,
             HBaseBytesGetter<I> qualifierConverter,
-            HBaseBytesGetter<I> valueConverter
+            HBaseBytesGetter<I> itemConverter
     ) {
         return obj -> {
             NavigableMap<byte[], byte[]> cellsMap = HBaseSchemaUtils.asBytesTreeMap();
@@ -147,7 +147,7 @@ public final class HBaseSchemaConversions {
                 return cellsMap;
             }
             for (I item : list) {
-                byte[] value = valueConverter.getBytes(item);
+                byte[] value = itemConverter.getBytes(item);
                 byte[] qualifier = qualifierConverter.getBytes(item);
                 if (value != null && qualifier != null) {
                     cellsMap.put(qualifier, value);
@@ -251,29 +251,47 @@ public final class HBaseSchemaConversions {
     /**
      * Populates a list field in the object from a set of HBase cells
      *
-     * @param listSetter  sets the list field from the object
-     * @param bytesSetter populates the item with the cell value
-     * @param constructor creates a new item instance
-     * @param <T>         object type
-     * @param <I>         item type
+     * @param listSetter      sets the list field in the object
+     * @param itemBytesSetter populates the item with the cell value
+     * @param itemConstructor creates a new item instance
+     * @param <T>             object type
+     * @param <I>             item type
      * @return lambda to populate the object list field from a map (qualifier -> cell value)
      */
     public static <T, I> HBaseBytesMapSetter<T> listColumnSetter(
             BiConsumer<T, List<I>> listSetter,
-            HBaseBytesSetter<I> bytesSetter,
-            Supplier<I> constructor
+            HBaseBytesSetter<I> itemBytesSetter,
+            Supplier<I> itemConstructor
+    ) {
+        return listColumnSetter(listSetter, bytes -> {
+            I item = itemConstructor.get();
+            itemBytesSetter.setFromBytes(item, bytes);
+            return item;
+        });
+    }
+
+    /**
+     * Populates a list field in the object from a set of HBase cells
+     *
+     * @param listSetter           sets the list field in the object
+     * @param itemBytesConstructor creates a new item from a cell value
+     * @param <T>                  object type
+     * @param <I>                  item type
+     * @return lambda to populate the object list field from a map (qualifier -> cell value)
+     */
+    public static <T, I> HBaseBytesMapSetter<T> listColumnSetter(
+            BiConsumer<T, List<I>> listSetter,
+            Function<byte[], I> itemBytesConstructor
     ) {
         return (obj, bytesMap) -> {
             List<I> itens = new ArrayList<>();
 
             for (byte[] value : bytesMap.values()) {
-                I item = constructor.get();
-                bytesSetter.setFromBytes(item, value);
+                I item = itemBytesConstructor.apply(value);
                 itens.add(item);
             }
 
             listSetter.accept(obj, itens);
         };
     }
-
 }

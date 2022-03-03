@@ -6,6 +6,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Map;
 
 public class DummyPojo {
@@ -14,6 +15,7 @@ public class DummyPojo {
     private Long longField;
     private Instant instantField;
     private Boolean booleanField;
+    private List<String> listField;
     private Map<String, String> map1;
     private Map<String, String> map2;
 
@@ -82,6 +84,18 @@ public class DummyPojo {
         return this;
     }
 
+    public List<String> getListField() {
+        return listField;
+    }
+
+    public void setListField(List<String> listField) {
+        this.listField = listField;
+    }
+
+    public DummyPojo withListField(List<String> listField) {
+        this.listField = listField;
+        return this;
+    }
 
     public Map<String, String> getMap1() {
         return map1;
