@@ -2,6 +2,7 @@ package hbase.schema.api.utils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import hbase.schema.api.interfaces.converters.HBaseBytesGetter;
+import hbase.schema.api.interfaces.converters.HBaseBytesMapGetter;
 import hbase.schema.api.interfaces.converters.HBaseBytesMapSetter;
 import hbase.schema.api.interfaces.converters.HBaseBytesSetter;
 import hbase.schema.api.interfaces.converters.HBaseLongGetter;
@@ -124,10 +125,20 @@ public final class HBaseSchemaConversions {
         });
     }
 
-    public static <T, I> Function<T, NavigableMap<byte[], byte[]>> listColumnGetter(
+    /**
+     * Maps a list field in the object to a set of HBase cells
+     *
+     * @param listGetter         gets the list field from the object
+     * @param qualifierConverter converts the item to a qualifier
+     * @param valueConverter     converts the item to a cell value
+     * @param <T>                object type
+     * @param <I>                item type
+     * @return lambda to map the object field to a map (qualifier -> cell value)
+     */
+    public static <T, I> HBaseBytesMapGetter<T> listColumnGetter(
             Function<T, List<? extends I>> listGetter,
-            Function<I, byte[]> qualifierConverter,
-            Function<I, byte[]> valueConverter
+            HBaseBytesGetter<I> qualifierConverter,
+            HBaseBytesGetter<I> valueConverter
     ) {
         return obj -> {
             NavigableMap<byte[], byte[]> cellsMap = HBaseSchemaUtils.asBytesTreeMap();
@@ -136,8 +147,8 @@ public final class HBaseSchemaConversions {
                 return cellsMap;
             }
             for (I item : list) {
-                byte[] value = valueConverter.apply(item);
-                byte[] qualifier = qualifierConverter.apply(item);
+                byte[] value = valueConverter.getBytes(item);
+                byte[] qualifier = qualifierConverter.getBytes(item);
                 if (value != null && qualifier != null) {
                     cellsMap.put(qualifier, value);
                 }
@@ -237,6 +248,16 @@ public final class HBaseSchemaConversions {
         });
     }
 
+    /**
+     * Populates a list field in the object from a set of HBase cells
+     *
+     * @param listSetter  sets the list field from the object
+     * @param bytesSetter populates the item with the cell value
+     * @param constructor creates a new item instance
+     * @param <T>         object type
+     * @param <I>         item type
+     * @return lambda to populate the object list field from a map (qualifier -> cell value)
+     */
     public static <T, I> HBaseBytesMapSetter<T> listColumnSetter(
             BiConsumer<T, List<I>> listSetter,
             HBaseBytesSetter<I> bytesSetter,
