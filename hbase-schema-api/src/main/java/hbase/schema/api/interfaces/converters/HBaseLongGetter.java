@@ -1,5 +1,6 @@
 package hbase.schema.api.interfaces.converters;
 
+import org.apache.hadoop.hbase.util.Bytes;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.function.Function;
@@ -12,9 +13,15 @@ import static java.util.Optional.ofNullable;
  * @param <T> object type
  */
 @FunctionalInterface
-public interface HBaseLongGetter<T> {
+public interface HBaseLongGetter<T> extends HBaseBytesGetter<T> {
     @Nullable
     Long getLong(T obj);
+
+    @Override
+    default byte @Nullable [] getBytes(T obj) {
+        Long l = getLong(obj);
+        return l == null ? null : Bytes.toBytes(l);
+    }
 
     /**
      * Builds a new {@link HBaseLongGetter} object from a Long-conversible field

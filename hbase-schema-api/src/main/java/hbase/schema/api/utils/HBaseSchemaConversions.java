@@ -24,6 +24,8 @@ import static hbase.schema.api.interfaces.converters.HBaseBytesMapSetter.bytesMa
  * Generic utility aid methods
  */
 public final class HBaseSchemaConversions {
+    private static final Long LONG_ONE = 1L;
+
     private HBaseSchemaConversions() {
         // utility class
     }
@@ -91,7 +93,7 @@ public final class HBaseSchemaConversions {
      *
      * @param getter lambda to get the boolean field
      * @param <O>    object type
-     * @return lambda to extract a Long value from the object: 0 for false and 1 for true
+     * @return lambda to extract a Long value from the object: null for false and 1 for true
      */
     public static <O> HBaseLongGetter<O> booleanGetter(Function<O, Boolean> getter) {
         return obj -> {
@@ -99,8 +101,27 @@ public final class HBaseSchemaConversions {
             if (value == null) {
                 return null;
             }
-            return value ? 1L : 0L;
+            return value ? LONG_ONE : null;
         };
+    }
+
+    /**
+     * Gets a boolean field in the object
+     *
+     * @param getter    lambda to get the field from the object
+     * @param converter converts the field into a Boolean
+     * @param <O>       object type
+     * @param <F>       field type
+     * @return lambda to extract a Long value from the object: null for false and 1 for true
+     */
+    public static <O, F> HBaseLongGetter<O> booleanGetter(Function<O, F> getter, Function<F, Boolean> converter) {
+        return booleanGetter(obj -> {
+            F value = getter.apply(obj);
+            if (value == null) {
+                return null;
+            }
+            return converter.apply(value);
+        });
     }
 
     public static <T, I> Function<T, NavigableMap<byte[], byte[]>> listColumnGetter(
