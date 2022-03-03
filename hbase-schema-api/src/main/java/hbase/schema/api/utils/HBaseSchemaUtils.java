@@ -71,7 +71,7 @@ public final class HBaseSchemaUtils {
      * @param <T>                value type
      * @return map sorted by bytes values using {@link Bytes#BYTES_COMPARATOR}
      * @throws IllegalArgumentException key without corresponding value in {@code otherKeysAndValues}
-     * @throws IllegalArgumentException value with type not compatible with {@code firstValue}
+     * @throws ClassCastException       value with type not compatible with {@code firstValue}
      */
     @SuppressWarnings({"unchecked", "rawtypes"})
     public static <T> TreeMap<byte[], T> asBytesTreeMap(byte[] firstKey,
@@ -89,7 +89,7 @@ public final class HBaseSchemaUtils {
             byte[] key = (byte[]) otherKeysAndValues[i];
             Object value = otherKeysAndValues[i + 1];
             if (value != null && !valueClass.isAssignableFrom(value.getClass())) {
-                throw new IllegalArgumentException("Invalid value type");
+                throw new ClassCastException("Invalid value type");
             }
             map.put(key, (T) value);
         }
