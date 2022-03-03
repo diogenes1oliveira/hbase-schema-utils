@@ -3,8 +3,8 @@ package hbase.connector;
 import hbase.connector.interfaces.HBaseConnectionFactory;
 import hbase.connector.interfaces.HBaseConnectionProxy;
 import hbase.connector.utils.ContextReadWriteLock;
-import hbase.connector.utils.HBaseExpirableConnection;
-import hbase.connector.utils.HBaseRecreatableConnection;
+import hbase.connector.proxies.HBaseExpirableConnection;
+import hbase.connector.proxies.HBaseRecreatableConnection;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.client.Connection;
 

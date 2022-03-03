@@ -1,4 +1,4 @@
-package hbase.connector.utils;
+package hbase.connector.proxies;
 
 import hbase.connector.interfaces.HBaseConnectionSafeProxy;
 import hbase.connector.interfaces.IOConsumer;

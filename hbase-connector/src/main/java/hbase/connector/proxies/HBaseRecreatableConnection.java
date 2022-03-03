@@ -1,9 +1,10 @@
-package hbase.connector.utils;
+package hbase.connector.proxies;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
 import hbase.connector.interfaces.HBaseConnectionFactory;
 import hbase.connector.interfaces.HBaseConnectionProxy;
 import hbase.connector.interfaces.LockContext;
+import hbase.connector.utils.ContextReadWriteLock;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.Connection;

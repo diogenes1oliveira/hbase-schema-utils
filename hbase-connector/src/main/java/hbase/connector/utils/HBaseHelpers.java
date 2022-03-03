@@ -72,6 +72,9 @@ public final class HBaseHelpers {
         }
     }
 
+    /**
+     * Returns {@code true} if the class is from this package
+     */
     public static boolean isFromThisModule(Class<?> clazz) {
         String classPackage = clazz.getPackage().getName();
         String thisPackage = HBaseHelpers.class.getPackage().getName().replaceAll("\\.utils$", "");

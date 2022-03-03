@@ -1,4 +1,4 @@
-package hbase.connector.utils;
+package hbase.connector.proxies;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
 import hbase.connector.interfaces.HBaseConnectionProxy;
