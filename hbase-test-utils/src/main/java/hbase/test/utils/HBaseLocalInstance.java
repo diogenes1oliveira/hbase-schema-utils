@@ -1,10 +1,10 @@
 package hbase.test.utils;
 
-import hbase.connector.HBaseConnector;
 import hbase.test.utils.interfaces.HBaseTestInstance;
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.Admin;
 import org.apache.hadoop.hbase.client.Connection;
+import org.apache.hadoop.hbase.client.ConnectionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,7 +24,6 @@ public class HBaseLocalInstance implements HBaseTestInstance {
     private static final String ZOOKEEPER_QUORUM = "localhost:2181";
     public static final String PREFIX = "test-table-";
     private int tableIndex = 0;
-    private HBaseConnector connector;
 
     /**
      * This class refers to an externally started test instance, so this method
@@ -35,13 +34,12 @@ public class HBaseLocalInstance implements HBaseTestInstance {
         Properties props = new Properties();
         props.setProperty("hbase.zookeeper.quorum", ZOOKEEPER_QUORUM);
 
-        connector = new HBaseConnector(props);
         cleanUpCurrent();
         return props;
     }
 
     private void cleanUpCurrent() {
-        try (Connection connection = connector.connect();
+        try (Connection connection = ConnectionFactory.createConnection();
              Admin admin = connection.getAdmin()) {
             TableName[] tableNames = admin.listTableNames();
             String[] tempNames = stream(tableNames)
@@ -53,13 +51,6 @@ public class HBaseLocalInstance implements HBaseTestInstance {
             LOGGER.error("Failed to drop current temp tables", e);
             throw new IllegalStateException(e);
         }
-    }
-
-    /**
-     * Gets the connector set up to talk to a local HBase instance
-     */
-    public HBaseConnector connector() {
-        return connector;
     }
 
     /**
@@ -79,10 +70,10 @@ public class HBaseLocalInstance implements HBaseTestInstance {
     @Override
     public void cleanUp() throws IOException {
         String[] tempNames = IntStream.range(0, tableIndex)
-                .mapToObj(i -> PREFIX + i)
-                .toArray(String[]::new);
+                                      .mapToObj(i -> PREFIX + i)
+                                      .toArray(String[]::new);
 
-        try (Connection connection = connector.connect();
+        try (Connection connection = ConnectionFactory.createConnection();
              Admin admin = connection.getAdmin()) {
             safeDropTables(admin, tempNames);
         }
@@ -91,7 +82,6 @@ public class HBaseLocalInstance implements HBaseTestInstance {
     @Override
     public void close() throws IOException {
         cleanUp();
-        connector.close();
     }
 
     /**

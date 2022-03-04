@@ -1,7 +1,5 @@
 package hbase.test.utils.interfaces;
 
-import hbase.connector.HBaseConnector;
-
 import java.io.IOException;
 import java.util.Properties;
 
@@ -15,11 +13,6 @@ public interface HBaseTestInstance extends AutoCloseable {
      * @return properties to connect to the test instance
      */
     Properties start() throws IOException;
-
-    /**
-     * Gets the connector set up to talk to this test instance
-     */
-    HBaseConnector connector();
 
     /**
      * Closes this test instance

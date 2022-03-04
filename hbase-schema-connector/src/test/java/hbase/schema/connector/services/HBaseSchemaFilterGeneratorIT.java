@@ -1,6 +1,6 @@
 package hbase.schema.connector.services;
 
-import hbase.connector.HBaseConnector;
+import hbase.connector.services.HBaseConnector;
 import hbase.schema.api.interfaces.HBaseQuerySchema;
 import hbase.schema.api.schemas.HBaseQuerySchemaBuilder;
 import hbase.test.utils.HBaseTestJunitExtension;
@@ -20,6 +20,7 @@ import testutils.DummyPojo;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 import java.util.TreeMap;
 
 import static hbase.schema.api.utils.HBaseSchemaConversions.stringGetter;
@@ -37,6 +38,7 @@ import static testutils.HBaseSchemaConnectorTestHelpers.bytesToStringMap;
 class HBaseSchemaFilterGeneratorIT {
     byte[] family = new byte[]{'f'};
     TableName tempTable;
+    HBaseConnector connector;
 
     HBaseQuerySchema<DummyPojo> prefixQuerySchema = new HBaseQuerySchemaBuilder<DummyPojo>()
             .withRowKey(stringGetter(DummyPojo::getId))
@@ -47,13 +49,15 @@ class HBaseSchemaFilterGeneratorIT {
     HBaseSchemaFilterGenerator<DummyPojo> prefixFilterGenerator = new HBaseSchemaFilterGenerator<>(family, prefixQuerySchema);
 
     @BeforeEach
-    void setUp(TableName tempTable, HBaseConnector connector) {
+    void setUp(TableName tempTable, Properties props, Connection connection) {
         this.tempTable = tempTable;
-        createTable(connector, newTableDescriptor(tempTable, family));
+        this.connector = new HBaseConnector(props);
+
+        createTable(connection, newTableDescriptor(tempTable, family));
     }
 
     @Test
-    void testPrefixParser(HBaseConnector connector) throws IOException {
+    void testPrefixParser() throws IOException {
         // given a table with three rows with values
         Put put1 = new Put(utf8ToBytes("row1-values"))
                 .addColumn(family, utf8ToBytes("p-1"), utf8ToBytes("a"))
@@ -65,7 +69,7 @@ class HBaseSchemaFilterGeneratorIT {
         Put put3 = new Put(utf8ToBytes("row3-values"))
                 .addColumn(family, utf8ToBytes("dummy"), utf8ToBytes("dummy"));
 
-        try (Connection connection = connector.connect();
+        try (Connection connection = connector.context();
              Table table = connection.getTable(tempTable)) {
             table.put(asList(put1, put2, put3));
         }
@@ -77,7 +81,7 @@ class HBaseSchemaFilterGeneratorIT {
         prefixFilterGenerator.selectColumns(query1, scan);
         List<TreeMap<String, String>> results = new ArrayList<>();
 
-        try (Connection connection = connector.connect();
+        try (Connection connection = connector.context();
              Table table = connection.getTable(tempTable);
              ResultScanner scanner = table.getScanner(scan)) {
             for (Result result : scanner) {

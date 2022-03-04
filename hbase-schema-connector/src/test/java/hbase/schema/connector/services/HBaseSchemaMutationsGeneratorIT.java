@@ -1,6 +1,6 @@
 package hbase.schema.connector.services;
 
-import hbase.connector.HBaseConnector;
+import hbase.connector.services.HBaseConnector;
 import hbase.schema.api.interfaces.HBaseMutationSchema;
 import hbase.schema.api.schemas.HBaseMutationSchemaBuilder;
 import hbase.test.utils.HBaseTestJunitExtension;
@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 import java.util.TreeMap;
 
 import static hbase.schema.api.interfaces.converters.HBaseLongGetter.longGetter;
@@ -35,6 +36,7 @@ import static testutils.HBaseSchemaConnectorTestHelpers.bytesToStringMap;
 
 @ExtendWith(HBaseTestJunitExtension.class)
 class HBaseSchemaMutationsGeneratorIT {
+    HBaseConnector connector;
     TableName tempTable;
     byte[] family = new byte[]{'f'};
     HBaseMutationSchema<DummyPojo> schema = new HBaseMutationSchemaBuilder<DummyPojo>()
@@ -47,20 +49,22 @@ class HBaseSchemaMutationsGeneratorIT {
     HBaseSchemaMutationsGenerator<DummyPojo> mutationsGenerator = new HBaseSchemaMutationsGenerator<>(family, schema);
 
     @BeforeEach
-    void setUp(TableName tempTable, HBaseConnector connector) {
+    void setUp(TableName tempTable, Properties props, Connection connection) {
         this.tempTable = tempTable;
-        createTable(connector, newTableDescriptor(tempTable, family));
+        this.connector = new HBaseConnector(props);
+
+        createTable(connection, newTableDescriptor(tempTable, family));
     }
 
     @Test
-    void testValues(HBaseConnector connector) throws IOException, InterruptedException {
+    void testValues() throws IOException, InterruptedException {
         DummyPojo pojo = new DummyPojo()
                 .withId("dummy-id")
                 .withInstant(Instant.ofEpochMilli(1000L))
                 .withString("dummy-string");
         List<Mutation> mutations = mutationsGenerator.toMutations(pojo);
 
-        try (Connection connection = connector.connect();
+        try (Connection connection = connector.context();
              Table table = connection.getTable(tempTable)) {
             table.batch(mutations, new Object[mutations.size()]);
         }
@@ -68,7 +72,7 @@ class HBaseSchemaMutationsGeneratorIT {
         Scan scan = new Scan().addFamily(family);
         List<TreeMap<String, String>> results = new ArrayList<>();
 
-        try (Connection connection = connector.connect();
+        try (Connection connection = connector.context();
              Table table = connection.getTable(tempTable);
              ResultScanner scanner = table.getScanner(scan)) {
             for (Result result : scanner) {
@@ -81,7 +85,7 @@ class HBaseSchemaMutationsGeneratorIT {
     }
 
     @Test
-    void testDeltas(HBaseConnector connector) throws IOException, InterruptedException {
+    void testDeltas() throws IOException, InterruptedException {
         DummyPojo pojo1 = new DummyPojo()
                 .withId("dummy-id")
                 .withInstant(Instant.ofEpochMilli(1000L))
@@ -91,7 +95,7 @@ class HBaseSchemaMutationsGeneratorIT {
                 .withInstant(Instant.ofEpochMilli(1001L))
                 .withLong(3L);
 
-        try (Connection connection = connector.connect();
+        try (Connection connection = connector.context();
              Table table = connection.getTable(tempTable)) {
             table.batch(mutationsGenerator.toMutations(pojo1), new Object[1]);
             table.batch(mutationsGenerator.toMutations(pojo2), new Object[1]);
@@ -100,7 +104,7 @@ class HBaseSchemaMutationsGeneratorIT {
         Scan scan = new Scan().addFamily(family);
         List<TreeMap<String, Long>> results = new ArrayList<>();
 
-        try (Connection connection = connector.connect();
+        try (Connection connection = connector.context();
              Table table = connection.getTable(tempTable);
              ResultScanner scanner = table.getScanner(scan)) {
             for (Result result : scanner) {

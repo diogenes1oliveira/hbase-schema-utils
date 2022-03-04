@@ -1,11 +1,12 @@
 package hbase.schema.connector.services;
 
-import hbase.connector.HBaseConnector;
+import hbase.connector.services.HBaseConnector;
 import hbase.schema.api.interfaces.HBaseSchema;
 import hbase.schema.connector.interfaces.HBaseFetcher;
 import hbase.schema.connector.interfaces.HBaseMutator;
 import hbase.test.utils.HBaseTestJunitExtension;
 import org.apache.hadoop.hbase.TableName;
+import org.apache.hadoop.hbase.client.Connection;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -16,6 +17,7 @@ import testutils.DummyPojoSchema;
 
 import java.io.IOException;
 import java.time.Instant;
+import java.util.Properties;
 import java.util.stream.Stream;
 
 import static hbase.test.utils.HBaseTestHelpers.createTable;
@@ -31,13 +33,15 @@ public class HBaseFetcherIT {
     HBaseSchema<DummyPojo, DummyPojo> schema = new DummyPojoSchema();
     byte[] family = new byte[]{'f'};
     TableName tempTable;
+    HBaseConnector connector;
     HBaseFetcher<DummyPojo, DummyPojo> fetcher;
     HBaseMutator<DummyPojo> mutator;
 
     @BeforeEach
-    void setUp(TableName tempTable, HBaseConnector connector) {
+    void setUp(TableName tempTable, Properties props, Connection connection) {
         this.tempTable = tempTable;
-        createTable(connector, newTableDescriptor(tempTable, family));
+        this.connector = new HBaseConnector(props);
+        createTable(connection, newTableDescriptor(tempTable, family));
 
         fetcher = new HBaseSchemaFetcher<>(family, schema, connector);
         mutator = new HBaseSchemaMutator<>(family, schema, connector);

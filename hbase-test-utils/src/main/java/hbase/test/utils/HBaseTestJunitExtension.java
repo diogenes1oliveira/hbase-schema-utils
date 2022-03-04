@@ -1,9 +1,9 @@
 package hbase.test.utils;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
-import hbase.connector.HBaseConnector;
 import hbase.test.utils.interfaces.HBaseTestInstance;
 import org.apache.hadoop.hbase.TableName;
+import org.apache.hadoop.hbase.client.Connection;
 import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
 import org.junit.jupiter.api.extension.ConditionEvaluationResult;
@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Properties;
 
+import static hbase.test.utils.HBaseTestHelpers.newConnection;
 import static java.util.Arrays.asList;
 
 public class HBaseTestJunitExtension implements
@@ -26,6 +27,7 @@ public class HBaseTestJunitExtension implements
     private static final Logger LOGGER = LoggerFactory.getLogger(HBaseTestJunitExtension.class);
     private HBaseTestInstance testInstance;
     private Properties properties;
+    private Connection connection;
 
     @Override
     public ConditionEvaluationResult evaluateExecutionCondition(ExtensionContext extensionContext) {
@@ -65,7 +67,7 @@ public class HBaseTestJunitExtension implements
                 TableName.class,
                 Properties.class,
                 HBaseTestInstance.class,
-                HBaseConnector.class
+                Connection.class
         );
         return supportedTypes.stream().anyMatch(type::isAssignableFrom);
     }
@@ -77,10 +79,13 @@ public class HBaseTestJunitExtension implements
             return TableName.valueOf(testInstance.tempTableName());
         } else if (type.isAssignableFrom(Properties.class)) {
             return properties;
-        } else if (type.isAssignableFrom(HBaseConnector.class)) {
-            return testInstance.connector();
         } else if (type.isAssignableFrom(HBaseTestInstance.class)) {
             return testInstance;
+        } else if (type.isAssignableFrom(Connection.class)) {
+            if (connection == null) {
+                connection = newConnection(properties);
+            }
+            return connection;
         } else {
             throw new ParameterResolutionException("No converter for " + type);
         }

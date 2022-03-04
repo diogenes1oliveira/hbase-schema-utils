@@ -1,6 +1,6 @@
 package hbase.schema.connector.services;
 
-import hbase.connector.HBaseConnector;
+import hbase.connector.services.HBaseConnector;
 import hbase.schema.api.interfaces.HBaseResultParserSchema;
 import hbase.schema.api.schemas.HBaseResultParserBuilder;
 import hbase.test.utils.HBaseTestJunitExtension;
@@ -15,6 +15,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import testutils.DummyPojo;
 
 import java.io.IOException;
+import java.util.Properties;
 
 import static hbase.schema.api.utils.HBaseSchemaConversions.stringSetter;
 import static hbase.schema.api.utils.HBaseSchemaConversions.utf8ToBytes;
@@ -30,6 +31,8 @@ import static testutils.HBaseSchemaConnectorTestHelpers.bytesToStringMap;
 class HBaseSchemaResultsParserIT {
     byte[] family = new byte[]{'f'};
     TableName tempTable;
+    HBaseConnector connector;
+
     HBaseResultParserSchema<DummyPojo> resultParserSchema = new HBaseResultParserBuilder<>(DummyPojo::new)
             .fromRowKey(stringSetter(DummyPojo::setId))
             .fromPrefix("p-", (obj, bytesMap) -> obj.setMap1(bytesToStringMap(bytesMap)))
@@ -38,13 +41,15 @@ class HBaseSchemaResultsParserIT {
     HBaseSchemaResultsParser<DummyPojo> resultsParser = new HBaseSchemaResultsParser<>(family, resultParserSchema);
 
     @BeforeEach
-    void setUp(TableName tempTable, HBaseConnector connector) {
+    void setUp(TableName tempTable, Properties props, Connection connection) {
         this.tempTable = tempTable;
-        createTable(connector, newTableDescriptor(tempTable, family));
+        this.connector = new HBaseConnector(props);
+
+        createTable(connection, newTableDescriptor(tempTable, family));
     }
 
     @Test
-    void testParsing(HBaseConnector connector) throws IOException {
+    void testParsing() throws IOException {
         Put put = new Put(utf8ToBytes("some-id"))
                 .addColumn(family, utf8ToBytes("p-1"), utf8ToBytes("a"))
                 .addColumn(family, utf8ToBytes("p-2"), utf8ToBytes("b"))
@@ -52,7 +57,7 @@ class HBaseSchemaResultsParserIT {
         Get get = new Get(utf8ToBytes("some-id")).addFamily(family);
         DummyPojo result;
 
-        try (Connection connection = connector.connect();
+        try (Connection connection = connector.context();
              Table table = connection.getTable(tempTable)) {
             table.put(put);
             result = resultsParser.parseResult(table.get(get));

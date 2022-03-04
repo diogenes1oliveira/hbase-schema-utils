@@ -1,6 +1,7 @@
 package hbase.test.utils;
 
-import hbase.connector.HBaseConnector;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.TableNotDisabledException;
 import org.apache.hadoop.hbase.TableNotEnabledException;
@@ -9,6 +10,7 @@ import org.apache.hadoop.hbase.client.Admin;
 import org.apache.hadoop.hbase.client.ColumnFamilyDescriptor;
 import org.apache.hadoop.hbase.client.ColumnFamilyDescriptorBuilder;
 import org.apache.hadoop.hbase.client.Connection;
+import org.apache.hadoop.hbase.client.ConnectionFactory;
 import org.apache.hadoop.hbase.client.TableDescriptor;
 import org.apache.hadoop.hbase.client.TableDescriptorBuilder;
 import org.jetbrains.annotations.Nullable;
@@ -40,6 +42,25 @@ public final class HBaseTestHelpers {
 
     private HBaseTestHelpers() {
         // utility class
+    }
+
+    /**
+     * Creates a new simple HBase connection
+     *
+     * @param props properties for the new connection
+     * @return new connection
+     */
+    public static Connection newConnection(Properties props) {
+        Configuration conf = HBaseConfiguration.create();
+        for (String name : props.stringPropertyNames()) {
+            String value = props.getProperty(name);
+            conf.set(name, value);
+        }
+        try {
+            return ConnectionFactory.createConnection(conf);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
     }
 
     /**
@@ -119,22 +140,6 @@ public final class HBaseTestHelpers {
      */
     public static void createTable(Connection connection, TableDescriptor descriptor) {
         try (Admin admin = connection.getAdmin()) {
-            createTable(admin, descriptor);
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
-    }
-
-    /**
-     * Creates a table (!)
-     *
-     * @param connector  {@link HBaseConnector instance}
-     * @param descriptor table descriptor
-     * @throws UncheckedIOException failed to create the table or to get a {@link Connection} or {@link Admin} instance
-     */
-    public static void createTable(HBaseConnector connector, TableDescriptor descriptor) {
-        try (Connection connection = connector.connect();
-             Admin admin = connection.getAdmin()) {
             createTable(admin, descriptor);
         } catch (IOException e) {
             throw new UncheckedIOException(e);

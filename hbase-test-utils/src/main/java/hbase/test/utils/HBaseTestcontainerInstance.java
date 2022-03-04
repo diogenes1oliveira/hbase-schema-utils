@@ -1,6 +1,5 @@
 package hbase.test.utils;
 
-import hbase.connector.HBaseConnector;
 import hbase.test.utils.interfaces.HBaseTestInstance;
 import io.github.diogenes1oliveira.hbase2.HBaseContainer;
 import org.slf4j.Logger;
@@ -19,7 +18,6 @@ public class HBaseTestcontainerInstance implements HBaseTestInstance {
     public static final String PREFIX = "test-table-";
 
     private HBaseContainer container;
-    private HBaseConnector connector;
     private int tableIndex = 0;
 
     /**
@@ -31,16 +29,7 @@ public class HBaseTestcontainerInstance implements HBaseTestInstance {
         container.start();
         container.followOutput(new Slf4jLogConsumer(LOGGER));
 
-        Properties props = container.getProperties();
-        connector = new HBaseConnector(props);
-        return props;
-    }
-
-    /**
-     * Gets the connector set up to talk to a local HBase instance
-     */
-    public HBaseConnector connector() {
-        return connector;
+        return container.getProperties();
     }
 
     /**
