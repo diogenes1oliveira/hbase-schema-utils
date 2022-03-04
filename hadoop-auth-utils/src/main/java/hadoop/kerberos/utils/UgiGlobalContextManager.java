@@ -14,22 +14,20 @@ import java.util.concurrent.locks.ReentrantLock;
 public class UgiGlobalContextManager {
     private static final Lock globalLock = new ReentrantLock();
 
-    public static IOAuthContext<UserGroupInformation> enterDefault(Configuration conf) throws IOException {
-        return new UgiConfigContext(conf, conf, globalLock, UserGroupInformation::getCurrentUser);
+    public static IOAuthContext<UserGroupInformation> enterDefault() throws IOException {
+        Configuration originalConf = new Configuration();
+        return new UgiConfigContext(originalConf, originalConf, globalLock, UserGroupInformation::getCurrentUser);
     }
 
-    public static IOAuthContext<UserGroupInformation> enterWithKeytab(Configuration conf,
-                                                                      String principal,
+    public static IOAuthContext<UserGroupInformation> enterWithKeytab(String principal,
                                                                       String keytab) throws IOException {
-        Configuration confCopy = new Configuration(conf);
-        setKerberosConf(conf);
+        Configuration originalConf = new Configuration();
+        Configuration kerberosConf = new Configuration();
+        kerberosConf.set("hadoop.security.authentication", "Kerberos");
 
-        return new UgiConfigContext(confCopy, conf, globalLock, () ->
+        return new UgiConfigContext(originalConf, kerberosConf, globalLock, () ->
                 UserGroupInformation.loginUserFromKeytabAndReturnUGI(principal, keytab)
         );
     }
 
-    private static void setKerberosConf(Configuration conf) {
-        conf.set("hadoop.security.authentication", "Kerberos");
-    }
 }

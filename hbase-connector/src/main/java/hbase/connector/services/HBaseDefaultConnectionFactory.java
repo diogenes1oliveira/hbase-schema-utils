@@ -30,10 +30,8 @@ public class HBaseDefaultConnectionFactory implements HBaseConnectionFactory {
      */
     @Override
     public Connection create(Configuration conf) throws IOException {
-        Configuration confCopy = new Configuration(conf);
-
-        try (IOAuthContext<UserGroupInformation> context = enterUgiContext(confCopy)) {
-            return ConnectionFactory.createConnection(confCopy);
+        try (IOAuthContext<UserGroupInformation> context = enterUgiContext(conf)) {
+            return ConnectionFactory.createConnection(conf);
         }
     }
 
@@ -48,14 +46,14 @@ public class HBaseDefaultConnectionFactory implements HBaseConnectionFactory {
         return true;
     }
 
-    protected IOAuthContext<UserGroupInformation> enterUgiContext(Configuration conf) throws IOException {
-        String principal = conf.getTrimmed(CONFIG_PRINCIPAL, "");
-        String keytab = conf.getTrimmed(CONFIG_KEYTAB, "");
+    protected IOAuthContext<UserGroupInformation> enterUgiContext(Configuration hBaseConf) throws IOException {
+        String principal = hBaseConf.getTrimmed(CONFIG_PRINCIPAL, "");
+        String keytab = hBaseConf.getTrimmed(CONFIG_KEYTAB, "");
 
         if (principal.isEmpty() || keytab.isEmpty()) {
-            return UgiGlobalContextManager.enterDefault(conf);
+            return UgiGlobalContextManager.enterDefault();
         } else {
-            return UgiGlobalContextManager.enterWithKeytab(conf, principal, keytab);
+            return UgiGlobalContextManager.enterWithKeytab(principal, keytab);
         }
     }
 }
