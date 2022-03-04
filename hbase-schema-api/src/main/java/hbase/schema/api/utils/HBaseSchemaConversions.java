@@ -1,11 +1,11 @@
 package hbase.schema.api.utils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import hbase.schema.api.interfaces.converters.HBaseBytesGetter;
-import hbase.schema.api.interfaces.converters.HBaseBytesMapGetter;
-import hbase.schema.api.interfaces.converters.HBaseBytesMapSetter;
-import hbase.schema.api.interfaces.converters.HBaseBytesSetter;
-import hbase.schema.api.interfaces.converters.HBaseLongGetter;
+import hbase.schema.api.interfaces.fields.HBaseBytesGetter;
+import hbase.schema.api.interfaces.fields.HBaseBytesMapGetter;
+import hbase.schema.api.interfaces.fields.HBaseBytesMapSetter;
+import hbase.schema.api.interfaces.fields.HBaseBytesSetter;
+import hbase.schema.api.interfaces.fields.HBaseLongGetter;
 import org.apache.hadoop.hbase.util.Bytes;
 
 import java.io.IOException;
@@ -18,8 +18,8 @@ import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import static hbase.schema.api.interfaces.converters.HBaseBytesGetter.bytesGetter;
-import static hbase.schema.api.interfaces.converters.HBaseBytesMapSetter.bytesMapSetter;
+import static hbase.schema.api.interfaces.fields.HBaseBytesGetter.bytesGetter;
+import static hbase.schema.api.interfaces.fields.HBaseBytesMapSetter.bytesMapSetter;
 
 /**
  * Generic utility aid methods

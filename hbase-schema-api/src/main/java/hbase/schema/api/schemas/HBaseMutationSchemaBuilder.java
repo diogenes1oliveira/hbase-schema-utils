@@ -1,10 +1,10 @@
 package hbase.schema.api.schemas;
 
 import hbase.schema.api.interfaces.HBaseMutationSchema;
-import hbase.schema.api.interfaces.converters.HBaseBytesGetter;
-import hbase.schema.api.interfaces.converters.HBaseBytesMapGetter;
-import hbase.schema.api.interfaces.converters.HBaseLongGetter;
-import hbase.schema.api.interfaces.converters.HBaseLongMapGetter;
+import hbase.schema.api.interfaces.fields.HBaseBytesGetter;
+import hbase.schema.api.interfaces.fields.HBaseBytesMapGetter;
+import hbase.schema.api.interfaces.fields.HBaseLongGetter;
+import hbase.schema.api.interfaces.fields.HBaseLongMapGetter;
 import org.apache.commons.lang3.ArrayUtils;
 import org.jetbrains.annotations.Nullable;
 

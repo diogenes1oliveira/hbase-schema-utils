@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Test;
 import java.util.NavigableMap;
 import java.util.NavigableSet;
 
-import static hbase.schema.api.interfaces.converters.HBaseBytesMapSetter.bytesMapSetter;
+import static hbase.schema.api.interfaces.fields.HBaseBytesMapSetter.bytesMapSetter;
 import static hbase.schema.api.utils.HBaseSchemaConversions.utf8ToBytes;
 import static hbase.schema.api.utils.HBaseSchemaUtils.asBytesTreeMap;
 import static hbase.schema.api.utils.HBaseSchemaUtils.asBytesTreeSet;

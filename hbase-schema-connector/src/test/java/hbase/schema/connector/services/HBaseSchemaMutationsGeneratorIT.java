@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Properties;
 import java.util.TreeMap;
 
-import static hbase.schema.api.interfaces.converters.HBaseLongGetter.longGetter;
+import static hbase.schema.api.interfaces.fields.HBaseLongGetter.longGetter;
 import static hbase.schema.api.utils.HBaseSchemaConversions.stringGetter;
 import static hbase.schema.api.utils.HBaseSchemaUtils.asStringMap;
 import static hbase.test.utils.HBaseTestHelpers.createTable;

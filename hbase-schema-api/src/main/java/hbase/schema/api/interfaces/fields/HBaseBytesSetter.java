@@ -1,4 +1,4 @@
-package hbase.schema.api.interfaces.converters;
+package hbase.schema.api.interfaces.fields;
 
 import java.util.function.BiConsumer;
 import java.util.function.Function;

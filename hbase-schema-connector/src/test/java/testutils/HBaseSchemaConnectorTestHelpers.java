@@ -1,12 +1,12 @@
 package testutils;
 
-import hbase.schema.api.interfaces.converters.HBaseBytesMapSetter;
+import hbase.schema.api.interfaces.fields.HBaseBytesMapSetter;
 import org.apache.hadoop.hbase.util.Bytes;
 
 import java.util.NavigableMap;
 import java.util.TreeMap;
 
-import static hbase.schema.api.interfaces.converters.HBaseBytesMapSetter.bytesMapSetter;
+import static hbase.schema.api.interfaces.fields.HBaseBytesMapSetter.bytesMapSetter;
 import static hbase.schema.api.utils.HBaseSchemaConversions.utf8FromBytes;
 
 public final class HBaseSchemaConnectorTestHelpers {

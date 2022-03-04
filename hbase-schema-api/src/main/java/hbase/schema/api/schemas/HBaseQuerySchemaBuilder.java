@@ -1,8 +1,8 @@
 package hbase.schema.api.schemas;
 
 import hbase.schema.api.interfaces.HBaseQuerySchema;
-import hbase.schema.api.interfaces.converters.HBaseBytesGetter;
-import hbase.schema.api.interfaces.converters.HBaseIntegerGetter;
+import hbase.schema.api.interfaces.fields.HBaseBytesGetter;
+import hbase.schema.api.interfaces.fields.HBaseIntegerGetter;
 import hbase.schema.api.utils.HBaseSchemaConversions;
 
 import java.util.Arrays;

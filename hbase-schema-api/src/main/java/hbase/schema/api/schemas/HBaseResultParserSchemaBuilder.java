@@ -1,7 +1,7 @@
 package hbase.schema.api.schemas;
 
-import hbase.schema.api.interfaces.converters.HBaseBytesMapSetter;
-import hbase.schema.api.interfaces.converters.HBaseBytesSetter;
+import hbase.schema.api.interfaces.fields.HBaseBytesMapSetter;
+import hbase.schema.api.interfaces.fields.HBaseBytesSetter;
 import hbase.schema.api.interfaces.HBaseResultParserSchema;
 
 import java.nio.charset.StandardCharsets;

@@ -2,11 +2,11 @@ package hbase.schema.api.utils;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import hbase.schema.api.interfaces.converters.HBaseBytesGetter;
-import hbase.schema.api.interfaces.converters.HBaseBytesMapGetter;
-import hbase.schema.api.interfaces.converters.HBaseBytesMapSetter;
-import hbase.schema.api.interfaces.converters.HBaseBytesSetter;
-import hbase.schema.api.interfaces.converters.HBaseLongGetter;
+import hbase.schema.api.interfaces.fields.HBaseBytesGetter;
+import hbase.schema.api.interfaces.fields.HBaseBytesMapGetter;
+import hbase.schema.api.interfaces.fields.HBaseBytesMapSetter;
+import hbase.schema.api.interfaces.fields.HBaseBytesSetter;
+import hbase.schema.api.interfaces.fields.HBaseLongGetter;
 import hbase.schema.api.testutils.DummyPojo;
 import hbase.test.utils.HBaseTestHelpers;
 import org.apache.commons.lang3.StringUtils;
@@ -18,7 +18,7 @@ import java.time.Instant;
 import java.util.Map;
 import java.util.NavigableMap;
 
-import static hbase.schema.api.interfaces.converters.HBaseLongGetter.longGetter;
+import static hbase.schema.api.interfaces.fields.HBaseLongGetter.longGetter;
 import static hbase.schema.api.utils.HBaseSchemaConversions.utf8ToBytes;
 import static hbase.schema.api.utils.HBaseSchemaUtils.asBytesTreeMap;
 import static java.util.Arrays.asList;

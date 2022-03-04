@@ -11,10 +11,10 @@ import org.apache.hadoop.hbase.util.Bytes;
 
 import java.time.Instant;
 
-import static hbase.schema.api.interfaces.converters.HBaseBytesMapGetter.bytesMapGetter;
-import static hbase.schema.api.interfaces.converters.HBaseBytesMapSetter.bytesMapSetter;
-import static hbase.schema.api.interfaces.converters.HBaseLongGetter.longGetter;
-import static hbase.schema.api.interfaces.converters.HBaseLongMapGetter.longMapGetter;
+import static hbase.schema.api.interfaces.fields.HBaseBytesMapGetter.bytesMapGetter;
+import static hbase.schema.api.interfaces.fields.HBaseBytesMapSetter.bytesMapSetter;
+import static hbase.schema.api.interfaces.fields.HBaseLongGetter.longGetter;
+import static hbase.schema.api.interfaces.fields.HBaseLongMapGetter.longMapGetter;
 import static hbase.schema.api.utils.HBaseSchemaConversions.longSetter;
 import static hbase.schema.api.utils.HBaseSchemaConversions.stringGetter;
 import static hbase.schema.api.utils.HBaseSchemaConversions.stringSetter;

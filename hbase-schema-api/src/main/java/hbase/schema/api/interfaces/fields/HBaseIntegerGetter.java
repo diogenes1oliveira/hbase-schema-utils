@@ -1,4 +1,4 @@
-package hbase.schema.api.interfaces.converters;
+package hbase.schema.api.interfaces.fields;
 
 import org.jetbrains.annotations.Nullable;
 
