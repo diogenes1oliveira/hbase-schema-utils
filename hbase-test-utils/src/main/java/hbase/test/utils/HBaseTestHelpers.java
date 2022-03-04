@@ -1,5 +1,6 @@
 package hbase.test.utils;
 
+import hbase.base.exceptions.UncheckedInterruptionException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.TableName;
@@ -253,8 +254,8 @@ public final class HBaseTestHelpers {
      * Wraps over {@link Thread#sleep(long)} and handles its checked exception
      *
      * @param millis time in milliseconds to sleep
-     * @throws IllegalStateException interruption request while sleeping. The current thread is interrupted
-     *                               before throwing this exception
+     * @throws UncheckedInterruptionException interruption request while sleeping. The current thread is interrupted
+     *                                        before throwing this exception
      */
     public static void safeSleep(long millis) {
         try {
@@ -262,7 +263,7 @@ public final class HBaseTestHelpers {
         } catch (InterruptedException e) {
             LOGGER.warn("Thread interrupted while sleeping", e);
             Thread.currentThread().interrupt();
-            throw new IllegalStateException("Thread interrupted while sleeping", e);
+            throw new UncheckedInterruptionException("Thread interrupted while sleeping", e);
         }
     }
 

@@ -26,6 +26,10 @@
         </dependency>
         <dependency>
             <groupId>com.github.diogenes1oliveira</groupId>
+            <artifactId>hbase-base-types</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.github.diogenes1oliveira</groupId>
             <artifactId>hbase-schema-api</artifactId>
         </dependency>
         <dependency>

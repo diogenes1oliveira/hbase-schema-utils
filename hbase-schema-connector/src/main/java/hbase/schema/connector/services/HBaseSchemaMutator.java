@@ -1,5 +1,6 @@
 package hbase.schema.connector.services;
 
+import hbase.base.exceptions.UncheckedInterruptionException;
 import hbase.connector.services.HBaseConnector;
 import hbase.schema.api.interfaces.HBaseSchema;
 import hbase.schema.connector.interfaces.HBaseMutationsGenerator;
@@ -41,7 +42,7 @@ public class HBaseSchemaMutator<T> implements HBaseMutator<T> {
      * @param tableName name of the table to insert data in
      * @param objects   source objects
      * @throws IOException           failed to execute the mutations
-     * @throws IllegalStateException interrupted while mutating
+     * @throws UncheckedInterruptionException interrupted while mutating
      */
     @Override
     public void mutate(TableName tableName, List<T> objects) throws IOException {
@@ -53,7 +54,7 @@ public class HBaseSchemaMutator<T> implements HBaseMutator<T> {
         } catch (InterruptedException e) {
             LOGGER.error("Interrupted while mutating", e);
             Thread.currentThread().interrupt();
-            throw new IllegalStateException("Interrupted while mutating", e);
+            throw new UncheckedInterruptionException("Interrupted while mutating", e);
         }
     }
 }

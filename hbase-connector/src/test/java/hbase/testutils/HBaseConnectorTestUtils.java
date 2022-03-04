@@ -1,5 +1,6 @@
 package hbase.testutils;
 
+import hbase.base.exceptions.UncheckedInterruptionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,6 +22,7 @@ public final class HBaseConnectorTestUtils {
      *
      * @param code runnable to be executed in a thread
      * @return started thread
+     * @throws UncheckedInterruptionException interrupted while waiting for thread
      */
     public static Thread startThread(ThrowingRunnable<Exception> code) {
         CountDownLatch latch = new CountDownLatch(1);
@@ -43,7 +45,7 @@ public final class HBaseConnectorTestUtils {
             LOGGER.error("interrupted while waiting for thread to start", e);
             Thread.currentThread().interrupt();
             thread.interrupt();
-            throw new IllegalStateException("interrupted while waiting for thread to start", e);
+            throw new UncheckedInterruptionException("interrupted while waiting for thread to start", e);
         }
 
         return thread;

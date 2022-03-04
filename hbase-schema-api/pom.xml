@@ -27,6 +27,10 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
+            <groupId>com.github.diogenes1oliveira</groupId>
+            <artifactId>hbase-base-types</artifactId>
+        </dependency>
+        <dependency>
             <groupId>commons-codec</groupId>
             <artifactId>commons-codec</artifactId>
         </dependency>

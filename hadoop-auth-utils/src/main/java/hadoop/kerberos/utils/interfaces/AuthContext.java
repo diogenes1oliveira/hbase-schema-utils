@@ -1,6 +1,7 @@
 package hadoop.kerberos.utils.interfaces;
 
-import hadoop.kerberos.utils.exceptions.ContextInterruptedException;
+
+import hbase.base.exceptions.UncheckedInterruptionException;
 
 import java.util.function.Supplier;
 
@@ -18,10 +19,10 @@ public interface AuthContext<C, E extends Exception> extends AutoCloseable {
      * The default implementation just forwards to {@link #get(Supplier)}
      *
      * @param runnable code to execute within the Kerberos context
-     * @throws ContextInterruptedException thread interrupted while executing the code. Before throwing this
-     *                                     exception, implementations must log this error and call
-     *                                     {@code Thread.currentThread().interrupt()}, in this order.
-     * @throws RuntimeException            runnable failed
+     * @throws UncheckedInterruptionException thread interrupted while executing the code. Before throwing this
+     *                                        exception, implementations must log this error and call
+     *                                        {@code Thread.currentThread().interrupt()}, in this order.
+     * @throws RuntimeException               runnable failed
      */
     default void run(Runnable runnable) throws E {
         get(() -> {
@@ -38,10 +39,10 @@ public interface AuthContext<C, E extends Exception> extends AutoCloseable {
     /**
      * @param supplier code to supply a value within the Kerberos context
      * @param <T>      supplied value type
-     * @throws ContextInterruptedException thread interrupted while executing the code. Before throwing this
-     *                                     exception, implementations must log this error and call
-     *                                     {@code Thread.currentThread().interrupt()} in this order
-     * @throws RuntimeException            supplier failed
+     * @throws UncheckedInterruptionException thread interrupted while executing the code. Before throwing this
+     *                                        exception, implementations must log this error and call
+     *                                        {@code Thread.currentThread().interrupt()} in this order
+     * @throws RuntimeException               supplier failed
      */
     <T> T get(Supplier<T> supplier) throws E;
 
