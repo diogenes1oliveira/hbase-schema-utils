@@ -8,6 +8,7 @@
 
 Realistas:
 
+- Consertar o report do JaCoCo;
 - Verificar pacote org.apache.hadoop.fs.shell.find.Result
 - Checar interrupted;
 - Pacote separado para as interfaces e exceções;
