@@ -9,6 +9,8 @@
 Realistas:
 
 - Consertar o report do JaCoCo;
+- Consertar Conversions, too cumbersome all of those stringGetter() longGetter() etc;
+- Decorator time???
 - Verificar pacote org.apache.hadoop.fs.shell.find.Result
 - Checar interrupted;
 - Pacote separado para as interfaces e exceções;
