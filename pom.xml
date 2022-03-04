@@ -45,6 +45,7 @@
         <module>hbase-schema-connector</module>
         <module>hbase-test-utils</module>
         <module>hadoop-auth-utils</module>
+        <module>hbase-base-types</module>
     </modules>
 
     <dependencyManagement>
@@ -73,6 +74,11 @@
             <dependency>
                 <groupId>com.github.diogenes1oliveira</groupId>
                 <artifactId>hadoop-auth-utils</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.github.diogenes1oliveira</groupId>
+                <artifactId>hbase-base-types</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
