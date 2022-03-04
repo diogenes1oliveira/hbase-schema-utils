@@ -1,1 +1,1 @@
-hbase.connector.HBaseDefaultConnectionFactory
+hbase.connector.services.HBaseDefaultConnectionFactory

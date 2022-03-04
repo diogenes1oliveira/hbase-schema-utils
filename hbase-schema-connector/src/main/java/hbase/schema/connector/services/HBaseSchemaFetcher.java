@@ -1,6 +1,6 @@
 package hbase.schema.connector.services;
 
-import hbase.connector.HBaseConnector;
+import hbase.connector.services.HBaseConnector;
 import hbase.schema.api.interfaces.HBaseQuerySchema;
 import hbase.schema.api.interfaces.HBaseSchema;
 import hbase.schema.connector.interfaces.HBaseFetcher;
@@ -81,7 +81,7 @@ public class HBaseSchemaFetcher<T, R> implements HBaseFetcher<T, R> {
         if (get == null) {
             return null;
         }
-        try (Connection connection = connector.connect();
+        try (Connection connection = connector.context();
              Table table = connection.getTable(tableName)) {
             Result result = table.get(get);
             return resultsParser.parseResult(result);
@@ -123,7 +123,7 @@ public class HBaseSchemaFetcher<T, R> implements HBaseFetcher<T, R> {
      */
     public List<R> scan(TableName tableName, List<? extends T> queries) throws IOException {
         Scan scan = toScan(queries);
-        try (Connection connection = connector.connect();
+        try (Connection connection = connector.context();
              Table table = connection.getTable(tableName);
              ResultScanner scanner = table.getScanner(scan)) {
             return resultsParser.parseResults(scanner);

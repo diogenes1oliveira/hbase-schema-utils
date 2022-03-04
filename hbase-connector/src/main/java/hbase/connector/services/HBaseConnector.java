@@ -1,28 +1,34 @@
-package hbase.connector;
+package hbase.connector.services;
 
+import hadoop.kerberos.utils.interfaces.IOSupplier;
 import hbase.connector.interfaces.HBaseConnectionFactory;
 import hbase.connector.interfaces.HBaseConnectionProxy;
-import hbase.connector.utils.ContextReadWriteLock;
-import hbase.connector.proxies.HBaseExpirableConnection;
-import hbase.connector.proxies.HBaseRecreatableConnection;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.client.Connection;
 
 import java.io.IOException;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import static hbase.connector.utils.HBaseHelpers.getMillisDuration;
 import static hbase.connector.utils.HBaseHelpers.toHBaseConf;
 
 /**
  * Manages a singleton instance of a HBase connection
  * <p>
- * {@link HBaseRegistryConnectionFactory} is used to get the suitable factory for the given configuration
+ * {@link HBaseConnectionFactoryRegistry} is used to get the suitable factory for the given configuration
  * <p>
  * Obs: connection and disconnection are mutually synchronized
  */
-public class HBaseConnector implements AutoCloseable {
-    private final HBaseExpirableConnection connection;
+public class HBaseConnector {
+    private final HBaseRecreatableConnectionContext connectionContext;
+
+    /**
+     * Automatic reconnection period
+     */
+    public static final String CONFIG_RECONNECTION_PERIOD = "hbase.custom.reconnection.period";
 
     /**
      * @param props Java properties for the new connection
@@ -42,7 +48,7 @@ public class HBaseConnector implements AutoCloseable {
      * @param conf Hadoop-style configuration for the connection
      */
     public HBaseConnector(Configuration conf) {
-        this.connection = newConnection(conf, new HBaseRegistryConnectionFactory(), new ContextReadWriteLock());
+        this.connectionContext = newContext(conf);
     }
 
     /**
@@ -55,16 +61,15 @@ public class HBaseConnector implements AutoCloseable {
      * @return HBase connection object
      * @throws IOException failed to create connection
      */
-    public HBaseConnectionProxy connect() throws IOException {
-        return connection.getWrappedConnection();
+    public HBaseConnectionProxy context() throws IOException {
+        return connectionContext.enter();
     }
 
     /**
      * Closes the current connection and creates it back up
      */
     public void reconnect() throws IOException {
-        close();
-        connection.refreshNow();
+        connectionContext.refresh();
     }
 
     /**
@@ -74,24 +79,27 @@ public class HBaseConnector implements AutoCloseable {
      *
      * @throws IOException failed to close the currently open connection
      */
-    @Override
-    public void close() throws IOException {
-        connection.close();
+    public void disconnect() throws IOException {
+        connectionContext.disconnect();
     }
 
     /**
      * Checks if there's an active connection
      */
     public boolean isConnected() {
-        return connection.getUnproxiedConnection() != null;
+        return connectionContext.getUnproxiedConnection() != null;
     }
 
-    private static HBaseExpirableConnection newConnection(Configuration conf,
-                                                          HBaseConnectionFactory factory,
-                                                          ContextReadWriteLock contextLock) {
-        HBaseRecreatableConnection connection = new HBaseRecreatableConnection(
-                conf, factory, contextLock
-        );
-        return new HBaseExpirableConnection(connection);
+    protected HBaseRecreatableConnectionContext newContext(Configuration conf) {
+        long expireMillis = getMillisDuration(conf, CONFIG_RECONNECTION_PERIOD, 0L);
+        ReadWriteLock readWriteLock = new ReentrantReadWriteLock();
+        HBaseConnectionFactory connectionFactory = new HBaseConnectionFactoryRegistry();
+        IOSupplier<Connection> connectionCreator = () -> connectionFactory.create(conf);
+
+        if (expireMillis > 0) {
+            return new HBaseExpirableConnectionContext(expireMillis, connectionCreator, readWriteLock);
+        } else {
+            return new HBaseRecreatableConnectionContext(connectionCreator, readWriteLock);
+        }
     }
 }

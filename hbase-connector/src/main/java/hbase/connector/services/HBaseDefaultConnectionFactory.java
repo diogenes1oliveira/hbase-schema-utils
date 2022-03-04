@@ -1,4 +1,4 @@
-package hbase.connector;
+package hbase.connector.services;
 
 import hadoop.kerberos.utils.UgiGlobalContextManager;
 import hadoop.kerberos.utils.interfaces.IOAuthContext;

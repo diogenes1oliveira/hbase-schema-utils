@@ -1,6 +1,6 @@
 package hbase.schema.connector.services;
 
-import hbase.connector.HBaseConnector;
+import hbase.connector.services.HBaseConnector;
 import hbase.schema.api.interfaces.HBaseSchema;
 import hbase.schema.connector.interfaces.HBaseMutationsGenerator;
 import hbase.schema.connector.interfaces.HBaseMutator;
@@ -47,7 +47,7 @@ public class HBaseSchemaMutator<T> implements HBaseMutator<T> {
     public void mutate(TableName tableName, List<T> objects) throws IOException {
         List<Mutation> mutations = mutationsGenerator.toMutations(objects);
 
-        try (Connection connection = connector.connect();
+        try (Connection connection = connector.context();
              Table table = connection.getTable(tableName)) {
             table.batch(mutations, new Object[mutations.size()]);
         } catch (InterruptedException e) {

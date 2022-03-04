@@ -1,12 +1,10 @@
-package hbase.connector;
+package hbase.connector.services;
 
 import hbase.connector.interfaces.HBaseConnectionFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.client.Connection;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.ServiceLoader;
@@ -20,7 +18,7 @@ import static java.util.Comparator.comparingInt;
  * <p>
  * Obs: DO NOT register this class in META-INF/services
  */
-public final class HBaseRegistryConnectionFactory implements HBaseConnectionFactory {
+public final class HBaseConnectionFactoryRegistry implements HBaseConnectionFactory {
     private final List<HBaseConnectionFactory> factories = new CopyOnWriteArrayList<>();
     private final AtomicBoolean initialized = new AtomicBoolean(false);
 
@@ -60,16 +58,15 @@ public final class HBaseRegistryConnectionFactory implements HBaseConnectionFact
      * @return factory for the given configuration or empty
      */
     public Optional<HBaseConnectionFactory> getFactory(Configuration conf) {
-        Comparator<HBaseConnectionFactory> comparator = comparingInt(f -> f.priority(conf));
         return factories.stream()
                         .filter(factory -> factory.supports(conf))
-                        .max(comparator);
+                        .max(comparingInt(f -> f.priority(conf)));
     }
 
     private void loadFactories() {
         for (HBaseConnectionFactory factory : ServiceLoader.load(HBaseConnectionFactory.class)) {
             if (factory == this) {
-                String thisClassName = HBaseRegistryConnectionFactory.class.getSimpleName();
+                String thisClassName = HBaseConnectionFactoryRegistry.class.getSimpleName();
                 throw new IllegalStateException("The class " + thisClassName + " shouldn't be registered as a service");
             }
             factories.add(factory);
