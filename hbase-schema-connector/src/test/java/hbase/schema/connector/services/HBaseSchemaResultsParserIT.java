@@ -2,7 +2,7 @@ package hbase.schema.connector.services;
 
 import hbase.connector.services.HBaseConnector;
 import hbase.schema.api.interfaces.HBaseResultParserSchema;
-import hbase.schema.api.schemas.HBaseResultParserBuilder;
+import hbase.schema.api.schemas.HBaseResultParserSchemaBuilder;
 import hbase.test.utils.HBaseTestJunitExtension;
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.Connection;
@@ -33,7 +33,7 @@ class HBaseSchemaResultsParserIT {
     TableName tempTable;
     HBaseConnector connector;
 
-    HBaseResultParserSchema<DummyPojo> resultParserSchema = new HBaseResultParserBuilder<>(DummyPojo::new)
+    HBaseResultParserSchema<DummyPojo> resultParserSchema = new HBaseResultParserSchemaBuilder<>(DummyPojo::new)
             .fromRowKey(stringSetter(DummyPojo::setId))
             .fromPrefix("p-", (obj, bytesMap) -> obj.setMap1(bytesToStringMap(bytesMap)))
             .fromColumn("string", stringSetter(DummyPojo::setString))

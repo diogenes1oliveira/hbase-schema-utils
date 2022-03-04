@@ -64,7 +64,7 @@ public class HBaseGenericRowSchema implements HBaseSchema<HBaseGenericRow, HBase
      */
     @Override
     public HBaseResultParserSchema<HBaseGenericRow> resultParserSchema() {
-        return new HBaseResultParserBuilder<>(HBaseGenericRow::new)
+        return new HBaseResultParserSchemaBuilder<>(HBaseGenericRow::new)
                 .fromRowKey(HBaseGenericRow::setRowKey)
                 .fromPrefix(EMPTY, HBaseGenericRowSchema::setCells)
                 .build();

@@ -16,7 +16,7 @@ import static hbase.schema.api.utils.HBaseSchemaUtils.asBytesTreeMap;
  *
  * @param <T> result object instance
  */
-public class HBaseResultParserBuilder<T> {
+public class HBaseResultParserSchemaBuilder<T> {
     private final Supplier<T> constructor;
     private HBaseBytesSetter<T> fromRowKeySetter = HBaseBytesSetter.dummy();
     private final NavigableMap<byte[], HBaseBytesSetter<T>> cellSetters = asBytesTreeMap();
@@ -27,7 +27,7 @@ public class HBaseResultParserBuilder<T> {
      *
      * @param constructor supplier of a new result instance
      */
-    public HBaseResultParserBuilder(Supplier<T> constructor) {
+    public HBaseResultParserSchemaBuilder(Supplier<T> constructor) {
         this.constructor = constructor;
     }
 
@@ -37,7 +37,7 @@ public class HBaseResultParserBuilder<T> {
      * @param bytesSetter lambda to populate the result object with data from the row key
      * @return this builder
      */
-    public HBaseResultParserBuilder<T> fromRowKey(HBaseBytesSetter<T> bytesSetter) {
+    public HBaseResultParserSchemaBuilder<T> fromRowKey(HBaseBytesSetter<T> bytesSetter) {
         this.fromRowKeySetter = bytesSetter;
         return this;
     }
@@ -49,7 +49,7 @@ public class HBaseResultParserBuilder<T> {
      * @param bytesSetter lambda to populate the result object with data from the given column
      * @return this builder
      */
-    public HBaseResultParserBuilder<T> fromColumn(byte[] qualifier, HBaseBytesSetter<T> bytesSetter) {
+    public HBaseResultParserSchemaBuilder<T> fromColumn(byte[] qualifier, HBaseBytesSetter<T> bytesSetter) {
         cellSetters.put(qualifier, bytesSetter);
         return this;
     }
@@ -61,7 +61,7 @@ public class HBaseResultParserBuilder<T> {
      * @param bytesSetter lambda to populate the result object with binary data from the given column
      * @return this builder
      */
-    public HBaseResultParserBuilder<T> fromColumn(String qualifier, HBaseBytesSetter<T> bytesSetter) {
+    public HBaseResultParserSchemaBuilder<T> fromColumn(String qualifier, HBaseBytesSetter<T> bytesSetter) {
         return fromColumn(qualifier.getBytes(StandardCharsets.UTF_8), bytesSetter);
     }
 
@@ -73,7 +73,7 @@ public class HBaseResultParserBuilder<T> {
      *                       will receive the data without such prefix
      * @return this builder
      */
-    public HBaseResultParserBuilder<T> fromPrefix(byte[] prefix, HBaseBytesMapSetter<T> bytesMapSetter) {
+    public HBaseResultParserSchemaBuilder<T> fromPrefix(byte[] prefix, HBaseBytesMapSetter<T> bytesMapSetter) {
         prefixSetters.put(prefix, bytesMapSetter);
         return this;
     }
@@ -86,7 +86,7 @@ public class HBaseResultParserBuilder<T> {
      *                       will receive the data without such prefix
      * @return this builder
      */
-    public <F> HBaseResultParserBuilder<T> fromPrefix(String prefix, HBaseBytesMapSetter<T> bytesMapSetter) {
+    public <F> HBaseResultParserSchemaBuilder<T> fromPrefix(String prefix, HBaseBytesMapSetter<T> bytesMapSetter) {
         return fromPrefix(prefix.getBytes(StandardCharsets.UTF_8), bytesMapSetter);
     }
 

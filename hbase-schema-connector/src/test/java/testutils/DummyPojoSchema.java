@@ -6,7 +6,7 @@ import hbase.schema.api.interfaces.HBaseResultParserSchema;
 import hbase.schema.api.interfaces.HBaseSchema;
 import hbase.schema.api.schemas.HBaseMutationSchemaBuilder;
 import hbase.schema.api.schemas.HBaseQuerySchemaBuilder;
-import hbase.schema.api.schemas.HBaseResultParserBuilder;
+import hbase.schema.api.schemas.HBaseResultParserSchemaBuilder;
 import org.apache.hadoop.hbase.util.Bytes;
 
 import java.time.Instant;
@@ -50,7 +50,7 @@ public class DummyPojoSchema implements HBaseSchema<DummyPojo, DummyPojo> {
 
     @Override
     public HBaseResultParserSchema<DummyPojo> resultParserSchema() {
-        return new HBaseResultParserBuilder<>(DummyPojo::new)
+        return new HBaseResultParserSchemaBuilder<>(DummyPojo::new)
                 .fromRowKey(stringSetter(DummyPojo::setId))
                 .fromPrefix("map1-", bytesMapSetter(DummyPojo::setMap1, utf8FromBytes(), utf8FromBytes()))
                 .fromPrefix("map2-", bytesMapSetter(DummyPojo::setMap2, utf8FromBytes(), Bytes::toLong))

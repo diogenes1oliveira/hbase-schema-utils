@@ -19,7 +19,7 @@ import static org.hamcrest.Matchers.equalTo;
 
 class HBaseResultParserSchemaBuilderTest {
 
-    HBaseResultParserSchema<DummyPojo> resultParser = new HBaseResultParserBuilder<>(DummyPojo::new)
+    HBaseResultParserSchema<DummyPojo> resultParser = new HBaseResultParserSchemaBuilder<>(DummyPojo::new)
             .fromRowKey(stringSetter(DummyPojo::setId))
             .fromColumn("field", stringSetter(DummyPojo::setField))
             .fromPrefix("p", stringMapSetter(DummyPojo::setMap1))
