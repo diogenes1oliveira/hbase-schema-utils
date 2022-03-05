@@ -2,15 +2,14 @@ package hbase.schema.api.schemas;
 
 import hbase.schema.api.interfaces.HBaseQuerySchema;
 import hbase.schema.api.interfaces.conversion.BytesConverter;
-import hbase.schema.api.utils.HBaseSchemaConversions;
 
-import java.util.Arrays;
+import java.nio.charset.StandardCharsets;
+import java.util.NavigableSet;
 import java.util.SortedSet;
 import java.util.function.Function;
 
-import static hbase.schema.api.utils.HBaseSchemaConversions.utf8ToBytes;
 import static hbase.schema.api.utils.HBaseSchemaUtils.*;
-import static java.util.Optional.ofNullable;
+import static java.util.Arrays.asList;
 
 /**
  * Builder for {@link HBaseQuerySchema} objects, providing a fluent API to add fields and field prefixes to be fetched
@@ -19,8 +18,8 @@ import static java.util.Optional.ofNullable;
  */
 public class HBaseQuerySchemaBuilder<T> {
     private Function<T, byte[]> rowKeyGetter = null;
-    private Function<T, SortedSet<byte[]>> qualifiersGetter = null;
-    private Function<T, SortedSet<byte[]>> prefixesGetter = null;
+    private final NavigableSet<byte[]> qualifiers = asBytesTreeSet();
+    private final NavigableSet<byte[]> prefixes = asBytesTreeSet();
 
     /**
      * Generates the row key to be used in a Get request
@@ -65,10 +64,9 @@ public class HBaseQuerySchemaBuilder<T> {
      * @return this builder
      */
     public HBaseQuerySchemaBuilder<T> withQualifiers(byte[] first, byte[]... rest) {
-        SortedSet<byte[]> qualifiers = asBytesTreeSet(rest);
         qualifiers.add(first);
+        qualifiers.addAll(asList(rest));
 
-        this.qualifiersGetter = query -> qualifiers;
         return this;
     }
 
@@ -80,7 +78,10 @@ public class HBaseQuerySchemaBuilder<T> {
      * @return this builder
      */
     public HBaseQuerySchemaBuilder<T> withQualifiers(String first, String... rest) {
-        return withQualifiers(utf8ToBytes(first), utf8ToBytesArray(rest));
+        return withQualifiers(
+                first.getBytes(StandardCharsets.UTF_8),
+                mapArray(rest, byte[].class, s -> s.getBytes(StandardCharsets.UTF_8))
+        );
     }
 
     /**
@@ -91,10 +92,9 @@ public class HBaseQuerySchemaBuilder<T> {
      * @return this builder
      */
     public HBaseQuerySchemaBuilder<T> withPrefixes(byte[] first, byte[]... rest) {
-        SortedSet<byte[]> prefixes = asBytesTreeSet(rest);
         prefixes.add(first);
+        prefixes.addAll(asList(rest));
 
-        this.prefixesGetter = query -> prefixes;
         return this;
     }
 
@@ -106,7 +106,10 @@ public class HBaseQuerySchemaBuilder<T> {
      * @return this builder
      */
     public HBaseQuerySchemaBuilder<T> withPrefixes(String first, String... rest) {
-        return withPrefixes(utf8ToBytes(first), utf8ToBytesArray(rest));
+        return withPrefixes(
+                first.getBytes(StandardCharsets.UTF_8),
+                mapArray(rest, byte[].class, s -> s.getBytes(StandardCharsets.UTF_8))
+        );
     }
 
     /**
@@ -116,10 +119,7 @@ public class HBaseQuerySchemaBuilder<T> {
      */
     public HBaseQuerySchema<T> build() {
         verifyNonNull("no row key generator is set", rowKeyGetter);
-        verifyNonNull("needs qualifiers or prefixes", qualifiersGetter, prefixesGetter);
-
-        qualifiersGetter = ofNullable(qualifiersGetter).orElse(obj -> asBytesTreeSet());
-        prefixesGetter = ofNullable(prefixesGetter).orElse(obj -> asBytesTreeSet());
+        verifyNonEmpty("needs qualifiers or prefixes", qualifiers, prefixes);
 
         return new HBaseQuerySchema<T>() {
             @Override
@@ -129,19 +129,14 @@ public class HBaseQuerySchemaBuilder<T> {
 
             @Override
             public SortedSet<byte[]> getQualifiers(T query) {
-                return qualifiersGetter.apply(query);
+                return qualifiers;
             }
 
             @Override
             public SortedSet<byte[]> getPrefixes(T query) {
-                return prefixesGetter.apply(query);
+                return prefixes;
             }
         };
     }
 
-    private static byte[][] utf8ToBytesArray(String... strings) {
-        return Arrays.stream(strings)
-                .map(HBaseSchemaConversions::utf8ToBytes)
-                .toArray(byte[][]::new);
-    }
 }
