@@ -1,12 +1,13 @@
 package hbase.schema.api.utils;
 
+import org.apache.hadoop.hbase.filter.Filter;
+import org.apache.hadoop.hbase.filter.FilterList;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-import java.util.Collection;
-import java.util.LinkedHashMap;
-import java.util.TreeMap;
-import java.util.TreeSet;
+import java.lang.reflect.Array;
+import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
@@ -155,25 +156,103 @@ public final class HBaseSchemaUtils {
         throw new IllegalStateException(message);
     }
 
+    /**
+     * Creates a new array by applying a mapper the items in the input
+     *
+     * @param input      input array
+     * @param outputType type of output items
+     * @param mapper     maps an input item
+     * @param <T>        input type
+     * @param <U>        output type
+     * @return new array with the mapped items
+     */
+    @SuppressWarnings("unchecked")
+    public static <T, U> U[] mapArray(T[] input, Class<U> outputType, Function<T, U> mapper) {
+        U[] output = (U[]) Array.newInstance(outputType, input.length);
+        for (int i = 0; i < input.length; ++i) {
+            output[i] = mapper.apply(input[i]);
+        }
+        return output;
+    }
 
+    /**
+     * Builds a new function that applies the functions in sequence, handling null values accordingly.
+     *
+     * @param f1  first function in chain
+     * @param f2  second function in chain
+     * @param <T> first function input type
+     * @param <U> first function output type and second function input type
+     * @param <V> second function output type
+     * @return new function equivalent to {@code f2(f1(t))}
+     */
     public static <T, U, V> Function<T, V> chain(Function<T, U> f1, Function<U, V> f2) {
         return t -> {
-            if(t == null) {
+            if (t == null) {
                 return null;
             }
             U u = f1.apply(t);
             return u != null ? f2.apply(u) : null;
         };
     }
+
+    /**
+     * Builds a new bi-consumer that applies a transformer function beforehand, handling null values accordingly.
+     *
+     * @param c1  bi-consumer
+     * @param f2  function
+     * @param <T> bi-consumer first input type
+     * @param <U> bi-consumer second input type and function output type
+     * @param <V> function input type
+     * @return new bi-consumer equivalent to {@code c1(t, f2(v))}
+     */
     public static <T, U, V> BiConsumer<T, V> chain(BiConsumer<T, U> c1, Function<V, U> f2) {
         return (t, v) -> {
-            if(v == null) {
+            if (v == null) {
                 return;
             }
             U u = f2.apply(v);
-            if(u != null) {
+            if (u != null) {
                 c1.accept(t, u);
             }
         };
+    }
+
+    /**
+     * Combines the filters, skipping the null ones
+     *
+     * @param operator operator to combine the filters into a {@link FilterList}
+     * @param filters  iterator that yields the (potentially null) filters to be combined
+     * @return a FilterList, the only non-null Filter or null if no valid filter was found
+     */
+    @Nullable
+    public static Filter combineNullableFilters(FilterList.Operator operator, Iterator<@Nullable Filter> filters) {
+        FilterList filterList = new FilterList(operator);
+        while (filters.hasNext()) {
+            Filter filter = filters.next();
+            if (filter != null) {
+                filterList.addFilter(filter);
+            }
+        }
+
+        switch (filterList.size()) {
+            case 0:
+                return null;
+            case 1:
+                return filterList.getFilters().get(0);
+            default:
+                return filterList;
+        }
+    }
+
+    /**
+     * Combines the filters, skipping the null ones
+     *
+     * @param operator operator to combine the filters into a {@link FilterList}
+     * @param filters  array of filters to be combined
+     * @return a FilterList, the only non-null Filter or null if no valid filter was found
+     */
+    @Nullable
+    public static Filter combineNullableFilters(FilterList.Operator operator, @Nullable Filter... filters) {
+        return combineNullableFilters(operator, asList(filters).iterator());
     }
 }
