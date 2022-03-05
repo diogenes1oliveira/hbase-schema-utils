@@ -1,17 +1,15 @@
 package hbase.schema.api.schemas;
 
 import hbase.schema.api.interfaces.HBaseQuerySchema;
-import hbase.schema.api.interfaces.fields.HBaseBytesGetter;
-import hbase.schema.api.interfaces.fields.HBaseIntegerGetter;
+import hbase.schema.api.interfaces.conversion.BytesConverter;
 import hbase.schema.api.utils.HBaseSchemaConversions;
 
 import java.util.Arrays;
 import java.util.SortedSet;
 import java.util.function.Function;
 
-import static hbase.schema.api.utils.HBaseSchemaUtils.asBytesTreeSet;
 import static hbase.schema.api.utils.HBaseSchemaConversions.utf8ToBytes;
-import static hbase.schema.api.utils.HBaseSchemaUtils.verifyNonNull;
+import static hbase.schema.api.utils.HBaseSchemaUtils.*;
 import static java.util.Optional.ofNullable;
 
 /**
@@ -20,8 +18,8 @@ import static java.util.Optional.ofNullable;
  * @param <T> query object instance
  */
 public class HBaseQuerySchemaBuilder<T> {
-    private HBaseBytesGetter<T> rowKeyGetter = null;
-    private HBaseBytesGetter<T> scanKeyGetter = null;
+    private Function<T, byte[]> rowKeyGetter = null;
+    private Function<T, byte[]> scanKeyGetter = null;
     private Function<T, SortedSet<byte[]>> qualifiersGetter = null;
     private Function<T, SortedSet<byte[]>> prefixesGetter = null;
 
@@ -31,9 +29,33 @@ public class HBaseQuerySchemaBuilder<T> {
      * @param getter lambda to build a Get row key from the object
      * @return this builder
      */
-    public HBaseQuerySchemaBuilder<T> withRowKey(HBaseBytesGetter<T> getter) {
+    public HBaseQuerySchemaBuilder<T> withRowKey(Function<T, byte[]> getter) {
         this.rowKeyGetter = getter;
         return this;
+    }
+
+    /**
+     * Generates the row key to be used in a Get request
+     *
+     * @param getter    lambda to get a row key value from the object
+     * @param converter converts the value to a proper {@code byte[]}
+     * @param <U>       value type
+     * @return this builder
+     */
+    public <U> HBaseQuerySchemaBuilder<T> withRowKey(Function<T, U> getter, Function<U, byte[]> converter) {
+        return withRowKey(chain(getter, converter));
+    }
+
+    /**
+     * Generates the row key to be used in a Get request
+     *
+     * @param getter    lambda to get a row key value from the object
+     * @param converter converts the value to a proper {@code byte[]}
+     * @param <U>       value type
+     * @return this builder
+     */
+    public <U> HBaseQuerySchemaBuilder<T> withRowKey(Function<T, U> getter, BytesConverter<U> converter) {
+        return withRowKey(getter, converter::toBytes);
     }
 
     /**
@@ -42,9 +64,33 @@ public class HBaseQuerySchemaBuilder<T> {
      * @param getter lambda to build a Scan search key from the object
      * @return this builder
      */
-    public HBaseQuerySchemaBuilder<T> withScanKey(HBaseBytesGetter<T> getter) {
+    public HBaseQuerySchemaBuilder<T> withScanKey(Function<T, byte[]> getter) {
         this.scanKeyGetter = getter;
         return this;
+    }
+
+    /**
+     * Generates the search key to be used in a Scan request
+     *
+     * @param getter    lambda to build a Scan search key from the object
+     * @param converter converts the value to a proper {@code byte[]}
+     * @param <U>       value type
+     * @return this builder
+     */
+    public <U> HBaseQuerySchemaBuilder<T> withScanKey(Function<T, U> getter, Function<U, byte[]> converter) {
+        return withScanKey(chain(getter, converter));
+    }
+
+    /**
+     * Generates the search key to be used in a Scan request
+     *
+     * @param getter    lambda to build a Scan search key from the object
+     * @param converter converts the value to a proper {@code byte[]}
+     * @param <U>       value type
+     * @return this builder
+     */
+    public <U> HBaseQuerySchemaBuilder<T> withScanKey(Function<T, U> getter, BytesConverter<U> converter) {
+        return withScanKey(getter, converter::toBytes);
     }
 
     /**
@@ -63,10 +109,10 @@ public class HBaseQuerySchemaBuilder<T> {
      * @param sizeGetter lambda to get the Scan search key size from the object
      * @return this builder
      */
-    public HBaseQuerySchemaBuilder<T> withScanKeySize(HBaseIntegerGetter<T> sizeGetter) {
+    public HBaseQuerySchemaBuilder<T> withScanKeySize(Function<T, Integer> sizeGetter) {
         return withScanKey(query -> {
-            byte[] rowKey = rowKeyGetter.getBytes(query);
-            Integer size = sizeGetter.getInteger(query);
+            byte[] rowKey = rowKeyGetter.apply(query);
+            Integer size = sizeGetter.apply(query);
             if (rowKey == null || size == null) {
                 return null;
             }
@@ -144,12 +190,12 @@ public class HBaseQuerySchemaBuilder<T> {
         return new HBaseQuerySchema<T>() {
             @Override
             public byte[] buildRowKey(T query) {
-                return rowKeyGetter.getBytes(query);
+                return rowKeyGetter.apply(query);
             }
 
             @Override
             public byte[] buildScanKey(T query) {
-                return scanKeyGetter.getBytes(query);
+                return scanKeyGetter.apply(query);
             }
 
             @Override
@@ -166,7 +212,7 @@ public class HBaseQuerySchemaBuilder<T> {
 
     private static byte[][] utf8ToBytesArray(String... strings) {
         return Arrays.stream(strings)
-                     .map(HBaseSchemaConversions::utf8ToBytes)
-                     .toArray(byte[][]::new);
+                .map(HBaseSchemaConversions::utf8ToBytes)
+                .toArray(byte[][]::new);
     }
 }

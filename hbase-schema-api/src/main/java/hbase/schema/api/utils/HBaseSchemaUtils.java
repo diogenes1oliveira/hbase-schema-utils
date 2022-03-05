@@ -7,6 +7,8 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.function.BiConsumer;
+import java.util.function.Function;
 
 import static java.util.Arrays.asList;
 
@@ -151,5 +153,27 @@ public final class HBaseSchemaUtils {
             }
         }
         throw new IllegalStateException(message);
+    }
+
+
+    public static <T, U, V> Function<T, V> chain(Function<T, U> f1, Function<U, V> f2) {
+        return t -> {
+            if(t == null) {
+                return null;
+            }
+            U u = f1.apply(t);
+            return u != null ? f2.apply(u) : null;
+        };
+    }
+    public static <T, U, V> BiConsumer<T, V> chain(BiConsumer<T, U> c1, Function<V, U> f2) {
+        return (t, v) -> {
+            if(v == null) {
+                return;
+            }
+            U u = f2.apply(v);
+            if(u != null) {
+                c1.accept(t, u);
+            }
+        };
     }
 }

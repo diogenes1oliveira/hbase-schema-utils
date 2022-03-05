@@ -1,10 +1,12 @@
 package hbase.schema.api.interfaces.conversion;
 
+import hbase.schema.api.utils.HBaseSchemaUtils;
 import org.apache.hadoop.hbase.util.Bytes;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.NavigableMap;
+import java.util.function.Supplier;
 
 import static hbase.schema.api.utils.HBaseSchemaConversions.transformMap;
 import static hbase.schema.api.utils.HBaseSchemaConversions.transformMapValues;
@@ -52,22 +54,9 @@ public interface LongMapConverter<T> extends BytesMapConverter<T> {
     /**
      * A dummy converter for bytes map values
      */
-    LongMapConverter<NavigableMap<byte[], Long>> IDENTITY = new LongMapConverter<NavigableMap<byte[], Long>>() {
-        @Override
-        public NavigableMap<byte[], Long> toLongMap(NavigableMap<byte[], Long> longMap) {
-            return longMap;
-        }
-
-        @Override
-        public NavigableMap<byte[], Long> fromLongMap(NavigableMap<byte[], Long> longMap) {
-            return longMap;
-        }
-
-        @Override
-        public Class<?> type() {
-            return Map.class;
-        }
-    };
+    LongMapConverter<NavigableMap<byte[], Long>> IDENTITY = longMapConverter(
+            BytesConverter.identity(), LongConverter.identity(), HBaseSchemaUtils::asBytesTreeMap
+    );
 
     /**
      * A dummy converter for bytes map values
@@ -76,17 +65,29 @@ public interface LongMapConverter<T> extends BytesMapConverter<T> {
         return IDENTITY;
     }
 
-    static <K, V> LongMapConverter<Map<K, V>> longMapConverter(BytesConverter<K> keyConverter,
-                                                               LongConverter<V> valueConverter) {
-        return new LongMapConverter<Map<K, V>>() {
+    /**
+     * Creates a new long map converter
+     *
+     * @param keyConverter   converts the values to/from {@code byte[]}
+     * @param valueConverter converts the values to/from {@code Long}
+     * @param mapConstructor constructs a new map instance
+     * @param <K>            key type
+     * @param <V>            value type
+     * @param <T>            concrete map type
+     * @return new long map converter
+     */
+    static <K, V, T extends Map<K, V>> LongMapConverter<T> longMapConverter(BytesConverter<K> keyConverter,
+                                                                            LongConverter<V> valueConverter,
+                                                                            Supplier<T> mapConstructor) {
+        return new LongMapConverter<T>() {
             @Override
-            public NavigableMap<byte[], Long> toLongMap(Map<K, V> value) {
+            public NavigableMap<byte[], Long> toLongMap(T value) {
                 return transformMap(value, asBytesTreeMap(), keyConverter::toBytes, valueConverter::toLong);
             }
 
             @Override
-            public Map<K, V> fromLongMap(NavigableMap<byte[], Long> longMap) {
-                return transformMap(longMap, new HashMap<>(), keyConverter::fromBytes, valueConverter::fromLong);
+            public T fromLongMap(NavigableMap<byte[], Long> longMap) {
+                return transformMap(longMap, mapConstructor.get(), keyConverter::fromBytes, valueConverter::fromLong);
             }
 
             @Override
@@ -94,5 +95,30 @@ public interface LongMapConverter<T> extends BytesMapConverter<T> {
                 return Map.class;
             }
         };
+    }
+
+    /**
+     * Creates a new long HashMap converter
+     *
+     * @param keyConverter   converts the values to/from {@code byte[]}
+     * @param valueConverter converts the values to/from {@code Long}
+     * @param <K>            key type
+     * @param <V>            value type
+     * @return new long HashMap converter
+     */
+    static <K, V> LongMapConverter<Map<K, V>> longMapConverter(BytesConverter<K> keyConverter,
+                                                               LongConverter<V> valueConverter) {
+        return longMapConverter(keyConverter, valueConverter, HashMap::new);
+    }
+
+    /**
+     * Creates a new long HashMap converter
+     *
+     * @param keyConverter converts the values to/from {@code byte[]}
+     * @param <K>          key type
+     * @return new long HashMap converter
+     */
+    static <K> LongMapConverter<Map<K, Long>> longMapKeyConverter(BytesConverter<K> keyConverter) {
+        return longMapConverter(keyConverter, LongConverter.identity());
     }
 }

@@ -9,8 +9,8 @@ import org.junit.jupiter.params.provider.MethodSource;
 import java.util.NavigableMap;
 import java.util.stream.Stream;
 
-import static hbase.schema.api.utils.HBaseSchemaConversions.stringMapSetter;
-import static hbase.schema.api.utils.HBaseSchemaConversions.stringSetter;
+import static hbase.schema.api.converters.Utf8BytesMapConverter.utf8BytesMapConverter;
+import static hbase.schema.api.converters.Utf8Converter.utf8Converter;
 import static hbase.schema.api.utils.HBaseSchemaConversions.utf8ToBytes;
 import static hbase.schema.api.utils.HBaseSchemaUtils.asBytesTreeMap;
 import static hbase.schema.api.utils.HBaseSchemaUtils.asStringMap;
@@ -20,10 +20,10 @@ import static org.hamcrest.Matchers.equalTo;
 class HBaseResultParserSchemaBuilderTest {
 
     HBaseResultParserSchema<DummyPojo> resultParser = new HBaseResultParserSchemaBuilder<>(DummyPojo::new)
-            .fromRowKey(stringSetter(DummyPojo::setId))
-            .fromColumn("field", stringSetter(DummyPojo::setField))
-            .fromPrefix("p", stringMapSetter(DummyPojo::setMap1))
-            .fromPrefix("q", stringMapSetter(DummyPojo::setMap2))
+            .fromRowKey(DummyPojo::setId, utf8Converter())
+            .fromColumn("field", DummyPojo::setField, utf8Converter())
+            .fromPrefix("p", DummyPojo::setMap1, utf8BytesMapConverter())
+            .fromPrefix("q", DummyPojo::setMap2, utf8BytesMapConverter())
             .build();
 
     @ParameterizedTest

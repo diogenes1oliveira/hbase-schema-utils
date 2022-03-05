@@ -6,10 +6,11 @@ import hbase.schema.api.utils.HBaseSchemaConversions;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.junit.jupiter.api.Test;
 
+import java.util.Map;
 import java.util.NavigableMap;
 import java.util.NavigableSet;
 
-import static hbase.schema.api.interfaces.fields.HBaseBytesMapSetter.bytesMapSetter;
+import static hbase.schema.api.converters.Utf8BytesMapConverter.utf8BytesMapConverter;
 import static hbase.schema.api.utils.HBaseSchemaConversions.utf8ToBytes;
 import static hbase.schema.api.utils.HBaseSchemaUtils.asBytesTreeMap;
 import static hbase.schema.api.utils.HBaseSchemaUtils.asBytesTreeSet;
@@ -46,8 +47,8 @@ class AbstractHBaseResultParserSchemaTest {
         @Override
         public void setFromPrefix(DummyPojo obj, byte[] prefix, NavigableMap<byte[], byte[]> cellsFromPrefix) {
             if (Bytes.equals(prefix, utf8ToBytes("p1"))) {
-                bytesMapSetter(DummyPojo::setMap1, HBaseSchemaConversions::utf8FromBytes, HBaseSchemaConversions::utf8FromBytes)
-                        .setFromBytes(obj, cellsFromPrefix);
+                Map<String, String> map = utf8BytesMapConverter().fromBytesMap(cellsFromPrefix);
+                obj.setMap1(map);
             }
         }
     };

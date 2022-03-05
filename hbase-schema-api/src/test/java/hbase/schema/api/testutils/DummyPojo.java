@@ -18,6 +18,7 @@ public class DummyPojo {
     private List<String> listField;
     private Map<String, String> map1;
     private Map<String, String> map2;
+    private Map<String, Long> map3;
 
     public String getId() {
         return id;
@@ -123,6 +124,19 @@ public class DummyPojo {
         return this;
     }
 
+    public Map<String, Long> getMap3() {
+        return map3;
+    }
+
+    public void setMap3(Map<String, Long> map3) {
+        this.map3 = map3;
+    }
+
+    public DummyPojo withMap3(Map<String, Long> map3) {
+        this.map3 = map3;
+        return this;
+    }
+
     @Override
     public String toString() {
         return new ToStringBuilder(this, ToStringStyle.SHORT_PREFIX_STYLE)
@@ -133,6 +147,7 @@ public class DummyPojo {
                 .append("boolean", booleanField)
                 .append("map1", map1)
                 .append("map2", map2)
+                .append("map3", map3)
                 .toString();
     }
 
@@ -152,6 +167,7 @@ public class DummyPojo {
                 .append(this.booleanField, other.booleanField)
                 .append(this.map1, other.map1)
                 .append(this.map2, other.map2)
+                .append(this.map3, other.map3)
                 .isEquals();
     }
 
@@ -165,6 +181,7 @@ public class DummyPojo {
                 .append(booleanField)
                 .append(map1)
                 .append(map2)
+                .append(map3)
                 .toHashCode();
     }
 }

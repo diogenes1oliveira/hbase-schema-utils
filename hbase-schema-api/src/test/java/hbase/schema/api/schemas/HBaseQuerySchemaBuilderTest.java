@@ -4,7 +4,7 @@ import hbase.schema.api.interfaces.HBaseQuerySchema;
 import hbase.schema.api.testutils.DummyPojo;
 import org.junit.jupiter.api.Test;
 
-import static hbase.schema.api.utils.HBaseSchemaConversions.stringGetter;
+import static hbase.schema.api.converters.Utf8Converter.utf8Converter;
 import static hbase.schema.api.utils.HBaseSchemaConversions.utf8ToBytes;
 import static hbase.schema.api.utils.HBaseSchemaUtils.asBytesTreeSet;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -14,7 +14,7 @@ class HBaseQuerySchemaBuilderTest {
     @Test
     void buildScanKey_SlicesRowKey() {
         HBaseQuerySchema<DummyPojo> schema = new HBaseQuerySchemaBuilder<DummyPojo>()
-                .withRowKey(stringGetter(DummyPojo::getId))
+                .withRowKey(DummyPojo::getId, utf8Converter())
                 .withScanKeySize(2)
                 .withQualifiers("dummy")
                 .build();
@@ -27,7 +27,7 @@ class HBaseQuerySchemaBuilderTest {
     @Test
     void buildScanKey_UsesRowKeyByDefault() {
         HBaseQuerySchema<DummyPojo> schema = new HBaseQuerySchemaBuilder<DummyPojo>()
-                .withRowKey(stringGetter(DummyPojo::getId))
+                .withRowKey(DummyPojo::getId, utf8Converter())
                 .withQualifiers("dummy")
                 .build();
 
@@ -41,7 +41,7 @@ class HBaseQuerySchemaBuilderTest {
     @Test
     void buildScanKey_SetsQualifiers() {
         HBaseQuerySchema<DummyPojo> schema = new HBaseQuerySchemaBuilder<DummyPojo>()
-                .withRowKey(stringGetter(DummyPojo::getId))
+                .withRowKey(DummyPojo::getId, utf8Converter())
                 .withQualifiers("q1", "q2", "q3")
                 .build();
 
@@ -59,7 +59,7 @@ class HBaseQuerySchemaBuilderTest {
     @Test
     void buildScanKey_SetsPrefixes() {
         HBaseQuerySchema<DummyPojo> schema = new HBaseQuerySchemaBuilder<DummyPojo>()
-                .withRowKey(stringGetter(DummyPojo::getId))
+                .withRowKey(DummyPojo::getId, utf8Converter())
                 .withPrefixes("q1", "q2", "q3")
                 .build();
 

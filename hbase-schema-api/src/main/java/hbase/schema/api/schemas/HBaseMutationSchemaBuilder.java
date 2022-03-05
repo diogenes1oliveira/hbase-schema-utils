@@ -4,9 +4,7 @@ import hbase.schema.api.interfaces.HBaseMutationSchema;
 import hbase.schema.api.interfaces.conversion.BytesConverter;
 import hbase.schema.api.interfaces.conversion.BytesMapConverter;
 import hbase.schema.api.interfaces.conversion.LongConverter;
-import hbase.schema.api.interfaces.fields.HBaseBytesMapGetter;
-import hbase.schema.api.interfaces.fields.HBaseLongGetter;
-import hbase.schema.api.interfaces.fields.HBaseLongMapGetter;
+import hbase.schema.api.interfaces.conversion.LongMapConverter;
 import org.apache.commons.lang3.ArrayUtils;
 import org.jetbrains.annotations.Nullable;
 
@@ -17,9 +15,7 @@ import java.util.Map;
 import java.util.NavigableMap;
 import java.util.function.Function;
 
-import static hbase.schema.api.utils.HBaseSchemaUtils.asBytesTreeMap;
-import static hbase.schema.api.utils.HBaseSchemaUtils.verifyNonEmpty;
-import static hbase.schema.api.utils.HBaseSchemaUtils.verifyNonNull;
+import static hbase.schema.api.utils.HBaseSchemaUtils.*;
 
 /**
  * Builder for {@link HBaseMutationSchema} objects, providing a fluent API to add fields and field prefixes to be inserted
@@ -60,7 +56,7 @@ public class HBaseMutationSchemaBuilder<T> {
      * @return this builder
      */
     public <U> HBaseMutationSchemaBuilder<T> withRowKey(Function<T, U> getter, Function<U, byte[]> converter) {
-        return withRowKey(transitive(getter, converter));
+        return withRowKey(chain(getter, converter));
     }
 
     /**
@@ -95,7 +91,7 @@ public class HBaseMutationSchemaBuilder<T> {
      * @return this builder
      */
     public <U> HBaseMutationSchemaBuilder<T> withTimestamp(Function<T, U> getter, Function<U, Long> converter) {
-        return withTimestamp(transitive(getter, converter));
+        return withTimestamp(chain(getter, converter));
     }
 
     /**
@@ -148,7 +144,7 @@ public class HBaseMutationSchemaBuilder<T> {
     public <U> HBaseMutationSchemaBuilder<T> withValues(byte[] prefix,
                                                         Function<T, U> getter,
                                                         Function<U, NavigableMap<byte[], byte[]>> converter) {
-        return withValues(prefix, transitive(getter, converter));
+        return withValues(prefix, chain(getter, converter));
     }
 
     /**
@@ -235,7 +231,7 @@ public class HBaseMutationSchemaBuilder<T> {
      * @return this builder
      */
     public <U> HBaseMutationSchemaBuilder<T> withValue(byte[] field, Function<T, U> getter, Function<U, byte[]> converter) {
-        return withValue(field, transitive(getter, converter));
+        return withValue(field, chain(getter, converter));
     }
 
     /**
@@ -317,31 +313,31 @@ public class HBaseMutationSchemaBuilder<T> {
     /**
      * Sets up a set of cells to be updated as HBase Increments
      *
-     * @param prefix qualifier prefix bytes
-     * @param getter lambda to extract a value from the object
+     * @param prefix    qualifier prefix bytes
+     * @param getter    lambda to extract a value from the object
      * @param converter converts the value into a map (qualifier suffix -> increment value)
-     * @param <U> value type
+     * @param <U>       value type
      * @return this builder
      */
     public <U> HBaseMutationSchemaBuilder<T> withDeltas(byte[] prefix,
                                                         Function<T, U> getter,
                                                         Function<U, NavigableMap<byte[], Long>> converter) {
-        return withDeltas(prefix, transitive(getter, converter));
+        return withDeltas(prefix, chain(getter, converter));
     }
 
     /**
      * Sets up a set of cells to be updated as HBase Increments
      *
-     * @param prefix qualifier prefix bytes
-     * @param getter lambda to extract a value from the object
+     * @param prefix    qualifier prefix bytes
+     * @param getter    lambda to extract a value from the object
      * @param converter converts the value into a map (qualifier suffix -> increment value)
-     * @param <U> value type
+     * @param <U>       value type
      * @return this builder
      */
     public <U> HBaseMutationSchemaBuilder<T> withDeltas(byte[] prefix,
                                                         Function<T, U> getter,
-                                                        BytesMapConverter<U> converter) {
-        return withDeltas(prefix, getter, converter::toBytesMap);
+                                                        LongMapConverter<U> converter) {
+        return withDeltas(prefix, getter, converter::toLongMap);
     }
 
     /**
@@ -351,8 +347,38 @@ public class HBaseMutationSchemaBuilder<T> {
      * @param getter lambda to extract a map of (qualifier suffix -> increment value) from the object
      * @return this builder
      */
-    public HBaseMutationSchemaBuilder<T> withDeltas(String prefix, HBaseLongMapGetter<T> getter) {
+    public HBaseMutationSchemaBuilder<T> withDeltas(String prefix, Function<T, NavigableMap<byte[], Long>> getter) {
         return withDeltas(prefix.getBytes(StandardCharsets.UTF_8), getter);
+    }
+
+    /**
+     * Sets up a set of cells to be updated as HBase Increments
+     *
+     * @param prefix    qualifier prefix UTF-8 string
+     * @param getter    lambda to extract a value from the object
+     * @param converter converts the value into a map (qualifier suffix -> increment value)
+     * @param <U>       value type
+     * @return this builder
+     */
+    public <U> HBaseMutationSchemaBuilder<T> withDeltas(String prefix,
+                                                        Function<T, U> getter,
+                                                        Function<U, NavigableMap<byte[], Long>> converter) {
+        return withDeltas(prefix.getBytes(StandardCharsets.UTF_8), getter, converter);
+    }
+
+    /**
+     * Sets up a set of cells to be updated as HBase Increments
+     *
+     * @param prefix    qualifier prefix UTF-8 string
+     * @param getter    lambda to extract a value from the object
+     * @param converter converts the value into a map (qualifier suffix -> increment value)
+     * @param <U>       value type
+     * @return this builder
+     */
+    public <U> HBaseMutationSchemaBuilder<T> withDeltas(String prefix,
+                                                        Function<T, U> getter,
+                                                        LongMapConverter<U> converter) {
+        return withDeltas(prefix.getBytes(StandardCharsets.UTF_8), getter, converter);
     }
 
     /**
@@ -362,9 +388,9 @@ public class HBaseMutationSchemaBuilder<T> {
      * @param getter lambda to extract a Long increment value from the object
      * @return this builder
      */
-    public HBaseMutationSchemaBuilder<T> withDelta(byte[] field, HBaseLongGetter<T> getter) {
+    public HBaseMutationSchemaBuilder<T> withDelta(byte[] field, Function<T, Long> getter) {
         return withDeltas(field, obj -> {
-            Long value = getter.getLong(obj);
+            Long value = getter.apply(obj);
             NavigableMap<byte[], Long> cellsMap = asBytesTreeMap();
             if (value != null) {
                 cellsMap.put(EMPTY, value);
@@ -376,12 +402,60 @@ public class HBaseMutationSchemaBuilder<T> {
     /**
      * Sets up a single cell to be updated in a HBase Increment
      *
+     * @param field     qualifier bytes
+     * @param getter    lambda to extract a increment value from the object
+     * @param converter the value into a proper {@code Long}
+     * @return this builder
+     */
+    public <U> HBaseMutationSchemaBuilder<T> withDelta(byte[] field, Function<T, U> getter, Function<U, Long> converter) {
+        return withDelta(field, chain(getter, converter));
+    }
+
+    /**
+     * Sets up a single cell to be updated in a HBase Increment
+     *
+     * @param field     qualifier bytes
+     * @param getter    lambda to extract a increment value from the object
+     * @param converter the value into a proper {@code Long}
+     * @return this builder
+     */
+    public <U> HBaseMutationSchemaBuilder<T> withDelta(byte[] field, Function<T, U> getter, LongConverter<U> converter) {
+        return withDelta(field, getter, converter::toLong);
+    }
+
+    /**
+     * Sets up a single cell to be updated in a HBase Increment
+     *
      * @param field  qualifier UTF-8 string
      * @param getter lambda to extract a Long increment value from the object
      * @return this builder
      */
-    public HBaseMutationSchemaBuilder<T> withDelta(String field, HBaseLongGetter<T> getter) {
+    public HBaseMutationSchemaBuilder<T> withDelta(String field, Function<T, Long> getter) {
         return withDelta(field.getBytes(StandardCharsets.UTF_8), getter);
+    }
+
+    /**
+     * Sets up a single cell to be updated in a HBase Increment
+     *
+     * @param field     qualifier UTF-8 string
+     * @param getter    lambda to extract a increment value from the object
+     * @param converter the value into a proper {@code Long}
+     * @return this builder
+     */
+    public <U> HBaseMutationSchemaBuilder<T> withDelta(String field, Function<T, U> getter, Function<U, Long> converter) {
+        return withDelta(field.getBytes(StandardCharsets.UTF_8), getter, converter);
+    }
+
+    /**
+     * Sets up a single cell to be updated in a HBase Increment
+     *
+     * @param field     qualifier UTF-8 string
+     * @param getter    lambda to extract a increment value from the object
+     * @param converter the value into a proper {@code Long}
+     * @return this builder
+     */
+    public <U> HBaseMutationSchemaBuilder<T> withDelta(String field, Function<T, U> getter, LongConverter<U> converter) {
+        return withDelta(field.getBytes(StandardCharsets.UTF_8), getter, converter);
     }
 
     /**
@@ -397,13 +471,13 @@ public class HBaseMutationSchemaBuilder<T> {
         return new HBaseMutationSchema<T>() {
             @Override
             public byte @Nullable [] buildRowKey(T object) {
-                return rowKeyBuilder.getBytes(object);
+                return rowKeyBuilder.apply(object);
             }
 
             @Nullable
             @Override
             public Long buildTimestamp(T object) {
-                return timestampBuilder.getLong(object);
+                return timestampBuilder.apply(object);
             }
 
             @Nullable
@@ -415,8 +489,8 @@ public class HBaseMutationSchemaBuilder<T> {
             @Override
             public NavigableMap<byte[], byte[]> buildPutValues(T object) {
                 NavigableMap<byte[], byte[]> values = asBytesTreeMap();
-                for (HBaseBytesMapGetter<T> getter : valueBuilders) {
-                    values.putAll(getter.getBytesMap(object));
+                for (Function<T, NavigableMap<byte[], byte[]>> getter : valueBuilders) {
+                    values.putAll(getter.apply(object));
                 }
                 return values;
             }
@@ -424,8 +498,8 @@ public class HBaseMutationSchemaBuilder<T> {
             @Override
             public NavigableMap<byte[], Long> buildIncrementValues(T object) {
                 NavigableMap<byte[], Long> values = asBytesTreeMap();
-                for (HBaseLongMapGetter<T> getter : deltaBuilders) {
-                    values.putAll(getter.getLongMap(object));
+                for (Function<T, NavigableMap<byte[], Long>> getter : deltaBuilders) {
+                    values.putAll(getter.apply(object));
                 }
                 return values;
             }
@@ -434,17 +508,17 @@ public class HBaseMutationSchemaBuilder<T> {
 
     private Long buildCellTimestamp(T object, byte @Nullable [] qualifier) {
         if (qualifier == null) {
-            return timestampBuilder.getLong(object);
+            return timestampBuilder.apply(object);
         }
-        Map.Entry<byte[], HBaseLongGetter<T>> entry = timestampBuilders.floorEntry(qualifier);
+        Map.Entry<byte[], Function<T, Long>> entry = timestampBuilders.floorEntry(qualifier);
         if (entry == null) {
-            return timestampBuilder.getLong(object);
+            return timestampBuilder.apply(object);
         }
         byte[] prefix = entry.getKey();
         if (!prefixMatches(qualifier, prefix)) {
-            return timestampBuilder.getLong(object);
+            return timestampBuilder.apply(object);
         }
-        return entry.getValue().getLong(object);
+        return entry.getValue().apply(object);
     }
 
     private static boolean prefixMatches(byte[] arr, byte[] prefix) {
@@ -459,10 +533,4 @@ public class HBaseMutationSchemaBuilder<T> {
         return true;
     }
 
-    private static <T, U, V> Function<T, V> transitive(Function<T, U> f1, Function<U, V> f2) {
-        return t -> {
-            U u = f1.apply(t);
-            return u != null ? f2.apply(u) : null;
-        };
-    }
 }

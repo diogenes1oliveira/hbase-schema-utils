@@ -4,10 +4,10 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import hbase.schema.api.interfaces.conversion.BytesConverter;
-import hbase.schema.api.interfaces.fields.HBaseBytesGetter;
-import hbase.schema.api.interfaces.fields.HBaseBytesSetter;
 
 import java.io.IOException;
+import java.util.function.BiConsumer;
+import java.util.function.Function;
 
 /**
  * Converts objects as JSON strings
@@ -93,7 +93,7 @@ public class JsonConverter<T> implements BytesConverter<T> {
      * @param <T>    object type
      * @return lambda to map the object to a {@code byte[]} JSON value
      */
-    public static <T> HBaseBytesGetter<T> jsonGetter(ObjectMapper mapper) {
+    public static <T> Function<T, byte[]> jsonGetter(ObjectMapper mapper) {
         return obj -> {
             try {
                 return mapper.writeValueAsBytes(obj);
@@ -109,7 +109,7 @@ public class JsonConverter<T> implements BytesConverter<T> {
      * @param <T> object type
      * @return lambda to map the object to a {@code byte[]} JSON value
      */
-    public static <T> HBaseBytesGetter<T> jsonGetter() {
+    public static <T> Function<T, byte[]> jsonGetter() {
         return jsonGetter(defaultMapper);
     }
 
@@ -120,7 +120,7 @@ public class JsonConverter<T> implements BytesConverter<T> {
      * @param <T>    object type
      * @return lambda to populate the object with a {@code byte[]} JSON value
      */
-    public static <T> HBaseBytesSetter<T> jsonSetter(ObjectMapper mapper) {
+    public static <T> BiConsumer<T, byte[]> jsonSetter(ObjectMapper mapper) {
         return (obj, bytes) -> {
             try {
                 mapper.readerForUpdating(obj).readValue(bytes);
@@ -136,7 +136,7 @@ public class JsonConverter<T> implements BytesConverter<T> {
      * @param <T> object type
      * @return lambda to populate the object with a {@code byte[]} JSON value
      */
-    public static <T> HBaseBytesSetter<T> jsonSetter() {
+    public static <T> BiConsumer<T, byte[]> jsonSetter() {
         return jsonSetter(defaultMapper);
     }
 
