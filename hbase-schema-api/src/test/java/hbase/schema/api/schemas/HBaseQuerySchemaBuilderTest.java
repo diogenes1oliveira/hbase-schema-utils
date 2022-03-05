@@ -12,34 +12,7 @@ import static org.hamcrest.Matchers.equalTo;
 
 class HBaseQuerySchemaBuilderTest {
     @Test
-    void buildScanKey_SlicesRowKey() {
-        HBaseQuerySchema<DummyPojo> schema = new HBaseQuerySchemaBuilder<DummyPojo>()
-                .withRowKey(DummyPojo::getId, utf8Converter())
-                .withScanKeySize(2)
-                .withQualifiers("dummy")
-                .build();
-
-        DummyPojo query = new DummyPojo();
-        query.setId("ab-123");
-        assertThat(schema.buildScanKey(query), equalTo(new byte[]{'a', 'b'}));
-    }
-
-    @Test
-    void buildScanKey_UsesRowKeyByDefault() {
-        HBaseQuerySchema<DummyPojo> schema = new HBaseQuerySchemaBuilder<DummyPojo>()
-                .withRowKey(DummyPojo::getId, utf8Converter())
-                .withQualifiers("dummy")
-                .build();
-
-        DummyPojo query = new DummyPojo();
-        query.setId("ab-123");
-
-        assertThat(schema.buildRowKey(query), equalTo(utf8ToBytes("ab-123")));
-        assertThat(schema.buildScanKey(query), equalTo(utf8ToBytes("ab-123")));
-    }
-
-    @Test
-    void buildScanKey_SetsQualifiers() {
+    void build_SetsQualifiers() {
         HBaseQuerySchema<DummyPojo> schema = new HBaseQuerySchemaBuilder<DummyPojo>()
                 .withRowKey(DummyPojo::getId, utf8Converter())
                 .withQualifiers("q1", "q2", "q3")
@@ -57,7 +30,7 @@ class HBaseQuerySchemaBuilderTest {
     }
 
     @Test
-    void buildScanKey_SetsPrefixes() {
+    void build_SetsPrefixes() {
         HBaseQuerySchema<DummyPojo> schema = new HBaseQuerySchemaBuilder<DummyPojo>()
                 .withRowKey(DummyPojo::getId, utf8Converter())
                 .withPrefixes("q1", "q2", "q3")

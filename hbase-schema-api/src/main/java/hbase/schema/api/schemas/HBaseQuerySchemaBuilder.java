@@ -19,7 +19,6 @@ import static java.util.Optional.ofNullable;
  */
 public class HBaseQuerySchemaBuilder<T> {
     private Function<T, byte[]> rowKeyGetter = null;
-    private Function<T, byte[]> scanKeyGetter = null;
     private Function<T, SortedSet<byte[]>> qualifiersGetter = null;
     private Function<T, SortedSet<byte[]>> prefixesGetter = null;
 
@@ -56,68 +55,6 @@ public class HBaseQuerySchemaBuilder<T> {
      */
     public <U> HBaseQuerySchemaBuilder<T> withRowKey(Function<T, U> getter, BytesConverter<U> converter) {
         return withRowKey(getter, converter::toBytes);
-    }
-
-    /**
-     * Generates the search key to be used in a Scan request
-     *
-     * @param getter lambda to build a Scan search key from the object
-     * @return this builder
-     */
-    public HBaseQuerySchemaBuilder<T> withScanKey(Function<T, byte[]> getter) {
-        this.scanKeyGetter = getter;
-        return this;
-    }
-
-    /**
-     * Generates the search key to be used in a Scan request
-     *
-     * @param getter    lambda to build a Scan search key from the object
-     * @param converter converts the value to a proper {@code byte[]}
-     * @param <U>       value type
-     * @return this builder
-     */
-    public <U> HBaseQuerySchemaBuilder<T> withScanKey(Function<T, U> getter, Function<U, byte[]> converter) {
-        return withScanKey(chain(getter, converter));
-    }
-
-    /**
-     * Generates the search key to be used in a Scan request
-     *
-     * @param getter    lambda to build a Scan search key from the object
-     * @param converter converts the value to a proper {@code byte[]}
-     * @param <U>       value type
-     * @return this builder
-     */
-    public <U> HBaseQuerySchemaBuilder<T> withScanKey(Function<T, U> getter, BytesConverter<U> converter) {
-        return withScanKey(getter, converter::toBytes);
-    }
-
-    /**
-     * Sets the search key size to be used in a Scan request
-     *
-     * @param size search key size
-     * @return this builder
-     */
-    public HBaseQuerySchemaBuilder<T> withScanKeySize(int size) {
-        return withScanKeySize(query -> size);
-    }
-
-    /**
-     * Sets the search key size to be used in a Scan request
-     *
-     * @param sizeGetter lambda to get the Scan search key size from the object
-     * @return this builder
-     */
-    public HBaseQuerySchemaBuilder<T> withScanKeySize(Function<T, Integer> sizeGetter) {
-        return withScanKey(query -> {
-            byte[] rowKey = rowKeyGetter.apply(query);
-            Integer size = sizeGetter.apply(query);
-            if (rowKey == null || size == null) {
-                return null;
-            }
-            return Arrays.copyOfRange(rowKey, 0, size);
-        });
     }
 
     /**
@@ -180,9 +117,6 @@ public class HBaseQuerySchemaBuilder<T> {
     public HBaseQuerySchema<T> build() {
         verifyNonNull("no row key generator is set", rowKeyGetter);
         verifyNonNull("needs qualifiers or prefixes", qualifiersGetter, prefixesGetter);
-        if (scanKeyGetter == null) {
-            scanKeyGetter = rowKeyGetter;
-        }
 
         qualifiersGetter = ofNullable(qualifiersGetter).orElse(obj -> asBytesTreeSet());
         prefixesGetter = ofNullable(prefixesGetter).orElse(obj -> asBytesTreeSet());
@@ -191,11 +125,6 @@ public class HBaseQuerySchemaBuilder<T> {
             @Override
             public byte[] buildRowKey(T query) {
                 return rowKeyGetter.apply(query);
-            }
-
-            @Override
-            public byte[] buildScanKey(T query) {
-                return scanKeyGetter.apply(query);
             }
 
             @Override

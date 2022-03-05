@@ -22,18 +22,6 @@ public interface HBaseQuerySchema<T> {
     byte[] buildRowKey(T query);
 
     /**
-     * Generates the search key to be used in a Scan request
-     * <p>
-     * The default implementation just delegates to {@link #buildRowKey(T)}
-     *
-     * @param query input query object
-     * @return this builder
-     */
-    default byte[] buildScanKey(T query) {
-        return buildRowKey(query);
-    }
-
-    /**
      * Gets the fixed qualifiers to be fetched in the query
      * <p>
      * The default implementation returns an empty set
