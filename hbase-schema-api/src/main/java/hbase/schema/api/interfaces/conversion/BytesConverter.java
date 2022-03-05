@@ -27,19 +27,7 @@ public interface BytesConverter<T> {
     /**
      * Class instance for the value type
      */
-    Class<T> type();
-
-    /**
-     * Extra type arguments.
-     * <p>
-     * These arguments are used when {@link #type()} isn't enough to select a converter. For instance, if the type is a
-     * Collection, this method might return the concrete collection type argument
-     * <p>
-     * The default implementation returns an empty array.
-     */
-    default Object[] typeArgs() {
-        return new Object[0];
-    }
+    Class<?> type();
 
     /**
      * A dummy converter for {@code byte[]} values
@@ -56,7 +44,7 @@ public interface BytesConverter<T> {
         }
 
         @Override
-        public Class<byte[]> type() {
+        public Class<?> type() {
             return byte[].class;
         }
     };
@@ -64,7 +52,7 @@ public interface BytesConverter<T> {
     /**
      * A dummy converter for {@code byte[]} values
      */
-    static BytesConverter<byte[]> identity() {
+    static BytesConverter<byte[]> bytesConverter() {
         return IDENTITY;
     }
 
@@ -74,14 +62,12 @@ public interface BytesConverter<T> {
      * @param toBytes   lambda to convert the value into {@code byte[]}
      * @param fromBytes lambda to parse the value from {@code byte[]}
      * @param type      class instance
-     * @param typeArgs  extra type arguments
      * @param <T>       value type
      * @return new bytes converter
      */
     static <T> BytesConverter<T> bytesConverter(Function<T, byte[]> toBytes,
                                                 Function<byte[], T> fromBytes,
-                                                Class<T> type,
-                                                Object... typeArgs) {
+                                                Class<T> type) {
         return new BytesConverter<T>() {
             @Override
             public byte[] toBytes(T value) {
@@ -94,13 +80,8 @@ public interface BytesConverter<T> {
             }
 
             @Override
-            public Class<T> type() {
+            public Class<?> type() {
                 return type;
-            }
-
-            @Override
-            public Object[] typeArgs() {
-                return typeArgs;
             }
         };
     }

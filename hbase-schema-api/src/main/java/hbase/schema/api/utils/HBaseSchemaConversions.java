@@ -308,4 +308,24 @@ public final class HBaseSchemaConversions {
             listSetter.accept(obj, itens);
         };
     }
+
+    /**
+     * Applies a mapper function to the values in the source map
+     *
+     * @param source      source map
+     * @param destination destination map
+     * @param valueMapper function to map the source map value
+     * @param <K>         key type
+     * @param <V1>        source value type
+     * @param <V2>        destination value type
+     * @return the destination map
+     */
+    public static <K, V1, V2> Map<K, V2> mapValues(Map<K, V1> source, Map<K, V2> destination, Function<V1, V2> valueMapper) {
+        for (Map.Entry<K, V1> entry : source.entrySet()) {
+            K k = entry.getKey();
+            V1 v1 = entry.getValue();
+            V2 v2 = valueMapper.apply(v1);
+            destination.put(k, v2);
+        }
+    }
 }

@@ -1,7 +1,9 @@
 package hbase.schema.api.schemas;
 
 import hbase.schema.api.interfaces.HBaseMutationSchema;
-import hbase.schema.api.interfaces.fields.HBaseBytesGetter;
+import hbase.schema.api.interfaces.conversion.BytesConverter;
+import hbase.schema.api.interfaces.conversion.BytesMapConverter;
+import hbase.schema.api.interfaces.conversion.LongConverter;
 import hbase.schema.api.interfaces.fields.HBaseBytesMapGetter;
 import hbase.schema.api.interfaces.fields.HBaseLongGetter;
 import hbase.schema.api.interfaces.fields.HBaseLongMapGetter;
@@ -13,6 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.NavigableMap;
+import java.util.function.Function;
 
 import static hbase.schema.api.utils.HBaseSchemaUtils.asBytesTreeMap;
 import static hbase.schema.api.utils.HBaseSchemaUtils.verifyNonEmpty;
@@ -25,13 +28,13 @@ import static hbase.schema.api.utils.HBaseSchemaUtils.verifyNonNull;
  */
 public class HBaseMutationSchemaBuilder<T> {
     private static final byte[] EMPTY = new byte[0];
-    private HBaseBytesGetter<T> rowKeyBuilder = null;
-    private HBaseLongGetter<T> timestampBuilder = null;
-    private HBaseLongGetter<T> currentTimestampBuilder = null;
+    private Function<T, byte[]> rowKeyBuilder = null;
+    private Function<T, Long> timestampBuilder = null;
+    private Function<T, Long> currentTimestampBuilder = null;
 
-    private final List<HBaseBytesMapGetter<T>> valueBuilders = new ArrayList<>();
-    private final List<HBaseLongMapGetter<T>> deltaBuilders = new ArrayList<>();
-    private final NavigableMap<byte[], HBaseLongGetter<T>> timestampBuilders = asBytesTreeMap();
+    private final List<Function<T, NavigableMap<byte[], byte[]>>> valueBuilders = new ArrayList<>();
+    private final List<Function<T, NavigableMap<byte[], Long>>> deltaBuilders = new ArrayList<>();
+    private final NavigableMap<byte[], Function<T, Long>> timestampBuilders = asBytesTreeMap();
 
     /**
      * Sets up the row key generation
@@ -39,7 +42,7 @@ public class HBaseMutationSchemaBuilder<T> {
      * @param getter lambda to get the row key bytes from the object
      * @return this builder
      */
-    public HBaseMutationSchemaBuilder<T> withRowKey(HBaseBytesGetter<T> getter) {
+    public HBaseMutationSchemaBuilder<T> withRowKey(Function<T, byte[]> getter) {
         if (currentTimestampBuilder == null) {
             throw new IllegalStateException("You need to set a timestamp for the row key");
         }
@@ -49,14 +52,62 @@ public class HBaseMutationSchemaBuilder<T> {
     }
 
     /**
-     * Sets up the timestamp generator
+     * Sets up the row key generation
      *
-     * @param getter lambda to get the cell timestamp as milliseconds value from the object
+     * @param getter    lambda to get a row key value from the object
+     * @param converter converts the value into a proper {@code byte[]}
+     * @param <U>       row key value type
      * @return this builder
      */
-    public HBaseMutationSchemaBuilder<T> withTimestamp(HBaseLongGetter<T> getter) {
+    public <U> HBaseMutationSchemaBuilder<T> withRowKey(Function<T, U> getter, Function<U, byte[]> converter) {
+        return withRowKey(transitive(getter, converter));
+    }
+
+    /**
+     * Sets up the row key generation
+     *
+     * @param getter    lambda to get a row key value from the object
+     * @param converter converts the value into a proper {@code byte[]}
+     * @param <U>       row key value type
+     * @return this builder
+     */
+    public <U> HBaseMutationSchemaBuilder<T> withRowKey(Function<T, U> getter, BytesConverter<U> converter) {
+        return withRowKey(getter, converter::toBytes);
+    }
+
+    /**
+     * Sets up the timestamp generator
+     *
+     * @param getter lambda to get the cell timestamp as a milliseconds value
+     * @return this builder
+     */
+    public HBaseMutationSchemaBuilder<T> withTimestamp(Function<T, Long> getter) {
         this.currentTimestampBuilder = getter;
         return this;
+    }
+
+    /**
+     * Sets up the timestamp generator
+     *
+     * @param getter    lambda to get the cell timestamp value
+     * @param converter converts the value into a proper milliseconds {@code Long}
+     * @param <U>       timestamp value type
+     * @return this builder
+     */
+    public <U> HBaseMutationSchemaBuilder<T> withTimestamp(Function<T, U> getter, Function<U, Long> converter) {
+        return withTimestamp(transitive(getter, converter));
+    }
+
+    /**
+     * Sets up the timestamp generator
+     *
+     * @param getter    lambda to get the cell timestamp value
+     * @param converter converts the value into a proper milliseconds {@code Long}
+     * @param <U>       timestamp value type
+     * @return this builder
+     */
+    public <U> HBaseMutationSchemaBuilder<T> withTimestamp(Function<T, U> getter, LongConverter<U> converter) {
+        return withTimestamp(getter, converter::toLong);
     }
 
     /**
@@ -66,12 +117,12 @@ public class HBaseMutationSchemaBuilder<T> {
      * @param getter lambda to extract a map of (qualifier suffix -> cell value) from the object
      * @return this builder
      */
-    public HBaseMutationSchemaBuilder<T> withValues(byte[] prefix, HBaseBytesMapGetter<T> getter) {
+    public HBaseMutationSchemaBuilder<T> withValues(byte[] prefix, Function<T, NavigableMap<byte[], byte[]>> getter) {
         timestampBuilders.put(prefix, currentTimestampBuilder);
         valueBuilders.add(obj -> {
             NavigableMap<byte[], byte[]> valuesMap = asBytesTreeMap();
 
-            for (Map.Entry<byte[], byte[]> entry : getter.getBytesMap(obj).entrySet()) {
+            for (Map.Entry<byte[], byte[]> entry : getter.apply(obj).entrySet()) {
                 byte[] value = entry.getValue();
                 if (value == null) {
                     continue;
@@ -88,12 +139,72 @@ public class HBaseMutationSchemaBuilder<T> {
     /**
      * Sets up a set of cells to be inserted as HBase Puts
      *
+     * @param prefix    qualifier prefix bytes
+     * @param getter    lambda to extract a map-conversible value from the object
+     * @param converter converts the value into a proper bytes map
+     * @param <U>       value type
+     * @return this builder
+     */
+    public <U> HBaseMutationSchemaBuilder<T> withValues(byte[] prefix,
+                                                        Function<T, U> getter,
+                                                        Function<U, NavigableMap<byte[], byte[]>> converter) {
+        return withValues(prefix, transitive(getter, converter));
+    }
+
+    /**
+     * Sets up a set of cells to be inserted as HBase Puts
+     *
+     * @param prefix    qualifier prefix bytes
+     * @param getter    lambda to extract a map-conversible value from the object
+     * @param converter converts the value into a proper bytes map
+     * @param <U>       value type
+     * @return this builder
+     */
+    public <U> HBaseMutationSchemaBuilder<T> withValues(byte[] prefix,
+                                                        Function<T, U> getter,
+                                                        BytesMapConverter<U> converter) {
+        return withValues(prefix, getter, converter::toBytesMap);
+    }
+
+    /**
+     * Sets up a set of cells to be inserted as HBase Puts
+     *
      * @param prefix qualifier prefix UTF-8 string
      * @param getter lambda to extract a map of (qualifier suffix -> cell value) from the object
      * @return this builder
      */
-    public HBaseMutationSchemaBuilder<T> withValues(String prefix, HBaseBytesMapGetter<T> getter) {
+    public HBaseMutationSchemaBuilder<T> withValues(String prefix, Function<T, NavigableMap<byte[], byte[]>> getter) {
         return withValues(prefix.getBytes(StandardCharsets.UTF_8), getter);
+    }
+
+    /**
+     * Sets up a set of cells to be inserted as HBase Puts
+     *
+     * @param prefix    qualifier prefix UTF-8 string
+     * @param getter    lambda to extract a map-conversible value from the object
+     * @param converter converts the value into a proper bytes map
+     * @param <U>       value type
+     * @return this builder
+     */
+    public <U> HBaseMutationSchemaBuilder<T> withValues(String prefix,
+                                                        Function<T, U> getter,
+                                                        Function<U, NavigableMap<byte[], byte[]>> converter) {
+        return withValues(prefix.getBytes(StandardCharsets.UTF_8), getter, converter);
+    }
+
+    /**
+     * Sets up a set of cells to be inserted as HBase Puts
+     *
+     * @param prefix    qualifier prefix UTF-8 string
+     * @param getter    lambda to extract a map-conversible value from the object
+     * @param converter converts the value into a proper bytes map
+     * @param <U>       value type
+     * @return this builder
+     */
+    public <U> HBaseMutationSchemaBuilder<T> withValues(String prefix,
+                                                        Function<T, U> getter,
+                                                        BytesMapConverter<U> converter) {
+        return withValues(prefix.getBytes(StandardCharsets.UTF_8), getter, converter);
     }
 
     /**
@@ -103,9 +214,9 @@ public class HBaseMutationSchemaBuilder<T> {
      * @param getter lambda to extract a byte[] cell value from the object
      * @return this builder
      */
-    public HBaseMutationSchemaBuilder<T> withValue(byte[] field, HBaseBytesGetter<T> getter) {
+    public HBaseMutationSchemaBuilder<T> withValue(byte[] field, Function<T, byte[]> getter) {
         return withValues(field, obj -> {
-            byte[] value = getter.getBytes(obj);
+            byte[] value = getter.apply(obj);
             NavigableMap<byte[], byte[]> cellsMap = asBytesTreeMap();
             if (value != null) {
                 cellsMap.put(EMPTY, value);
@@ -117,12 +228,64 @@ public class HBaseMutationSchemaBuilder<T> {
     /**
      * Sets up a single cell to be inserted in a HBase Put
      *
+     * @param field     qualifier bytes
+     * @param getter    lambda to extract a value from the object
+     * @param converter converts the value into a proper {@code byte[]}
+     * @param <U>       value type
+     * @return this builder
+     */
+    public <U> HBaseMutationSchemaBuilder<T> withValue(byte[] field, Function<T, U> getter, Function<U, byte[]> converter) {
+        return withValue(field, transitive(getter, converter));
+    }
+
+    /**
+     * Sets up a single cell to be inserted in a HBase Put
+     *
+     * @param field     qualifier bytes
+     * @param getter    lambda to extract a value from the object
+     * @param converter converts the value into a proper {@code byte[]}
+     * @param <U>       value type
+     * @return this builder
+     */
+    public <U> HBaseMutationSchemaBuilder<T> withValue(byte[] field, Function<T, U> getter, BytesConverter<U> converter) {
+        return withValue(field, getter, converter::toBytes);
+    }
+
+    /**
+     * Sets up a single cell to be inserted in a HBase Put
+     *
      * @param field  qualifier UTF-8 string
      * @param getter lambda to extract a byte[] cell value from the object
      * @return this builder
      */
-    public HBaseMutationSchemaBuilder<T> withValue(String field, HBaseBytesGetter<T> getter) {
+    public HBaseMutationSchemaBuilder<T> withValue(String field, Function<T, byte[]> getter) {
         return withValue(field.getBytes(StandardCharsets.UTF_8), getter);
+    }
+
+    /**
+     * Sets up a single cell to be inserted in a HBase Put
+     *
+     * @param field     qualifier UTF-8 string
+     * @param getter    lambda to extract a value from the object
+     * @param converter converts the value into a proper {@code byte[]}
+     * @param <U>       value type
+     * @return this builder
+     */
+    public <U> HBaseMutationSchemaBuilder<T> withValue(String field, Function<T, U> getter, Function<U, byte[]> converter) {
+        return withValue(field.getBytes(StandardCharsets.UTF_8), getter, converter);
+    }
+
+    /**
+     * Sets up a single cell to be inserted in a HBase Put
+     *
+     * @param field     qualifier UTF-8 string
+     * @param getter    lambda to extract a value from the object
+     * @param converter converts the value into a proper {@code byte[]}
+     * @param <U>       value type
+     * @return this builder
+     */
+    public <U> HBaseMutationSchemaBuilder<T> withValue(String field, Function<T, U> getter, BytesConverter<U> converter) {
+        return withValue(field.getBytes(StandardCharsets.UTF_8), getter, converter);
     }
 
     /**
@@ -132,12 +295,12 @@ public class HBaseMutationSchemaBuilder<T> {
      * @param getter lambda to extract a map of (qualifier suffix -> increment value) from the object
      * @return this builder
      */
-    public HBaseMutationSchemaBuilder<T> withDeltas(byte[] prefix, HBaseLongMapGetter<T> getter) {
+    public HBaseMutationSchemaBuilder<T> withDeltas(byte[] prefix, Function<T, NavigableMap<byte[], Long>> getter) {
         timestampBuilders.put(prefix, currentTimestampBuilder);
         deltaBuilders.add(obj -> {
             NavigableMap<byte[], Long> valuesMap = asBytesTreeMap();
 
-            for (Map.Entry<byte[], Long> entry : getter.getLongMap(obj).entrySet()) {
+            for (Map.Entry<byte[], Long> entry : getter.apply(obj).entrySet()) {
                 Long value = entry.getValue();
                 if (value == null) {
                     continue;
@@ -149,6 +312,36 @@ public class HBaseMutationSchemaBuilder<T> {
             return valuesMap;
         });
         return this;
+    }
+
+    /**
+     * Sets up a set of cells to be updated as HBase Increments
+     *
+     * @param prefix qualifier prefix bytes
+     * @param getter lambda to extract a value from the object
+     * @param converter converts the value into a map (qualifier suffix -> increment value)
+     * @param <U> value type
+     * @return this builder
+     */
+    public <U> HBaseMutationSchemaBuilder<T> withDeltas(byte[] prefix,
+                                                        Function<T, U> getter,
+                                                        Function<U, NavigableMap<byte[], Long>> converter) {
+        return withDeltas(prefix, transitive(getter, converter));
+    }
+
+    /**
+     * Sets up a set of cells to be updated as HBase Increments
+     *
+     * @param prefix qualifier prefix bytes
+     * @param getter lambda to extract a value from the object
+     * @param converter converts the value into a map (qualifier suffix -> increment value)
+     * @param <U> value type
+     * @return this builder
+     */
+    public <U> HBaseMutationSchemaBuilder<T> withDeltas(byte[] prefix,
+                                                        Function<T, U> getter,
+                                                        BytesMapConverter<U> converter) {
+        return withDeltas(prefix, getter, converter::toBytesMap);
     }
 
     /**
@@ -264,5 +457,12 @@ public class HBaseMutationSchemaBuilder<T> {
             }
         }
         return true;
+    }
+
+    private static <T, U, V> Function<T, V> transitive(Function<T, U> f1, Function<U, V> f2) {
+        return t -> {
+            U u = f1.apply(t);
+            return u != null ? f2.apply(u) : null;
+        };
     }
 }
