@@ -1,5 +1,8 @@
 package hbase.schema.api.interfaces;
 
+import org.apache.hadoop.hbase.client.Get;
+import org.apache.hadoop.hbase.client.Scan;
+
 import java.util.SortedSet;
 
 import static hbase.schema.api.utils.HBaseSchemaUtils.asBytesTreeSet;
@@ -52,5 +55,48 @@ public interface HBaseQuerySchema<T> {
      */
     default SortedSet<byte[]> getPrefixes(T query) {
         return asBytesTreeSet();
+    }
+
+    /**
+     * Selects the columns returned in a Get query
+     * <p>
+     * The default implementation:
+     * <li>Selects the fixed columns in {@link #getQualifiers(T)} if {@link #getPrefixes(T)} is empty;</li>
+     * <li>Otherwise, selects the whole family.</li>
+     *
+     * @param query  query object
+     * @param family column family
+     * @param get    HBase Get instance
+     */
+    default void selectColumns(T query, byte[] family, Get get) {
+        if (getPrefixes(query).isEmpty()) {
+            for (byte[] qualifier : getQualifiers(query)) {
+                get.addColumn(family, qualifier);
+            }
+        } else {
+            get.addFamily(family);
+        }
+    }
+
+    /**
+     * Selects the columns returned in a Scan query
+     * <p>
+     * The default implementation:
+     * <li>Selects the fixed columns in {@link #getQualifiers(T)} if {@link #getPrefixes(T)} is empty;</li>
+     * <li>Otherwise, selects the whole family.</li>
+     *
+     * @param query  query object
+     * @param family column family
+     * @param scan   HBase Scan instance
+     */
+    default void selectColumns(T query, byte[] family, Scan scan) {
+        if (getPrefixes(query).isEmpty()) {
+            for (byte[] qualifier : getQualifiers(query)) {
+                scan.addColumn(family, qualifier);
+            }
+        } else {
+            scan.addFamily(family);
+        }
+
     }
 }
