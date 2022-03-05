@@ -52,7 +52,7 @@ public interface BytesConverter<T> {
     /**
      * A dummy converter for {@code byte[]} values
      */
-    static BytesConverter<byte[]> bytesConverter() {
+    static BytesConverter<byte[]> identity() {
         return IDENTITY;
     }
 

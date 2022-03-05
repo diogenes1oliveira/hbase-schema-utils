@@ -53,7 +53,7 @@ public interface BytesMapConverter<T> {
     /**
      * A dummy converter for bytes map values
      */
-    static BytesMapConverter<NavigableMap<byte[], byte[]>> bytesMapConverter() {
+    static BytesMapConverter<NavigableMap<byte[], byte[]>> identity() {
         return IDENTITY;
     }
 

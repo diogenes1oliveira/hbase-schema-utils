@@ -1,11 +1,13 @@
 package hbase.schema.api.interfaces.conversion;
 
-import hbase.schema.api.utils.HBaseSchemaUtils;
 import org.apache.hadoop.hbase.util.Bytes;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.NavigableMap;
 
-import static hbase.schema.api.utils.HBaseSchemaConversions.mapValues;
+import static hbase.schema.api.utils.HBaseSchemaConversions.transformMap;
+import static hbase.schema.api.utils.HBaseSchemaConversions.transformMapValues;
 import static hbase.schema.api.utils.HBaseSchemaUtils.asBytesTreeMap;
 
 /**
@@ -33,12 +35,13 @@ public interface LongMapConverter<T> extends BytesMapConverter<T> {
 
     @Override
     default NavigableMap<byte[], byte[]> toBytesMap(T value) {
-        return mapValues.<byte[], byte[], Long>(toLongMap(value), asBytesTreeMap(), );
+        return transformMapValues(toLongMap(value), asBytesTreeMap(), Bytes::toBytes);
     }
 
     @Override
     default T fromBytesMap(NavigableMap<byte[], byte[]> bytesMap) {
-        return null;
+        NavigableMap<byte[], Long> longMap = transformMapValues(bytesMap, asBytesTreeMap(), Bytes::toLong);
+        return fromLongMap(longMap);
     }
 
     /**
@@ -62,15 +65,34 @@ public interface LongMapConverter<T> extends BytesMapConverter<T> {
 
         @Override
         public Class<?> type() {
-            return NavigableMap.class;
+            return Map.class;
         }
     };
 
     /**
      * A dummy converter for bytes map values
      */
-    static LongMapConverter<NavigableMap<byte[], Long>> longMapConverter() {
+    static LongMapConverter<NavigableMap<byte[], Long>> identity() {
         return IDENTITY;
     }
 
+    static <K, V> LongMapConverter<Map<K, V>> longMapConverter(BytesConverter<K> keyConverter,
+                                                               LongConverter<V> valueConverter) {
+        return new LongMapConverter<Map<K, V>>() {
+            @Override
+            public NavigableMap<byte[], Long> toLongMap(Map<K, V> value) {
+                return transformMap(value, asBytesTreeMap(), keyConverter::toBytes, valueConverter::toLong);
+            }
+
+            @Override
+            public Map<K, V> fromLongMap(NavigableMap<byte[], Long> longMap) {
+                return transformMap(longMap, new HashMap<>(), keyConverter::fromBytes, valueConverter::fromLong);
+            }
+
+            @Override
+            public Class<?> type() {
+                return Map.class;
+            }
+        };
+    }
 }
