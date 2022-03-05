@@ -2,7 +2,6 @@ package hbase.schema.api.schemas;
 
 import hbase.schema.api.interfaces.HBaseResultParserSchema;
 import hbase.schema.api.testutils.DummyPojo;
-import hbase.schema.api.utils.HBaseSchemaConversions;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.junit.jupiter.api.Test;
 
@@ -40,7 +39,7 @@ class AbstractHBaseResultParserSchemaTest {
         @Override
         public void setFromCell(DummyPojo obj, byte[] qualifier, byte[] value) {
             if (Bytes.equals(qualifier, utf8ToBytes("field"))) {
-                obj.setField(fromUtf8(value));
+                obj.setString(fromUtf8(value));
             }
         }
 
@@ -67,7 +66,7 @@ class AbstractHBaseResultParserSchemaTest {
         parser.setFromResult(result, utf8ToBytes("row key"), resultCells);
 
         assertThat(result.getId(), equalTo("row key"));
-        assertThat(result.getField(), equalTo("field value"));
+        assertThat(result.getString(), equalTo("field value"));
         assertThat(result.getMap1(), equalTo(asStringMap("", "value", "b", "value b")));
         assertThat(result.getMap2(), nullValue());
     }

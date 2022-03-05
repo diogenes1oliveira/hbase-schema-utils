@@ -11,7 +11,7 @@ import java.util.Map;
 
 public class DummyPojo {
     private String id;
-    private String field;
+    private String stringField;
     private Long longField;
     private Instant instantField;
     private Boolean booleanField;
@@ -33,16 +33,16 @@ public class DummyPojo {
         return this;
     }
 
-    public String getField() {
-        return field;
+    public String getString() {
+        return stringField;
     }
 
-    public void setField(String field) {
-        this.field = field;
+    public void setString(String field) {
+        this.stringField = field;
     }
 
-    public DummyPojo withField(String field) {
-        this.field = field;
+    public DummyPojo withString(String field) {
+        this.stringField = field;
         return this;
     }
 
@@ -141,7 +141,7 @@ public class DummyPojo {
     public String toString() {
         return new ToStringBuilder(this, ToStringStyle.SHORT_PREFIX_STYLE)
                 .append("id", id)
-                .append("field", field)
+                .append("field", stringField)
                 .append("long", longField)
                 .append("instant", instantField)
                 .append("boolean", booleanField)
@@ -161,7 +161,7 @@ public class DummyPojo {
 
         return new EqualsBuilder()
                 .append(this.id, other.id)
-                .append(this.field, other.field)
+                .append(this.stringField, other.stringField)
                 .append(this.longField, other.longField)
                 .append(this.instantField, other.instantField)
                 .append(this.booleanField, other.booleanField)
@@ -175,7 +175,7 @@ public class DummyPojo {
     public int hashCode() {
         return new HashCodeBuilder(17, 37)
                 .append(id)
-                .append(field)
+                .append(stringField)
                 .append(longField)
                 .append(instantField)
                 .append(booleanField)

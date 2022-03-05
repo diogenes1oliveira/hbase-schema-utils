@@ -1,7 +1,6 @@
 package hbase.schema.api.schemas;
 
 import hbase.schema.api.interfaces.HBaseMutationSchema;
-import hbase.schema.api.interfaces.conversion.LongConverter;
 import hbase.schema.api.testutils.DummyPojo;
 import hbase.test.utils.models.PrettyBytesMap;
 import hbase.test.utils.models.PrettyLongMap;
@@ -9,7 +8,6 @@ import org.junit.jupiter.api.Test;
 
 import static hbase.schema.api.converters.Utf8BytesMapConverter.utf8BytesMapConverter;
 import static hbase.schema.api.converters.Utf8Converter.utf8Converter;
-import static hbase.schema.api.interfaces.conversion.LongMapConverter.longMapConverter;
 import static hbase.schema.api.interfaces.conversion.LongMapConverter.longMapKeyConverter;
 import static hbase.schema.api.utils.HBaseSchemaConversions.utf8ToBytes;
 import static hbase.schema.api.utils.HBaseSchemaUtils.asBytesTreeMap;
@@ -53,10 +51,10 @@ class HBaseMutationSchemaBuilderTest {
         HBaseMutationSchema<DummyPojo> schema = new HBaseMutationSchemaBuilder<DummyPojo>()
                 .withTimestamp(DummyPojo::getLong)
                 .withRowKey(DummyPojo::getId, utf8Converter())
-                .withValue("some-string-field", DummyPojo::getField, utf8Converter())
+                .withValue("some-string-field", DummyPojo::getString, utf8Converter())
                 .build();
 
-        DummyPojo pojo = new DummyPojo().withId("some-id").withLong(42L).withField("some-value");
+        DummyPojo pojo = new DummyPojo().withId("some-id").withLong(42L).withString("some-value");
 
         assertThat(new PrettyBytesMap(schema.buildPutValues(pojo)), equalTo(new PrettyBytesMap(asBytesTreeMap(
                 utf8ToBytes("some-string-field"), utf8ToBytes("some-value")

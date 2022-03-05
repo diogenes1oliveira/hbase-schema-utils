@@ -21,7 +21,7 @@ class HBaseResultParserSchemaBuilderTest {
 
     HBaseResultParserSchema<DummyPojo> resultParser = new HBaseResultParserSchemaBuilder<>(DummyPojo::new)
             .fromRowKey(DummyPojo::setId, utf8Converter())
-            .fromColumn("field", DummyPojo::setField, utf8Converter())
+            .fromColumn("field", DummyPojo::setString, utf8Converter())
             .fromPrefix("p", DummyPojo::setMap1, utf8BytesMapConverter())
             .fromPrefix("q", DummyPojo::setMap2, utf8BytesMapConverter())
             .build();
@@ -48,7 +48,7 @@ class HBaseResultParserSchemaBuilderTest {
                         ),
                         new DummyPojo()
                                 .withId("my row key")
-                                .withField("value")
+                                .withString("value")
                                 .withMap1(asStringMap("1", "v1", "2", "v2"))
                                 .withMap2(asStringMap("", "v"))
                 )
