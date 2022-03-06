@@ -59,23 +59,6 @@
                         </goals>
                     </execution>
                     <execution>
-                        <id>merge-results</id>
-                        <phase>prepare-package</phase>
-                        <goals>
-                            <goal>merge</goal>
-                        </goals>
-                        <configuration>
-                            <fileSets>
-                                <fileSet>
-                                    <directory>${project.build.directory}</directory>
-                                    <includes>
-                                        <include>*.exec</include>
-                                    </includes>
-                                </fileSet>
-                            </fileSets>
-                        </configuration>
-                    </execution>
-                    <execution>
                         <id>jacoco-site-aggregate</id>
                         <phase>prepare-package</phase>
                         <goals>
