@@ -89,7 +89,7 @@ command_sonar() {
     -Dsonar.projectName="${SONAR_PROJECT_NAME}" \
     -Dsonar.java.coveragePlugin=jacoco \
     -Dsonar.dynamicAnalysis=reuseReports \
-    -Dsonar.jacoco.reportPath=target/jacoco-aggregated.exec \
+    -Dsonar.coverage.jacoco.xmlReportPaths=target/jacoco/jacoco.xml \
     -Dsonar.language=java
 
   rm -rf .scannerwork/
