@@ -51,12 +51,66 @@
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
+                <configuration>
+                    <dataFile>${user.dir}/jacoco.exec</dataFile>
+                </configuration>
                 <executions>
                     <execution>
                         <id>jacoco-initialize</id>
+                        <phase>test-compile</phase>
                         <goals>
                             <goal>prepare-agent</goal>
                         </goals>
+                    </execution>
+                    <execution>
+                        <id>jacoco-merge-results</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>merge</goal>
+                        </goals>
+                        <configuration>
+                            <!-- I don't like hardcoding these modules, but for now it seems to work -->
+                            <!-- Merging like this does lose the module information, all we have is Java package names -->
+                            <fileSets>
+                                <fileSet>
+                                    <directory>${user.dir}/hbase-connector/target/</directory>
+                                    <includes>
+                                        <include>*.exec</include>
+                                    </includes>
+                                </fileSet>
+                                <fileSet>
+                                    <directory>${user.dir}/hbase-schema-api/target/</directory>
+                                    <includes>
+                                        <include>*.exec</include>
+                                    </includes>
+                                </fileSet>
+                                <fileSet>
+                                    <directory>${user.dir}/hbase-schema-connector/target/</directory>
+                                    <includes>
+                                        <include>*.exec</include>
+                                    </includes>
+                                </fileSet>
+                                <fileSet>
+                                    <directory>${user.dir}/hbase-test-utils/target/</directory>
+                                    <includes>
+                                        <include>*.exec</include>
+                                    </includes>
+                                </fileSet>
+                                <fileSet>
+                                    <directory>${user.dir}/hadoop-auth-utils/target/</directory>
+                                    <includes>
+                                        <include>*.exec</include>
+                                    </includes>
+                                </fileSet>
+                                <fileSet>
+                                    <directory>${user.dir}/hbase-base-types/target/</directory>
+                                    <includes>
+                                        <include>*.exec</include>
+                                    </includes>
+                                </fileSet>
+                            </fileSets>
+                            <destFile>${user.dir}/target/jacoco-aggregated.exec</destFile>
+                        </configuration>
                     </execution>
                     <execution>
                         <id>jacoco-site-aggregate</id>
@@ -65,7 +119,7 @@
                             <goal>report-aggregate</goal>
                         </goals>
                         <configuration>
-                            <outputDirectory>${project.reporting.outputDirectory}/jacoco</outputDirectory>
+                            <outputDirectory>${user.dir}/target/jacoco/</outputDirectory>
                         </configuration>
                     </execution>
                 </executions>

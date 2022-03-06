@@ -14,7 +14,6 @@ Realistas:
 - Decorator time???
 - Verificar pacote org.apache.hadoop.fs.shell.find.Result
 - Mergear os .exec do JaCoCo;
-- Verificar porque está sendo rodado o TestContainers no maven;
 - JavaDoc warnings;
 - Separate conversions to a different module?
 
@@ -24,6 +23,7 @@ Feito:
 - Consertar Conversions, too cumbersome all of those stringGetter() longGetter() etc;
 - Pacote separado para as interfaces e exceções;
 - Verificar um timeout no contextlock para não dar erro eterno em caso de uso errado do contexto;
+- Verificar porque está sendo rodado o TestContainers no maven => era só o .env não carregando na linha de comando;
 
 Desistido:
 

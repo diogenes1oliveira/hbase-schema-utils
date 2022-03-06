@@ -248,12 +248,11 @@
                     <executions>
                         <execution>
                             <id>jacoco-initialize</id>
+                            <phase>test-compile</phase>
                             <goals>
                                 <goal>prepare-agent</goal>
                             </goals>
-                            <phase>test-compile</phase>
                         </execution>
-                        <!-- attached to Maven test phase -->
                         <execution>
                             <id>jacoco-site</id>
                             <phase>verify</phase>
@@ -265,57 +264,6 @@
                 </plugin>
             </plugins>
         </pluginManagement>
-<!--        <plugins>-->
-<!--            <plugin>-->
-<!--                <groupId>org.jacoco</groupId>-->
-<!--                <artifactId>jacoco-maven-plugin</artifactId>-->
-<!--                <configuration>-->
-<!--                </configuration>-->
-<!--                <executions>-->
-<!--                    <execution>-->
-<!--                        <id>merge-results</id>-->
-<!--                        <phase>verify</phase>-->
-<!--                        <goals>-->
-<!--                            <goal>merge</goal>-->
-<!--                        </goals>-->
-<!--                        <configuration>-->
-<!--                            &lt;!&ndash; I don't like hardcoding these folders, but for now it seems to work &ndash;&gt;-->
-<!--                            <fileSets>-->
-<!--                                <fileSet>-->
-<!--                                    <directory>hbase-connector/target</directory>-->
-<!--                                    <includes>-->
-<!--                                        <include>*.exec</include>-->
-<!--                                    </includes>-->
-<!--                                </fileSet>-->
-<!--                                <fileSet>-->
-<!--                                    <directory>hbase-schema-api/target</directory>-->
-<!--                                    <includes>-->
-<!--                                        <include>*.exec</include>-->
-<!--                                    </includes>-->
-<!--                                </fileSet>-->
-<!--                                <fileSet>-->
-<!--                                    <directory>hbase-schema-connector/target</directory>-->
-<!--                                    <includes>-->
-<!--                                        <include>*.exec</include>-->
-<!--                                    </includes>-->
-<!--                                </fileSet>-->
-<!--                            </fileSets>-->
-<!--                            <destFile>${user.dir}/target/jacoco.exec</destFile>-->
-<!--                        </configuration>-->
-<!--                    </execution>-->
-<!--                    <execution>-->
-<!--                        <id>jacoco-site</id>-->
-<!--                        <phase>verify</phase>-->
-<!--                        <goals>-->
-<!--                            <goal>report-aggregate</goal>-->
-<!--                        </goals>-->
-<!--                        <configuration>-->
-<!--                            &lt;!&ndash;                            <dataFile>${user.dir}/target/jacoco.exec</dataFile>&ndash;&gt;-->
-<!--                        </configuration>-->
-<!--                    </execution>-->
-<!--                </executions>-->
-<!--            </plugin>-->
-<!--        </plugins>-->
     </build>
 
 </project>
