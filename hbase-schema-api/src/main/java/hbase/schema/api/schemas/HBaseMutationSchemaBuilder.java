@@ -116,18 +116,22 @@ public class HBaseMutationSchemaBuilder<T> {
     public HBaseMutationSchemaBuilder<T> withValues(byte[] prefix, Function<T, NavigableMap<byte[], byte[]>> getter) {
         timestampBuilders.put(prefix, currentTimestampBuilder);
         valueBuilders.add(obj -> {
-            NavigableMap<byte[], byte[]> valuesMap = asBytesTreeMap();
+            NavigableMap<byte[], byte[]> hBaseMap = asBytesTreeMap();
+            NavigableMap<byte[], byte[]> objectMap = getter.apply(obj);
+            if (objectMap == null) {
+                return hBaseMap;
+            }
 
-            for (Map.Entry<byte[], byte[]> entry : getter.apply(obj).entrySet()) {
+            for (Map.Entry<byte[], byte[]> entry : objectMap.entrySet()) {
                 byte[] value = entry.getValue();
                 if (value == null) {
                     continue;
                 }
                 byte[] qualifier = ArrayUtils.addAll(prefix, entry.getKey());
-                valuesMap.put(qualifier, value);
+                hBaseMap.put(qualifier, value);
             }
 
-            return valuesMap;
+            return hBaseMap;
         });
         return this;
     }
@@ -294,18 +298,22 @@ public class HBaseMutationSchemaBuilder<T> {
     public HBaseMutationSchemaBuilder<T> withDeltas(byte[] prefix, Function<T, NavigableMap<byte[], Long>> getter) {
         timestampBuilders.put(prefix, currentTimestampBuilder);
         deltaBuilders.add(obj -> {
-            NavigableMap<byte[], Long> valuesMap = asBytesTreeMap();
+            NavigableMap<byte[], Long> hBaseMap = asBytesTreeMap();
+            NavigableMap<byte[], Long> objectMap = getter.apply(obj);
+            if (objectMap == null) {
+                return hBaseMap;
+            }
 
-            for (Map.Entry<byte[], Long> entry : getter.apply(obj).entrySet()) {
+            for (Map.Entry<byte[], Long> entry : objectMap.entrySet()) {
                 Long value = entry.getValue();
                 if (value == null) {
                     continue;
                 }
                 byte[] qualifier = ArrayUtils.addAll(prefix, entry.getKey());
-                valuesMap.put(qualifier, value);
+                hBaseMap.put(qualifier, value);
             }
 
-            return valuesMap;
+            return hBaseMap;
         });
         return this;
     }
