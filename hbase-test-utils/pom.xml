@@ -65,6 +65,11 @@
             <artifactId>annotations</artifactId>
             <scope>compile</scope>
         </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <scope>compile</scope>
+        </dependency>
         <!-- test dependencies -->
         <dependency>
             <groupId>org.hamcrest</groupId>

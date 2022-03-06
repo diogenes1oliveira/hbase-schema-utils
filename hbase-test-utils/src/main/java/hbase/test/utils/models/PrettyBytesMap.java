@@ -1,8 +1,10 @@
 package hbase.test.utils.models;
 
+import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -60,24 +62,40 @@ public class PrettyBytesMap {
             return false;
         }
         PrettyBytesMap other = (PrettyBytesMap) obj;
-        if ((this.wrapped == null) && (other.wrapped == null)) {
-            return true;
-        } else if ((this.wrapped == null) != (other.wrapped == null)) {
+        if (this.wrapped == null) {
+            return other.wrapped == null;
+        } else if(other.wrapped == null) {
             return false;
         }
-        if (!this.wrapped.keySet().equals(other.wrapped.keySet())) {
+
+        if (this.wrapped.size() != other.wrapped.size()) {
             return false;
         }
-        for (byte[] key : this.wrapped.keySet()) {
-            byte[] thisValue = this.wrapped.get(key);
+
+        EqualsBuilder builder = new EqualsBuilder();
+        for (Map.Entry<byte[], byte[]> entry : this.wrapped.entrySet()) {
+            byte[] key = entry.getKey();
+            byte[] thisValue = entry.getValue();
             byte[] otherValue = other.wrapped.get(key);
-            if ((thisValue == null) != (otherValue == null)) {
-                return false;
-            } else if (thisValue != null && !Bytes.equals(thisValue, otherValue)) {
-                return false;
-            }
+            builder = builder.append(thisValue, otherValue);
         }
-        return true;
+
+        return builder.isEquals();
     }
 
+    @Override
+    public int hashCode() {
+        if (wrapped == null) {
+            return Objects.hashCode(null);
+        }
+        Map<String, String> hashable = new HashMap<>();
+
+        for (Map.Entry<byte[], byte[]> entry : wrapped.entrySet()) {
+            String key = Base64.getEncoder().encodeToString(entry.getKey());
+            String value = Base64.getEncoder().encodeToString(entry.getValue());
+            hashable.put(key, value);
+        }
+
+        return Objects.hashCode(hashable);
+    }
 }

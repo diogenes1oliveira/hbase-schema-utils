@@ -1,8 +1,10 @@
 package hbase.test.utils.models;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
+import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.hadoop.hbase.util.Bytes;
 
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -60,7 +62,40 @@ public class PrettyLongMap {
             return false;
         }
         PrettyLongMap other = (PrettyLongMap) obj;
-        return Objects.equals(this.wrapped, other.wrapped);
+        if (this.wrapped == null) {
+            return other.wrapped == null;
+        } else if(other.wrapped == null) {
+            return false;
+        }
+
+        if (this.wrapped.size() != other.wrapped.size()) {
+            return false;
+        }
+
+        EqualsBuilder builder = new EqualsBuilder();
+        for (Map.Entry<byte[], Long> entry : this.wrapped.entrySet()) {
+            byte[] key = entry.getKey();
+            Long thisValue = entry.getValue();
+            Long otherValue = other.wrapped.get(key);
+            builder = builder.append(thisValue, otherValue);
+        }
+
+        return builder.isEquals();
     }
 
+    @Override
+    public int hashCode() {
+        if (wrapped == null) {
+            return Objects.hashCode(null);
+        }
+        Map<String, Long> hashable = new HashMap<>();
+
+        for (Map.Entry<byte[], Long> entry : wrapped.entrySet()) {
+            String key = Base64.getEncoder().encodeToString(entry.getKey());
+            Long value = entry.getValue();
+            hashable.put(key, value);
+        }
+
+        return Objects.hashCode(hashable);
+    }
 }

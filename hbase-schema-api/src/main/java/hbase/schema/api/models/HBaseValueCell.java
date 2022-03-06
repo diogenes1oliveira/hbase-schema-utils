@@ -27,21 +27,6 @@ public class HBaseValueCell extends AbstractHBaseCell<byte[]> {
     }
 
     /**
-     * Compares just {@link #getQualifier()}
-     */
-    @Override
-    public boolean equals(Object o) {
-        if (o == this) {
-            return true;
-        } else if (!(o instanceof HBaseValueCell)) {
-            return false;
-        }
-
-        HBaseValueCell other = (HBaseValueCell) o;
-        return this.compareTo(other) == 0;
-    }
-
-    /**
      * Creates a map of {@code byte[]} values given the cell objects
      *
      * @param valueCells input cell objects

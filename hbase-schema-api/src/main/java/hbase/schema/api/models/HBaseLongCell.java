@@ -38,21 +38,6 @@ public class HBaseLongCell extends AbstractHBaseCell<Long> {
     }
 
     /**
-     * Compares just {@link #getQualifier()}
-     */
-    @Override
-    public boolean equals(Object o) {
-        if (o == this) {
-            return true;
-        } else if (!(o instanceof HBaseLongCell)) {
-            return false;
-        }
-
-        HBaseLongCell other = (HBaseLongCell) o;
-        return this.compareTo(other) == 0;
-    }
-
-    /**
      * Creates a map of {@code long} values given the cell objects
      *
      * @param longCells input cell objects
