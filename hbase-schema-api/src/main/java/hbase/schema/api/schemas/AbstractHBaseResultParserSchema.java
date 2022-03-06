@@ -20,13 +20,14 @@ public abstract class AbstractHBaseResultParserSchema<T> implements HBaseResultP
     /**
      * Populates the object with data from the row key
      * <p>
-     * The default implementation does nothing
+     * The default implementation just returns {@code false}
      *
      * @param obj    result object instance
      * @param rowKey row key bytes
+     * @return true if some data was set
      */
-    public void setFromRowKey(T obj, byte[] rowKey) {
-        // nothing to do, by default
+    public boolean setFromRowKey(T obj, byte[] rowKey) {
+        return false;
     }
 
     /**
@@ -43,27 +44,29 @@ public abstract class AbstractHBaseResultParserSchema<T> implements HBaseResultP
     /**
      * Populates the object with the value of a single cell
      * <p>
-     * The default implementation does nothing
+     * The default implementation just returns {@code false}
      *
      * @param obj       object to be populated
      * @param qualifier HBase cell qualifier
      * @param value     HBase cell value
+     * @return true if some data was set
      */
-    public void setFromCell(T obj, byte[] qualifier, byte[] value) {
-        // nothing to do, by default
+    public boolean setFromCell(T obj, byte[] qualifier, byte[] value) {
+        return false;
     }
 
     /**
      * Populates the object with the values of multiple cells with the same prefix
      * <p>
-     * The default implementation does nothing
+     * The default implementation just returns {@code false}
      *
      * @param obj             object to be populated
      * @param prefix          qualifier prefix
      * @param cellsFromPrefix map of (qualifier -> cell value). The prefix is removed from the qualifier
+     * @return true if some data was set
      */
-    public void setFromPrefix(T obj, byte[] prefix, NavigableMap<byte[], byte[]> cellsFromPrefix) {
-        // nothing to do, by default
+    public boolean setFromPrefix(T obj, byte[] prefix, NavigableMap<byte[], byte[]> cellsFromPrefix) {
+        return false;
     }
 
     /**
@@ -71,11 +74,11 @@ public abstract class AbstractHBaseResultParserSchema<T> implements HBaseResultP
      *
      * @param obj         result object instance
      * @param resultCells map of (qualifier -> cell value) fetched from HBase
+     * @return true if some data was set
      */
     @Override
-    public void setFromResult(T obj, byte[] rowKey, NavigableMap<byte[], byte[]> resultCells) {
-
-        setFromRowKey(obj, rowKey);
+    public boolean setFromResult(T obj, byte[] rowKey, NavigableMap<byte[], byte[]> resultCells) {
+        boolean setData = setFromRowKey(obj, rowKey);
 
         NavigableSet<byte[]> prefixes = getPrefixes();
         NavigableMap<byte[], NavigableMap<byte[], byte[]>> prefixMap = asBytesTreeMap();
@@ -86,7 +89,7 @@ public abstract class AbstractHBaseResultParserSchema<T> implements HBaseResultP
             byte[] prefix = prefixes.floor(qualifier);
             byte[] unprefixedQualifier = removePrefix(qualifier, prefix);
             if (unprefixedQualifier == null) {
-                setFromCell(obj, qualifier, value);
+                setData = setFromCell(obj, qualifier, value) || setData;
             } else {
                 NavigableMap<byte[], byte[]> cellsFromPrefix = prefixMap.computeIfAbsent(prefix, b -> asBytesTreeMap());
                 cellsFromPrefix.put(unprefixedQualifier, value);
@@ -96,8 +99,10 @@ public abstract class AbstractHBaseResultParserSchema<T> implements HBaseResultP
         for (Map.Entry<byte[], NavigableMap<byte[], byte[]>> entry : prefixMap.entrySet()) {
             byte[] prefix = entry.getKey();
             NavigableMap<byte[], byte[]> cellsFromPrefix = entry.getValue();
-            setFromPrefix(obj, prefix, cellsFromPrefix);
+            setData = setFromPrefix(obj, prefix, cellsFromPrefix) || setData;
         }
+
+        return setData;
     }
 
     private static byte @Nullable [] removePrefix(byte[] arr, byte @Nullable [] prefix) {

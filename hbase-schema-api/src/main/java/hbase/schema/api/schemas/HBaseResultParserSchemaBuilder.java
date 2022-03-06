@@ -21,9 +21,7 @@ import static hbase.schema.api.utils.HBaseSchemaUtils.chain;
  */
 public class HBaseResultParserSchemaBuilder<T> {
     private final Supplier<T> constructor;
-    private BiConsumer<T, byte[]> fromRowKeySetter = (obj, bytes) -> {
-        // dummy
-    };
+    private BiConsumer<T, byte[]> fromRowKeySetter = null;
     private final NavigableMap<byte[], BiConsumer<T, byte[]>> cellSetters = asBytesTreeMap();
     private final NavigableMap<byte[], BiConsumer<T, NavigableMap<byte[], byte[]>>> prefixSetters = asBytesTreeMap();
 
@@ -258,8 +256,13 @@ public class HBaseResultParserSchemaBuilder<T> {
             }
 
             @Override
-            public void setFromRowKey(T obj, byte[] rowKey) {
-                fromRowKeySetter.accept(obj, rowKey);
+            public boolean setFromRowKey(T obj, byte[] rowKey) {
+                if (fromRowKeySetter != null) {
+                    fromRowKeySetter.accept(obj, rowKey);
+                    return true;
+                } else {
+                    return false;
+                }
             }
 
             @Override
@@ -268,18 +271,24 @@ public class HBaseResultParserSchemaBuilder<T> {
             }
 
             @Override
-            public void setFromCell(T obj, byte[] qualifier, byte[] value) {
+            public boolean setFromCell(T obj, byte[] qualifier, byte[] value) {
                 BiConsumer<T, byte[]> setter = cellSetters.get(qualifier);
                 if (setter != null) {
                     setter.accept(obj, value);
+                    return true;
+                } else {
+                    return false;
                 }
             }
 
             @Override
-            public void setFromPrefix(T obj, byte[] prefix, NavigableMap<byte[], byte[]> cellsFromPrefix) {
+            public boolean setFromPrefix(T obj, byte[] prefix, NavigableMap<byte[], byte[]> cellsFromPrefix) {
                 BiConsumer<T, NavigableMap<byte[], byte[]>> setter = prefixSetters.get(prefix);
                 if (setter != null) {
                     setter.accept(obj, cellsFromPrefix);
+                    return true;
+                } else {
+                    return false;
                 }
             }
         };

@@ -32,22 +32,29 @@ class AbstractHBaseResultParserSchemaTest {
         }
 
         @Override
-        public void setFromRowKey(DummyPojo obj, byte[] rowKey) {
+        public boolean setFromRowKey(DummyPojo obj, byte[] rowKey) {
             obj.setId(fromUtf8(rowKey));
+            return true;
         }
 
         @Override
-        public void setFromCell(DummyPojo obj, byte[] qualifier, byte[] value) {
+        public boolean setFromCell(DummyPojo obj, byte[] qualifier, byte[] value) {
             if (Bytes.equals(qualifier, utf8ToBytes("field"))) {
                 obj.setString(fromUtf8(value));
+                return true;
+            } else {
+                return false;
             }
         }
 
         @Override
-        public void setFromPrefix(DummyPojo obj, byte[] prefix, NavigableMap<byte[], byte[]> cellsFromPrefix) {
+        public boolean setFromPrefix(DummyPojo obj, byte[] prefix, NavigableMap<byte[], byte[]> cellsFromPrefix) {
             if (Bytes.equals(prefix, utf8ToBytes("p1"))) {
                 Map<String, String> map = utf8BytesMapConverter().fromBytesMap(cellsFromPrefix);
                 obj.setMap1(map);
+                return true;
+            } else {
+                return false;
             }
         }
     };

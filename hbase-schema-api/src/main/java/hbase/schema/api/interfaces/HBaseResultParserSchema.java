@@ -1,5 +1,7 @@
 package hbase.schema.api.interfaces;
 
+import org.jetbrains.annotations.Nullable;
+
 import java.util.NavigableMap;
 
 /**
@@ -21,7 +23,27 @@ public interface HBaseResultParserSchema<T> {
      * @param obj         result object instance
      * @param rowKey      row key bytes
      * @param resultCells cells fetched from HBase, in a mapping (qualifier -> cell value)
+     * @return true if some data was set
      */
-    void setFromResult(T obj, byte[] rowKey, NavigableMap<byte[], byte[]> resultCells);
+    boolean setFromResult(T obj, byte[] rowKey, NavigableMap<byte[], byte[]> resultCells);
+
+    /**
+     * Creates a new result object and populates it with data fetched from HBase
+     * <p>
+     * The default implementation delegates to {@link #newInstance()} and
+     * {@link #setFromResult(T, byte[], NavigableMap)}
+     *
+     * @param rowKey      row key bytes
+     * @param resultCells cells fetched from HBase, in a mapping (qualifier -> cell value)
+     * @return parsed result object or null if no data was set
+     */
+    default @Nullable T parseResult(byte[] rowKey, NavigableMap<byte[], byte[]> resultCells) {
+        T instance = newInstance();
+        if (setFromResult(instance, rowKey, resultCells)) {
+            return instance;
+        } else {
+            return null;
+        }
+    }
 
 }
