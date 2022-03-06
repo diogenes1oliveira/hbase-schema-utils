@@ -15,6 +15,16 @@ import static java.util.Collections.singletonList;
 @FunctionalInterface
 public interface HBaseMutator<T> {
     /**
+     * Builds and executes the mutations corresponding to the source objects
+     *
+     * @param tableName name of the table to insert data in
+     * @param objects   source objects
+     * @throws IOException           failed to execute the mutations
+     * @throws IllegalStateException interrupted while mutating
+     */
+    void mutate(TableName tableName, List<T> objects) throws IOException;
+
+    /**
      * Builds and executes the mutations corresponding to the source object
      * <p>
      * The default implementation just delegates to {@link #mutate(TableName, List)}
@@ -28,14 +38,5 @@ public interface HBaseMutator<T> {
         mutate(tableName, singletonList(object));
     }
 
-    /**
-     * Builds and executes the mutations corresponding to the source objects
-     *
-     * @param tableName name of the table to insert data in
-     * @param objects   source objects
-     * @throws IOException           failed to execute the mutations
-     * @throws IllegalStateException interrupted while mutating
-     */
-    void mutate(TableName tableName, List<T> objects) throws IOException;
 
 }

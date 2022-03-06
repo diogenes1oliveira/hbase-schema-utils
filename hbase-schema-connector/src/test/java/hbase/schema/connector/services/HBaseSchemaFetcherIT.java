@@ -29,8 +29,8 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.nullValue;
 
 @ExtendWith(HBaseTestJunitExtension.class)
-public class HBaseFetcherIT {
-    HBaseSchema<DummyPojo, DummyPojo> schema = new DummyPojoSchema();
+public class HBaseSchemaFetcherIT {
+    HBaseSchema<DummyPojo, DummyPojo, DummyPojo> schema = new DummyPojoSchema();
     byte[] family = new byte[]{'f'};
     TableName tempTable;
     HBaseConnector connector;

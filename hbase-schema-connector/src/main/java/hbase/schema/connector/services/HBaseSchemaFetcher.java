@@ -1,35 +1,32 @@
 package hbase.schema.connector.services;
 
 import hbase.connector.services.HBaseConnector;
+import hbase.schema.api.interfaces.HBaseFilterSchema;
 import hbase.schema.api.interfaces.HBaseQuerySchema;
+import hbase.schema.api.interfaces.HBaseResultParserSchema;
 import hbase.schema.api.interfaces.HBaseSchema;
 import hbase.schema.connector.interfaces.HBaseFetcher;
-import hbase.schema.connector.interfaces.HBaseFilterGenerator;
-import hbase.schema.connector.interfaces.HBaseResultsParser;
 import org.apache.hadoop.hbase.TableName;
-import org.apache.hadoop.hbase.client.Connection;
-import org.apache.hadoop.hbase.client.Get;
-import org.apache.hadoop.hbase.client.Result;
-import org.apache.hadoop.hbase.client.ResultScanner;
-import org.apache.hadoop.hbase.client.Scan;
-import org.apache.hadoop.hbase.client.Table;
+import org.apache.hadoop.hbase.client.*;
 import org.apache.hadoop.hbase.filter.Filter;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.NavigableMap;
 
 /**
  * Object to query and parse data from HBase based on a Schema
  *
- * @param <T> query type
+ * @param <Q> query type
  * @param <R> result type
  */
-public class HBaseSchemaFetcher<T, R> implements HBaseFetcher<T, R> {
+public class HBaseSchemaFetcher<Q, R> implements HBaseFetcher<Q, R> {
     private final byte[] family;
-    private final HBaseFilterGenerator<T> filterGenerator;
-    private final HBaseResultsParser<R> resultsParser;
-    private final HBaseQuerySchema<T> querySchema;
+    private final HBaseFilterSchema<Q> filterSchema;
+    private final HBaseQuerySchema<Q> querySchema;
+    private final HBaseResultParserSchema<R> resultParserSchema;
     private final HBaseConnector connector;
 
     /**
@@ -37,11 +34,11 @@ public class HBaseSchemaFetcher<T, R> implements HBaseFetcher<T, R> {
      * @param schema    object schema
      * @param connector connector object
      */
-    public HBaseSchemaFetcher(byte[] family, HBaseSchema<T, R> schema, HBaseConnector connector) {
+    public HBaseSchemaFetcher(byte[] family, HBaseSchema<?, Q, R> schema, HBaseConnector connector) {
         this.family = family;
-        this.filterGenerator = new HBaseSchemaFilterGenerator<>(family, schema.querySchema());
-        this.resultsParser = new HBaseSchemaResultsParser<>(family, schema.resultParserSchema());
+        this.filterSchema = schema.filterSchema();
         this.querySchema = schema.querySchema();
+        this.resultParserSchema = schema.resultParserSchema();
         this.connector = connector;
     }
 
@@ -52,14 +49,16 @@ public class HBaseSchemaFetcher<T, R> implements HBaseFetcher<T, R> {
      * @return built Get request or null if the query object has no query data
      */
     @Nullable
-    public Get toGet(T query) {
+    public Get toGet(Q query) {
         byte[] rowKey = querySchema.buildRowKey(query);
         if (rowKey == null) {
             return null;
         }
+
         Get get = new Get(rowKey);
-        filterGenerator.selectColumns(query, get);
-        Filter filter = filterGenerator.toFilter(query);
+        querySchema.selectColumns(query, family, get);
+
+        Filter filter = filterSchema.buildFilter(query);
         if (filter != null) {
             get.setFilter(filter);
         }
@@ -76,7 +75,7 @@ public class HBaseSchemaFetcher<T, R> implements HBaseFetcher<T, R> {
      * @throws IOException failed to execute Get
      */
     @Nullable
-    public R get(TableName tableName, T query) throws IOException {
+    public R get(TableName tableName, Q query) throws IOException {
         Get get = toGet(query);
         if (get == null) {
             return null;
@@ -84,8 +83,27 @@ public class HBaseSchemaFetcher<T, R> implements HBaseFetcher<T, R> {
         try (Connection connection = connector.context();
              Table table = connection.getTable(tableName)) {
             Result result = table.get(get);
-            return resultsParser.parseResult(result);
+            return parseResult(result);
         }
+    }
+
+    /**
+     * Parses the data from a HBase result into a proper object
+     *
+     * @param result fetched HBase result
+     * @return parsed result object or null
+     */
+    public @Nullable R parseResult(Result result) {
+        if (result == null) {
+            return null;
+        }
+        byte[] rowKey = result.getRow();
+        NavigableMap<byte[], byte[]> cellsMap = result.getFamilyMap(family);
+
+        if (rowKey == null || cellsMap == null) {
+            return null;
+        }
+        return resultParserSchema.parseResult(rowKey, cellsMap);
     }
 
     /**
@@ -94,7 +112,7 @@ public class HBaseSchemaFetcher<T, R> implements HBaseFetcher<T, R> {
      * @param queries query objects
      * @return built Scan request
      */
-    public Scan toScan(List<? extends T> queries) {
+    public Scan toScan(List<? extends Q> queries) {
         Scan scan = new Scan();
 
         if (queries.isEmpty()) {
@@ -102,10 +120,10 @@ public class HBaseSchemaFetcher<T, R> implements HBaseFetcher<T, R> {
             return scan;
         }
 
-        T firstQuery = queries.get(0);
-        filterGenerator.selectColumns(firstQuery, scan);
+        Q firstQuery = queries.get(0);
+        querySchema.selectColumns(firstQuery, family, scan);
 
-        Filter filter = filterGenerator.toFilter(queries);
+        Filter filter = filterSchema.buildFilter(queries);
         if (filter != null) {
             scan.setFilter(filter);
         }
@@ -121,12 +139,21 @@ public class HBaseSchemaFetcher<T, R> implements HBaseFetcher<T, R> {
      * @return list with non-null results
      * @throws IOException failed to execute Get
      */
-    public List<R> scan(TableName tableName, List<? extends T> queries) throws IOException {
+    public List<R> scan(TableName tableName, List<? extends Q> queries) throws IOException {
         Scan scan = toScan(queries);
+        List<R> results = new ArrayList<>();
+
         try (Connection connection = connector.context();
              Table table = connection.getTable(tableName);
              ResultScanner scanner = table.getScanner(scan)) {
-            return resultsParser.parseResults(scanner);
+            for (Result result : scanner) {
+                R object = parseResult(result);
+                if (object != null) {
+                    results.add(object);
+                }
+            }
         }
+
+        return results;
     }
 }
