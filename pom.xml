@@ -28,7 +28,7 @@
         <jackson.version>2.13.1</jackson.version>
         <annotations.version>23.0.0</annotations.version>
         <!-- test dependencies -->
-        <junit.version>5.7.0</junit.version>
+        <junit.version>5.7.2</junit.version>
         <hamcrest.version>2.2</hamcrest.version>
         <mockito.version>4.3.1</mockito.version>
         <junit-pioneer.version>1.6.1</junit-pioneer.version>
