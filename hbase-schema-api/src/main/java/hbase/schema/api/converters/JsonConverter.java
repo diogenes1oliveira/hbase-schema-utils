@@ -15,6 +15,7 @@ import java.util.function.Function;
  * @param <T> result type
  */
 public class JsonConverter<T> implements BytesConverter<T> {
+    @SuppressWarnings("java:S3077")
     private static volatile ObjectMapper defaultMapper = new ObjectMapper()
             .setSerializationInclusion(JsonInclude.Include.NON_NULL)
             .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);

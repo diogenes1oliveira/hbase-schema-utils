@@ -17,6 +17,7 @@ public class HBaseRecreatableConnectionContext implements HBaseConnectionContext
     private final IOSupplier<Connection> connectionFactory;
     private final TimedReadWriteLock readWriteLock;
     private final Object lock = new Object();
+    @SuppressWarnings("java:S3077")
     private volatile Connection connection = null;
 
     /**

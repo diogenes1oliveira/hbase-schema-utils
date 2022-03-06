@@ -16,6 +16,7 @@ import java.util.function.Function;
  * @param <T> item type
  */
 public abstract class ListMapAbstractJsonConverter<T> extends ListMapAbstractConverter<T> {
+    @SuppressWarnings("java:S3077")
     private static volatile ObjectMapper defaultMapper = new ObjectMapper()
             .setSerializationInclusion(JsonInclude.Include.NON_NULL)
             .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
@@ -27,7 +28,7 @@ public abstract class ListMapAbstractJsonConverter<T> extends ListMapAbstractCon
      * @param itemType result type instance
      * @param mapper   object mapper to use as SerDe
      */
-    public ListMapAbstractJsonConverter(Class<T> itemType, ObjectMapper mapper) {
+    protected ListMapAbstractJsonConverter(Class<T> itemType, ObjectMapper mapper) {
         this.itemType = itemType;
         this.mapper = mapper;
     }
@@ -37,7 +38,7 @@ public abstract class ListMapAbstractJsonConverter<T> extends ListMapAbstractCon
      *
      * @param itemType result type instance
      */
-    public ListMapAbstractJsonConverter(Class<T> itemType) {
+    protected ListMapAbstractJsonConverter(Class<T> itemType) {
         this(itemType, defaultMapper);
     }
 
