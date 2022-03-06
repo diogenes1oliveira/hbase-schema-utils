@@ -12,8 +12,8 @@ services:
       - "16030:16030"
     working_dir: /opt
     environment:
-      HBASE_CONF_hbase_regionserver_hostname: hbase.localhost
-      HBASE_CONF_hbase_master_hostname: hbase.localhost
+      - HBASE_CONF_hbase_regionserver_hostname=hbase.localhost
+      - HBASE_CONF_hbase_master_hostname=hbase.localhost
 
   sonar:
     image: sonarqube:9.3-community
@@ -22,7 +22,7 @@ services:
     ports:
       - "9000:9000"
     environment:
-      SONAR_ES_BOOTSTRAP_CHECKS_DISABLE: "true"
+      - SONAR_ES_BOOTSTRAP_CHECKS_DISABLE=true
 
 networks:
   default:
