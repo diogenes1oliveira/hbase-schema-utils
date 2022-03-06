@@ -31,7 +31,7 @@
         <junit.version>5.7.0</junit.version>
         <hamcrest.version>2.2</hamcrest.version>
         <mockito.version>3.11.2</mockito.version>
-        <junit-pioneer.version>1.5.0</junit-pioneer.version>
+        <junit-pioneer.version>1.6.1</junit-pioneer.version>
         <!-- Plugins -->
         <surefire.plugin.version>3.0.0-M5</surefire.plugin.version>
         <source.plugin.version>3.2.1</source.plugin.version>
