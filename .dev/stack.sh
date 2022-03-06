@@ -36,9 +36,9 @@ setup_env() {
 }
 
 command_up() {
+  touch .env
   (
     cd .dev
-    touch .env
     docker-compose --env-file ../.env up --remove-orphans --renew-anon-volumes --detach
   )
   hbase_wait_for_shell
