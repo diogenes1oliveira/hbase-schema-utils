@@ -1,6 +1,10 @@
 package hbase.schema.api.schemas;
 
-import hbase.schema.api.interfaces.*;
+import hbase.schema.api.interfaces.HBaseFilterSchema;
+import hbase.schema.api.interfaces.HBaseMutationSchema;
+import hbase.schema.api.interfaces.HBaseQuerySchema;
+import hbase.schema.api.interfaces.HBaseResultParserSchema;
+import hbase.schema.api.interfaces.HBaseSchema;
 import hbase.schema.api.interfaces.conversion.BytesConverter;
 import hbase.schema.api.interfaces.conversion.BytesMapConverter;
 import hbase.schema.api.interfaces.conversion.LongConverter;
@@ -90,6 +94,38 @@ public abstract class AbstractHBaseSchema<T, R> implements HBaseSchema<T, T, R> 
     @Nullable
     public Filter buildFilter(T query) {
         return null;
+    }
+
+    /**
+     * Schema to generate the Mutations
+     */
+    @Override
+    public final HBaseMutationSchema<T> mutationSchema() {
+        return mutationBuilder.build();
+    }
+
+    /**
+     * Schema to generate the Gets and Scans queries
+     */
+    @Override
+    public final HBaseQuerySchema<T> querySchema() {
+        return queryBuilder.build();
+    }
+
+    /**
+     * Schema to generate the Filters
+     */
+    @Override
+    public final HBaseFilterSchema<T> filterSchema() {
+        return filterBuilder.withScanKey(this::buildRowKey, scanKeySize()).build();
+    }
+
+    /**
+     * Schema to parse fetched Results
+     */
+    @Override
+    public final HBaseResultParserSchema<R> resultParserSchema() {
+        return resultBuilder.build();
     }
 
     /**
@@ -192,37 +228,5 @@ public abstract class AbstractHBaseSchema<T, R> implements HBaseSchema<T, T, R> 
         queryBuilder.withPrefixes(prefix);
         filterBuilder.withPrefixes(prefix);
         resultBuilder.fromPrefix(prefix, setter, converter);
-    }
-
-    /**
-     * Schema to generate the Mutations
-     */
-    @Override
-    public final HBaseMutationSchema<T> mutationSchema() {
-        return mutationBuilder.build();
-    }
-
-    /**
-     * Schema to generate the Gets and Scans queries
-     */
-    @Override
-    public final HBaseQuerySchema<T> querySchema() {
-        return queryBuilder.build();
-    }
-
-    /**
-     * Schema to generate the Filters
-     */
-    @Override
-    public final HBaseFilterSchema<T> filterSchema() {
-        return filterBuilder.withScanKey(this::buildRowKey, scanKeySize()).build();
-    }
-
-    /**
-     * Schema to parse fetched Results
-     */
-    @Override
-    public final HBaseResultParserSchema<R> resultParserSchema() {
-        return resultBuilder.build();
     }
 }

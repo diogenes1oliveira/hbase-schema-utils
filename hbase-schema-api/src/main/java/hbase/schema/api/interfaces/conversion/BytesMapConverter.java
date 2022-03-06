@@ -18,6 +18,13 @@ import static hbase.schema.api.utils.HBaseSchemaUtils.asBytesTreeMap;
 public interface BytesMapConverter<T> {
 
     /**
+     * A dummy converter for bytes map values
+     */
+    BytesMapConverter<NavigableMap<byte[], byte[]>> IDENTITY = bytesMapConverter(
+            BytesConverter.bytesConverter(), BytesConverter.bytesConverter(), HBaseSchemaUtils::asBytesTreeMap
+    );
+
+    /**
      * Transforms a value into a bytes map payload
      *
      * @param value value instance
@@ -37,13 +44,6 @@ public interface BytesMapConverter<T> {
      * Class instance for the value type
      */
     Class<?> type();
-
-    /**
-     * A dummy converter for bytes map values
-     */
-    BytesMapConverter<NavigableMap<byte[], byte[]>> IDENTITY = bytesMapConverter(
-            BytesConverter.bytesConverter(), BytesConverter.bytesConverter(), HBaseSchemaUtils::asBytesTreeMap
-    );
 
     /**
      * A dummy converter for bytes map values

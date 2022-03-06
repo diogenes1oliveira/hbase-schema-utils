@@ -16,8 +16,8 @@ import java.io.IOException;
 public class HBaseRecreatableConnectionContext implements HBaseConnectionContext {
     private final IOSupplier<Connection> connectionFactory;
     private final TimedReadWriteLock readWriteLock;
-    private volatile Connection connection = null;
     private final Object lock = new Object();
+    private volatile Connection connection = null;
 
     /**
      * @param connectionCreator creator of new connection objects

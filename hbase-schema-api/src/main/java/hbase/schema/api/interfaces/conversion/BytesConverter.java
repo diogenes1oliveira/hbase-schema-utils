@@ -9,6 +9,26 @@ import java.util.function.Function;
  */
 public interface BytesConverter<T> {
     /**
+     * A dummy converter for {@code byte[]} values
+     */
+    BytesConverter<byte[]> IDENTITY = new BytesConverter<byte[]>() {
+        @Override
+        public byte[] toBytes(byte[] value) {
+            return value;
+        }
+
+        @Override
+        public byte[] fromBytes(byte[] bytes) {
+            return bytes;
+        }
+
+        @Override
+        public Class<?> type() {
+            return byte[].class;
+        }
+    };
+
+    /**
      * Transforms a value into a {@code byte[]} payload
      *
      * @param value value instance
@@ -28,26 +48,6 @@ public interface BytesConverter<T> {
      * Class instance for the value type
      */
     Class<?> type();
-
-    /**
-     * A dummy converter for {@code byte[]} values
-     */
-    BytesConverter<byte[]> IDENTITY = new BytesConverter<byte[]>() {
-        @Override
-        public byte[] toBytes(byte[] value) {
-            return value;
-        }
-
-        @Override
-        public byte[] fromBytes(byte[] bytes) {
-            return bytes;
-        }
-
-        @Override
-        public Class<?> type() {
-            return byte[].class;
-        }
-    };
 
     /**
      * A dummy converter for {@code byte[]} values

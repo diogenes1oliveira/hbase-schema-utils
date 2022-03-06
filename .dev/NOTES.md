@@ -15,6 +15,7 @@ Realistas:
 - Verificar pacote org.apache.hadoop.fs.shell.find.Result
 
 Feito:
+
 - Checar interrupted;
 - Consertar Conversions, too cumbersome all of those stringGetter() longGetter() etc;
 - Pacote separado para as interfaces e exceções;
@@ -24,5 +25,5 @@ Desistido:
 
 - Abstract provavelmente devia ser interface => melhor não, deixa um SchemaProvider cuidar disso
 - Tiemstamp shouldn't be nullable, really; => it can, best to deal with optional fields
-- Fazer uns schemas que sempre lançam unsupportedoperation para não ter que usar nulo em testes não mais necessário => não precisa no
-  novo formato;
+- Fazer uns schemas que sempre lançam unsupportedoperation para não ter que usar nulo em testes não mais necessário => não precisa no novo
+  formato;

@@ -10,11 +10,18 @@ import org.apache.hadoop.hbase.util.Bytes;
 import org.jetbrains.annotations.Nullable;
 
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+import java.util.NavigableSet;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-import static hbase.schema.api.utils.HBaseSchemaUtils.*;
+import static hbase.schema.api.utils.HBaseSchemaUtils.asBytesTreeSet;
+import static hbase.schema.api.utils.HBaseSchemaUtils.chain;
+import static hbase.schema.api.utils.HBaseSchemaUtils.combineNullableFilters;
+import static hbase.schema.api.utils.HBaseSchemaUtils.mapArray;
 import static java.util.Arrays.asList;
 
 /**

@@ -21,9 +21,9 @@ import static hbase.schema.api.utils.HBaseSchemaUtils.chain;
  */
 public class HBaseResultParserSchemaBuilder<T> {
     private final Supplier<T> constructor;
-    private BiConsumer<T, byte[]> fromRowKeySetter = null;
     private final NavigableMap<byte[], BiConsumer<T, byte[]>> cellSetters = asBytesTreeMap();
     private final NavigableMap<byte[], BiConsumer<T, NavigableMap<byte[], byte[]>>> prefixSetters = asBytesTreeMap();
+    private BiConsumer<T, byte[]> fromRowKeySetter = null;
 
     /**
      * Instantiate a new builder

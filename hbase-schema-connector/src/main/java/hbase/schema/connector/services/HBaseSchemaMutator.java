@@ -6,13 +6,21 @@ import hbase.schema.api.interfaces.HBaseMutationSchema;
 import hbase.schema.api.interfaces.HBaseSchema;
 import hbase.schema.connector.interfaces.HBaseMutator;
 import org.apache.hadoop.hbase.TableName;
-import org.apache.hadoop.hbase.client.*;
+import org.apache.hadoop.hbase.client.Connection;
+import org.apache.hadoop.hbase.client.Increment;
+import org.apache.hadoop.hbase.client.Mutation;
+import org.apache.hadoop.hbase.client.Put;
+import org.apache.hadoop.hbase.client.Table;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.NavigableMap;
+import java.util.Objects;
 
 import static org.apache.commons.lang3.ObjectUtils.firstNonNull;
 

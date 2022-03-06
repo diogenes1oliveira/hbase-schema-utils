@@ -11,6 +11,26 @@ import java.util.function.Function;
  */
 public interface LongConverter<T> extends BytesConverter<T> {
     /**
+     * A dummy converter for {@code Long} values
+     */
+    LongConverter<Long> IDENTITY = new LongConverter<Long>() {
+        @Override
+        public Long toLong(Long value) {
+            return value;
+        }
+
+        @Override
+        public Long fromLong(Long value) {
+            return value;
+        }
+
+        @Override
+        public Class<?> type() {
+            return Long.class;
+        }
+    };
+
+    /**
      * Transforms a value into a {@code Long} payload
      *
      * @param value value instance
@@ -48,26 +68,6 @@ public interface LongConverter<T> extends BytesConverter<T> {
      * Class instance for the value type
      */
     Class<?> type();
-
-    /**
-     * A dummy converter for {@code Long} values
-     */
-    LongConverter<Long> IDENTITY = new LongConverter<Long>() {
-        @Override
-        public Long toLong(Long value) {
-            return value;
-        }
-
-        @Override
-        public Long fromLong(Long value) {
-            return value;
-        }
-
-        @Override
-        public Class<?> type() {
-            return Long.class;
-        }
-    };
 
     /**
      * A dummy converter for {@code Long} values

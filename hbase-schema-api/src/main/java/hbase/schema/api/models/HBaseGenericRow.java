@@ -20,11 +20,10 @@ import static java.util.Collections.emptyList;
  */
 public class HBaseGenericRow {
     private static final byte[] EMPTY = new byte[0];
-
-    private byte[] rowKey;
     private final Long timestamp;
     private final SortedSet<HBaseValueCell> valueCells;
     private final SortedSet<HBaseLongCell> longCells;
+    private byte[] rowKey;
 
     /**
      * @param rowKey     {@link #getRowKey()}

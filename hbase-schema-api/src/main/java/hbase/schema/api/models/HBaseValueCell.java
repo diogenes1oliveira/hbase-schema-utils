@@ -27,14 +27,6 @@ public class HBaseValueCell extends AbstractHBaseCell<byte[]> {
     }
 
     /**
-     * Stringifies the {@code byte[]} value with {@link Bytes#toStringBinary}
-     */
-    @Override
-    protected String toString(byte @Nullable [] value) {
-        return Bytes.toStringBinary(value);
-    }
-
-    /**
      * Compares just {@link #getQualifier()}
      */
     @Override
@@ -63,6 +55,14 @@ public class HBaseValueCell extends AbstractHBaseCell<byte[]> {
         }
 
         return result;
+    }
+
+    /**
+     * Stringifies the {@code byte[]} value with {@link Bytes#toStringBinary}
+     */
+    @Override
+    protected String toString(byte @Nullable [] value) {
+        return Bytes.toStringBinary(value);
     }
 
 }

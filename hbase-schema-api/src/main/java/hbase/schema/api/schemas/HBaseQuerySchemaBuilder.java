@@ -8,7 +8,11 @@ import java.util.NavigableSet;
 import java.util.SortedSet;
 import java.util.function.Function;
 
-import static hbase.schema.api.utils.HBaseSchemaUtils.*;
+import static hbase.schema.api.utils.HBaseSchemaUtils.asBytesTreeSet;
+import static hbase.schema.api.utils.HBaseSchemaUtils.chain;
+import static hbase.schema.api.utils.HBaseSchemaUtils.mapArray;
+import static hbase.schema.api.utils.HBaseSchemaUtils.verifyNonEmpty;
+import static hbase.schema.api.utils.HBaseSchemaUtils.verifyNonNull;
 import static java.util.Arrays.asList;
 
 /**
@@ -17,9 +21,9 @@ import static java.util.Arrays.asList;
  * @param <T> query object instance
  */
 public class HBaseQuerySchemaBuilder<T> {
-    private Function<T, byte[]> rowKeyGetter = null;
     private final NavigableSet<byte[]> qualifiers = asBytesTreeSet();
     private final NavigableSet<byte[]> prefixes = asBytesTreeSet();
+    private Function<T, byte[]> rowKeyGetter = null;
 
     /**
      * Generates the row key to be used in a Get request

@@ -90,11 +90,6 @@ public abstract class AbstractHBaseCell<T> implements Comparable<AbstractHBaseCe
         return Bytes.hashCode(qualifier);
     }
 
-    /**
-     * Stringifies the cell value
-     */
-    protected abstract String toString(@Nullable T value);
-
     @Override
     public String toString() {
         ToStringBuilder builder = new ToStringBuilder(this, ToStringStyle.SHORT_PREFIX_STYLE)
@@ -108,4 +103,9 @@ public abstract class AbstractHBaseCell<T> implements Comparable<AbstractHBaseCe
 
         return builder.build();
     }
+
+    /**
+     * Stringifies the cell value
+     */
+    protected abstract String toString(@Nullable T value);
 }

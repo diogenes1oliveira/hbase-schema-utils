@@ -20,6 +20,13 @@ import static hbase.schema.api.utils.HBaseSchemaUtils.asBytesTreeMap;
 public interface LongMapConverter<T> extends BytesMapConverter<T> {
 
     /**
+     * A dummy converter for bytes map values
+     */
+    LongMapConverter<NavigableMap<byte[], Long>> IDENTITY = longMapConverter(
+            BytesConverter.bytesConverter(), LongConverter.longConverter(), HBaseSchemaUtils::asBytesTreeMap
+    );
+
+    /**
      * Transforms a value into a bytes map payload
      *
      * @param value value instance
@@ -50,13 +57,6 @@ public interface LongMapConverter<T> extends BytesMapConverter<T> {
      * Class instance for the value type
      */
     Class<?> type();
-
-    /**
-     * A dummy converter for bytes map values
-     */
-    LongMapConverter<NavigableMap<byte[], Long>> IDENTITY = longMapConverter(
-            BytesConverter.bytesConverter(), LongConverter.longConverter(), HBaseSchemaUtils::asBytesTreeMap
-    );
 
     /**
      * A dummy converter for bytes map values

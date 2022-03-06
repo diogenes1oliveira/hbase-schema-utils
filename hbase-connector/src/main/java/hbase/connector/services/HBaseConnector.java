@@ -22,22 +22,19 @@ import static hbase.connector.utils.HBaseHelpers.toHBaseConf;
  * Obs: connection and disconnection are mutually synchronized
  */
 public class HBaseConnector {
-    private final HBaseRecreatableConnectionContext connectionContext;
-
     /**
      * Automatic reconnection period
      */
     public static final String CONFIG_RECONNECTION_PERIOD = "custom.reconnection.period";
-
     /**
      * Timeout for acquiring a connection read lock
      */
     public static final String CONFIG_LOCK_READ_TIMEOUT = "custom.lock.read.timeout";
-
     /**
      * Timeout for acquiring a connection write lock
      */
     public static final String CONFIG_LOCK_WRITE_TIMEOUT = "custom.lock.write.timeout";
+    private final HBaseRecreatableConnectionContext connectionContext;
 
     /**
      * @param props Java properties for the new connection

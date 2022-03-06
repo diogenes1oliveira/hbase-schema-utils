@@ -16,10 +16,15 @@ import java.util.concurrent.CountDownLatch;
 import static hbase.test.utils.HBaseTestHelpers.safeSleep;
 import static hbase.testutils.HBaseConnectorTestUtils.startThread;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.nullValue;
+import static org.hamcrest.Matchers.sameInstance;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
 class HBaseRecreatableConnectionContextTest {
     IOSupplier<Connection> mockConnectionSupplier;
@@ -144,7 +149,7 @@ class HBaseRecreatableConnectionContextTest {
     }
 
     @Test
-    void reconnect_ThrowsIfWaitedTooLong() throws IOException {
+    void reconnect_ThrowsIfWaitedTooLong() {
         // given a lock with low write timeout
         readWriteLock = new TimedReadWriteLock(5_000L, 100);
 

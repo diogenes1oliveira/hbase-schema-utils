@@ -12,11 +12,9 @@ import java.util.Properties;
  * Test instance that spins up a HBase Testcontainer
  */
 public class HBaseTestcontainerInstance implements HBaseTestInstance {
-    private static final Logger LOGGER = LoggerFactory.getLogger(HBaseTestcontainerInstance.class);
-
     public static final String IMAGE = "diogenes1oliveira/hbase2-docker:1.0.0-hbase2.0.2";
     public static final String PREFIX = "test-table-";
-
+    private static final Logger LOGGER = LoggerFactory.getLogger(HBaseTestcontainerInstance.class);
     private HBaseContainer container;
     private int tableIndex = 0;
 

@@ -1,8 +1,5 @@
 package hbase.schema.api.utils;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.nullValue;
-
 class HBaseSchemaConversionsTest {
 
 //    @Test

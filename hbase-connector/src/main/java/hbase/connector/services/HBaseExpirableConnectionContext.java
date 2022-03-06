@@ -6,7 +6,6 @@ import hbase.connector.utils.TimedReadWriteLock;
 import org.apache.hadoop.hbase.client.Connection;
 
 import java.io.IOException;
-import java.util.concurrent.locks.ReadWriteLock;
 
 /**
  * Context that auto-recreates the connection after an expire duration.
@@ -16,8 +15,8 @@ import java.util.concurrent.locks.ReadWriteLock;
  */
 public class HBaseExpirableConnectionContext extends HBaseRecreatableConnectionContext {
     private final long expireMillis;
-    private volatile long creationNanos = -1L;
     private final Object lock = new Object();
+    private volatile long creationNanos = -1L;
 
     /**
      * @param expireMillis      automatic reconnection period in milliseconds

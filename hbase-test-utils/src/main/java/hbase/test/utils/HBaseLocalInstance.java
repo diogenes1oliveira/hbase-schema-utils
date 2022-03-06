@@ -19,10 +19,9 @@ import static java.util.Arrays.stream;
  * Test instance that points to an already running local HBase instance
  */
 public class HBaseLocalInstance implements HBaseTestInstance {
-    private static final Logger LOGGER = LoggerFactory.getLogger(HBaseLocalInstance.class);
-
-    private static final String ZOOKEEPER_QUORUM = "localhost:2181";
     public static final String PREFIX = "test-table-";
+    private static final Logger LOGGER = LoggerFactory.getLogger(HBaseLocalInstance.class);
+    private static final String ZOOKEEPER_QUORUM = "localhost:2181";
     private int tableIndex = 0;
 
     /**
@@ -36,21 +35,6 @@ public class HBaseLocalInstance implements HBaseTestInstance {
 
         cleanUpCurrent();
         return props;
-    }
-
-    private void cleanUpCurrent() {
-        try (Connection connection = ConnectionFactory.createConnection();
-             Admin admin = connection.getAdmin()) {
-            TableName[] tableNames = admin.listTableNames();
-            String[] tempNames = stream(tableNames)
-                    .map(TableName::getNameAsString)
-                    .filter(name -> name.startsWith(PREFIX))
-                    .toArray(String[]::new);
-            safeDropTables(admin, tempNames);
-        } catch (Exception e) {
-            LOGGER.error("Failed to drop current temp tables", e);
-            throw new IllegalStateException(e);
-        }
     }
 
     /**
@@ -92,5 +76,20 @@ public class HBaseLocalInstance implements HBaseTestInstance {
     @Override
     public String name() {
         return "local";
+    }
+
+    private void cleanUpCurrent() {
+        try (Connection connection = ConnectionFactory.createConnection();
+             Admin admin = connection.getAdmin()) {
+            TableName[] tableNames = admin.listTableNames();
+            String[] tempNames = stream(tableNames)
+                    .map(TableName::getNameAsString)
+                    .filter(name -> name.startsWith(PREFIX))
+                    .toArray(String[]::new);
+            safeDropTables(admin, tempNames);
+        } catch (Exception e) {
+            LOGGER.error("Failed to drop current temp tables", e);
+            throw new IllegalStateException(e);
+        }
     }
 }

@@ -7,7 +7,12 @@ import hbase.schema.api.interfaces.HBaseResultParserSchema;
 import hbase.schema.api.interfaces.HBaseSchema;
 import hbase.schema.connector.interfaces.HBaseFetcher;
 import org.apache.hadoop.hbase.TableName;
-import org.apache.hadoop.hbase.client.*;
+import org.apache.hadoop.hbase.client.Connection;
+import org.apache.hadoop.hbase.client.Get;
+import org.apache.hadoop.hbase.client.Result;
+import org.apache.hadoop.hbase.client.ResultScanner;
+import org.apache.hadoop.hbase.client.Scan;
+import org.apache.hadoop.hbase.client.Table;
 import org.apache.hadoop.hbase.filter.Filter;
 import org.jetbrains.annotations.Nullable;
 

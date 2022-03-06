@@ -15,7 +15,10 @@ import java.util.Map;
 import java.util.NavigableMap;
 import java.util.function.Function;
 
-import static hbase.schema.api.utils.HBaseSchemaUtils.*;
+import static hbase.schema.api.utils.HBaseSchemaUtils.asBytesTreeMap;
+import static hbase.schema.api.utils.HBaseSchemaUtils.chain;
+import static hbase.schema.api.utils.HBaseSchemaUtils.verifyNonEmpty;
+import static hbase.schema.api.utils.HBaseSchemaUtils.verifyNonNull;
 
 /**
  * Builder for {@link HBaseMutationSchema} objects, providing a fluent API to add fields and field prefixes to be inserted
@@ -24,13 +27,12 @@ import static hbase.schema.api.utils.HBaseSchemaUtils.*;
  */
 public class HBaseMutationSchemaBuilder<T> {
     private static final byte[] EMPTY = new byte[0];
-    private Function<T, byte[]> rowKeyBuilder = null;
-    private Function<T, Long> timestampBuilder = null;
-    private Function<T, Long> currentTimestampBuilder = null;
-
     private final List<Function<T, NavigableMap<byte[], byte[]>>> valueBuilders = new ArrayList<>();
     private final List<Function<T, NavigableMap<byte[], Long>>> deltaBuilders = new ArrayList<>();
     private final NavigableMap<byte[], Function<T, Long>> timestampBuilders = asBytesTreeMap();
+    private Function<T, byte[]> rowKeyBuilder = null;
+    private Function<T, Long> timestampBuilder = null;
+    private Function<T, Long> currentTimestampBuilder = null;
 
     /**
      * Sets up the row key generation
