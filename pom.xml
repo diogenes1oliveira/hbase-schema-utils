@@ -30,13 +30,13 @@
         <!-- test dependencies -->
         <junit.version>5.7.0</junit.version>
         <hamcrest.version>2.2</hamcrest.version>
-        <mockito.version>3.11.2</mockito.version>
+        <mockito.version>4.3.1</mockito.version>
         <junit-pioneer.version>1.6.1</junit-pioneer.version>
         <!-- Plugins -->
         <surefire.plugin.version>3.0.0-M5</surefire.plugin.version>
         <source.plugin.version>3.2.1</source.plugin.version>
-        <javadoc.plugin.version>3.3.1</javadoc.plugin.version>
-        <jacoco.plugin.version>0.8.6</jacoco.plugin.version>
+        <javadoc.plugin.version>3.3.2</javadoc.plugin.version>
+        <jacoco.plugin.version>0.8.7</jacoco.plugin.version>
     </properties>
 
     <modules>
@@ -46,6 +46,7 @@
         <module>hbase-test-utils</module>
         <module>hadoop-auth-utils</module>
         <module>hbase-base-types</module>
+        <module>build-report</module>
     </modules>
 
     <dependencyManagement>
@@ -264,57 +265,57 @@
                 </plugin>
             </plugins>
         </pluginManagement>
-        <plugins>
-            <plugin>
-                <groupId>org.jacoco</groupId>
-                <artifactId>jacoco-maven-plugin</artifactId>
-                <configuration>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>merge-results</id>
-                        <phase>verify</phase>
-                        <goals>
-                            <goal>merge</goal>
-                        </goals>
-                        <configuration>
-                            <!-- I don't like hardcoding these folders, but for now it seems to work -->
-                            <fileSets>
-                                <fileSet>
-                                    <directory>hbase-connector/target</directory>
-                                    <includes>
-                                        <include>*.exec</include>
-                                    </includes>
-                                </fileSet>
-                                <fileSet>
-                                    <directory>hbase-schema-api/target</directory>
-                                    <includes>
-                                        <include>*.exec</include>
-                                    </includes>
-                                </fileSet>
-                                <fileSet>
-                                    <directory>hbase-schema-connector/target</directory>
-                                    <includes>
-                                        <include>*.exec</include>
-                                    </includes>
-                                </fileSet>
-                            </fileSets>
-                            <destFile>${user.dir}/target/jacoco.exec</destFile>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>jacoco-site</id>
-                        <phase>verify</phase>
-                        <goals>
-                            <goal>report-aggregate</goal>
-                        </goals>
-                        <configuration>
-                            <!--                            <dataFile>${user.dir}/target/jacoco.exec</dataFile>-->
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
+<!--        <plugins>-->
+<!--            <plugin>-->
+<!--                <groupId>org.jacoco</groupId>-->
+<!--                <artifactId>jacoco-maven-plugin</artifactId>-->
+<!--                <configuration>-->
+<!--                </configuration>-->
+<!--                <executions>-->
+<!--                    <execution>-->
+<!--                        <id>merge-results</id>-->
+<!--                        <phase>verify</phase>-->
+<!--                        <goals>-->
+<!--                            <goal>merge</goal>-->
+<!--                        </goals>-->
+<!--                        <configuration>-->
+<!--                            &lt;!&ndash; I don't like hardcoding these folders, but for now it seems to work &ndash;&gt;-->
+<!--                            <fileSets>-->
+<!--                                <fileSet>-->
+<!--                                    <directory>hbase-connector/target</directory>-->
+<!--                                    <includes>-->
+<!--                                        <include>*.exec</include>-->
+<!--                                    </includes>-->
+<!--                                </fileSet>-->
+<!--                                <fileSet>-->
+<!--                                    <directory>hbase-schema-api/target</directory>-->
+<!--                                    <includes>-->
+<!--                                        <include>*.exec</include>-->
+<!--                                    </includes>-->
+<!--                                </fileSet>-->
+<!--                                <fileSet>-->
+<!--                                    <directory>hbase-schema-connector/target</directory>-->
+<!--                                    <includes>-->
+<!--                                        <include>*.exec</include>-->
+<!--                                    </includes>-->
+<!--                                </fileSet>-->
+<!--                            </fileSets>-->
+<!--                            <destFile>${user.dir}/target/jacoco.exec</destFile>-->
+<!--                        </configuration>-->
+<!--                    </execution>-->
+<!--                    <execution>-->
+<!--                        <id>jacoco-site</id>-->
+<!--                        <phase>verify</phase>-->
+<!--                        <goals>-->
+<!--                            <goal>report-aggregate</goal>-->
+<!--                        </goals>-->
+<!--                        <configuration>-->
+<!--                            &lt;!&ndash;                            <dataFile>${user.dir}/target/jacoco.exec</dataFile>&ndash;&gt;-->
+<!--                        </configuration>-->
+<!--                    </execution>-->
+<!--                </executions>-->
+<!--            </plugin>-->
+<!--        </plugins>-->
     </build>
 
 </project>
