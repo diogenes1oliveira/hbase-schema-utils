@@ -49,7 +49,7 @@ public interface HBaseQuerySchema<T> {
      * Selects the columns returned in a Get query
      * <p>
      * The default implementation:
-     * <li>Selects the fixed columns in {@link #getQualifiers(T)} if {@link #getPrefixes(T)} is empty;</li>
+     * <li>Selects the fixed columns in {@link #getQualifiers(Object)} if {@link #getPrefixes(Object)} is empty;</li>
      * <li>Otherwise, selects the whole family.</li>
      *
      * @param query  query object
@@ -70,7 +70,7 @@ public interface HBaseQuerySchema<T> {
      * Selects the columns returned in a Scan query
      * <p>
      * The default implementation:
-     * <li>Selects the fixed columns in {@link #getQualifiers(T)} if {@link #getPrefixes(T)} is empty;</li>
+     * <li>Selects the fixed columns in {@link #getQualifiers(Object)} if {@link #getPrefixes(Object)} is empty;</li>
      * <li>Otherwise, selects the whole family.</li>
      *
      * @param query  query object

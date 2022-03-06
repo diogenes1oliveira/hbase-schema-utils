@@ -47,7 +47,7 @@ public abstract class ListMapAbstractJsonConverter<T> extends ListMapAbstractCon
     public abstract @Nullable String toStringKey(int index, T item);
 
     /**
-     * Encodes as UTF-8 the string returned by {@link #toStringKey(int, T)}
+     * Encodes as UTF-8 the string returned by {@link #toStringKey(int, Object)}
      */
     @Override
     public byte @Nullable [] toBytesKey(int index, T item) {

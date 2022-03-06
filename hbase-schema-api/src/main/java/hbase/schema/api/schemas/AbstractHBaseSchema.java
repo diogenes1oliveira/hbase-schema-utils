@@ -48,7 +48,7 @@ public abstract class AbstractHBaseSchema<T, R> implements HBaseSchema<T, T, R> 
     /**
      * Calculates a timestamp for a specific field
      * <p>
-     * The default implementation just uses {@link #buildTimestamp(T)}
+     * The default implementation just uses {@link #buildTimestamp(Object)}
      *
      * @param object input object
      * @param field  field name

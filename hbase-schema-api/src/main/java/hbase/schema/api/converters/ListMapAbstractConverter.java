@@ -35,7 +35,7 @@ public abstract class ListMapAbstractConverter<T> implements BytesMapConverter<L
     public abstract @Nullable T fromBytes(byte[] key, byte[] value);
 
     /**
-     * Converts the list to a bytes map by applying {@link #toBytesKey(int, T)} and {@link #toBytesValue(int, T)}
+     * Converts the list to a bytes map by applying {@link #toBytesKey(int, Object)} and {@link #toBytesValue(int, Object)}
      * to each item
      */
     @Override

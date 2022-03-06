@@ -31,7 +31,7 @@ public class HBaseRecreatableConnectionContext implements HBaseConnectionContext
     /**
      * Enters a Read-locked connection context
      * <p>
-     * The connection is created via {@link #refresh();} if it still doesn't exist
+     * The connection is created via {@link #refresh()} if it still doesn't exist
      *
      * @return a proxy for the connection that locks the connection for Reads
      * @throws IOException failed to (re)connect to HBase

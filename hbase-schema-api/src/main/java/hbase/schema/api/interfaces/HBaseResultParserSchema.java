@@ -31,7 +31,7 @@ public interface HBaseResultParserSchema<T> {
      * Creates a new result object and populates it with data fetched from HBase
      * <p>
      * The default implementation delegates to {@link #newInstance()} and
-     * {@link #setFromResult(T, byte[], NavigableMap)}
+     * {@link #setFromResult(Object, byte[], NavigableMap)}
      *
      * @param rowKey      row key bytes
      * @param resultCells cells fetched from HBase, in a mapping (qualifier -> cell value)

@@ -34,7 +34,7 @@ public interface HBaseMutationSchema<T> {
     /**
      * Builds the timestamp for a single cell
      * <p>
-     * The default implementation just delegates to the row timestamp via {@link #buildTimestamp(T)}
+     * The default implementation just delegates to the row timestamp via {@link #buildTimestamp(Object)}
      *
      * @param object    object to be inserted into HBase
      * @param qualifier column qualifier

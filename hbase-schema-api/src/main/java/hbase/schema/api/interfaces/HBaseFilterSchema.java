@@ -42,7 +42,7 @@ public interface HBaseFilterSchema<T> {
      * Builds a filter that selects the rows in the result using a collection of query objects
      * to get the filter parameters
      * <p>
-     * The default implementation combines the filters from {@link #buildRowFilter(T)} using
+     * The default implementation combines the filters from {@link #buildRowFilter(Object)} using
      * {@link FilterList.Operator#MUST_PASS_ONE}
      *
      * @param queries query objects
@@ -58,8 +58,9 @@ public interface HBaseFilterSchema<T> {
      * Builds a filter that selects rows and columns using a query object to get the filter
      * parameters
      * <p>
-     * The default implementation combines the results of {@link #buildRowFilter(T)} and {@link #buildColumnFilter(T)}
-     * using {@link FilterList.Operator#MUST_PASS_ALL}
+     * The default implementation combines the results of {@link #buildRowFilter(Object)} and
+     * {@link #buildColumnFilter(Object)}
+     * using {@code FilterList.Operator.MUST_PASS_ALL}
      *
      * @param query query object
      * @return constructed filter or null
@@ -76,8 +77,8 @@ public interface HBaseFilterSchema<T> {
      * Builds a filter that selects rows and columns using a query object to get the filter
      * parameters
      * <p>
-     * The default implementation combines the results of {@link #buildRowFilter(List)} and {@link #buildColumnFilter(T)}
-     * using {@link FilterList.Operator#MUST_PASS_ALL}
+     * The default implementation combines the results of {@link #buildRowFilter(List)} and {@link #buildColumnFilter(Object)}
+     * using {@code FilterList.Operator.MUST_PASS_ALL}
      *
      * @param queries query objects
      * @return constructed filter or null

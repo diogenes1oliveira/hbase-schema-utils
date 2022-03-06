@@ -33,7 +33,7 @@ public class HBaseExpirableConnectionContext extends HBaseRecreatableConnectionC
     /**
      * Enters a Read-locked connection context
      * <p>
-     * The connection is created via {@link #refresh();} if it still doesn't exist
+     * The connection is created via {@link HBaseRecreatableConnectionContext#refresh()} if it still doesn't exist
      * or is stale
      *
      * @return a proxy for the connection that locks the connection for Reads
