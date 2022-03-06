@@ -16,6 +16,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
+@SuppressWarnings("java:S2925")
 class HBaseExpirableConnectionContextTest {
     IOSupplier<Connection> mockConnectionSupplier;
     TimedReadWriteLock readWriteLock;

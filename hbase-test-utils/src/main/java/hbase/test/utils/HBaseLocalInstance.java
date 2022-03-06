@@ -18,6 +18,7 @@ import static java.util.Arrays.stream;
 /**
  * Test instance that points to an already running local HBase instance
  */
+@SuppressWarnings("java:S2139")
 public class HBaseLocalInstance implements HBaseTestInstance {
     public static final String PREFIX = "test-table-";
     private static final Logger LOGGER = LoggerFactory.getLogger(HBaseLocalInstance.class);
@@ -89,7 +90,7 @@ public class HBaseLocalInstance implements HBaseTestInstance {
             safeDropTables(admin, tempNames);
         } catch (Exception e) {
             LOGGER.error("Failed to drop current temp tables", e);
-            throw new IllegalStateException(e);
+            throw new IllegalStateException("Failed to drop current temp tables", e);
         }
     }
 }

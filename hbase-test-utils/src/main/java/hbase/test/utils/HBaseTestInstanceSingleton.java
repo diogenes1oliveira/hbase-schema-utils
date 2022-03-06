@@ -18,6 +18,10 @@ import static hbase.test.utils.HBaseTestHelpers.loadPropsFromResource;
  * Manages a global HBase test instance configured via System properties or environment variables
  */
 public class HBaseTestInstanceSingleton {
+    private HBaseTestInstanceSingleton() {
+        // utility class
+    }
+
     /**
      * Name of the System property to get the instance name from
      */

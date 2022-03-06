@@ -10,6 +10,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * Helper methods
  */
+@SuppressWarnings("java:S2925")
 public final class HBaseConnectorTestUtils {
     private static final Logger LOGGER = LoggerFactory.getLogger(HBaseConnectorTestUtils.class);
 
@@ -43,9 +44,8 @@ public final class HBaseConnectorTestUtils {
             Thread.sleep(100);
         } catch (InterruptedException e) {
             LOGGER.error("interrupted while waiting for thread to start", e);
-            Thread.currentThread().interrupt();
             thread.interrupt();
-            throw new UncheckedInterruptionException("interrupted while waiting for thread to start", e);
+            Thread.currentThread().interrupt();
         }
 
         return thread;

@@ -73,7 +73,6 @@ public class HBaseSchemaMutator<T> implements HBaseMutator<T> {
         } catch (InterruptedException e) {
             LOGGER.error("Interrupted while mutating", e);
             Thread.currentThread().interrupt();
-            throw new UncheckedInterruptionException("Interrupted while mutating", e);
         }
     }
 

@@ -2,6 +2,8 @@ package hbase.schema.api.utils;
 
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
+
 import static java.util.Collections.emptyList;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -21,8 +23,9 @@ class HBaseSchemaUtilsTest {
 
     @Test
     void asBytesTreeMap_ValidatesType() {
+        Object dummy = new Object();
         assertThrows(ClassCastException.class, () ->
-                HBaseSchemaUtils.asBytesTreeMap(B1, B2, B3, null, B4, new Object())
+                HBaseSchemaUtils.asBytesTreeMap(B1, B2, B3, null, B4, dummy)
         );
     }
 
@@ -49,8 +52,9 @@ class HBaseSchemaUtilsTest {
 
     @Test
     void verifyNonEmpty_ThrowsIfNoNotEmptyObject() {
+        List<?> empty = emptyList();
         assertThrows(IllegalStateException.class, () ->
-                HBaseSchemaUtils.verifyNonEmpty("msg", emptyList(), null)
+                HBaseSchemaUtils.verifyNonEmpty("msg", empty, null)
         );
     }
 }

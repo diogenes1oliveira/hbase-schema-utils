@@ -20,6 +20,7 @@ import static java.util.Arrays.asList;
 /**
  * Miscellaneous utilities for schemas
  */
+@SuppressWarnings("java:S1319")
 public final class HBaseSchemaUtils {
     private HBaseSchemaUtils() {
         // utility class

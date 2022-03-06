@@ -14,6 +14,10 @@ import java.util.concurrent.locks.ReentrantLock;
 public class UgiGlobalContextManager {
     private static final Lock globalLock = new ReentrantLock();
 
+    private UgiGlobalContextManager() {
+        // utility class
+    }
+
     public static IOAuthContext<UserGroupInformation> enterDefault() throws IOException {
         Configuration originalConf = new Configuration();
         return new UgiConfigContext(originalConf, originalConf, globalLock, UserGroupInformation::getCurrentUser);

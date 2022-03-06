@@ -9,6 +9,7 @@ import java.util.function.Function;
  *
  * @param <T> type to be converted to/from bytes
  */
+@SuppressWarnings("java:S4276")
 public interface LongConverter<T> extends BytesConverter<T> {
     /**
      * A dummy converter for {@code Long} values

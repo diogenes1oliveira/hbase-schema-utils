@@ -44,13 +44,6 @@ public class HBaseTestJunitExtension implements
     public void beforeAll(ExtensionContext extensionContext) throws IOException {
         testInstance = HBaseTestInstanceSingleton.instance();
         properties = testInstance.start();
-//        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-//            try {
-//                testInstance.close();
-//            } catch (Exception e) {
-//                LOGGER.error("Failed to close test instance", e);
-//            }
-//        }));
     }
 
     @Override

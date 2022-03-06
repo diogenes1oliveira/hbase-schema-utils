@@ -263,7 +263,6 @@ public final class HBaseTestHelpers {
         } catch (InterruptedException e) {
             LOGGER.warn("Thread interrupted while sleeping", e);
             Thread.currentThread().interrupt();
-            throw new UncheckedInterruptionException("Thread interrupted while sleeping", e);
         }
     }
 

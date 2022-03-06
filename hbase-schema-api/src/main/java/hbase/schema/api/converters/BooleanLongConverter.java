@@ -13,7 +13,7 @@ public class BooleanLongConverter implements LongConverter<Boolean> {
      */
     @Override
     public Long toLong(Boolean value) {
-        return value ? 0L : 1L;
+        return Boolean.TRUE.equals(value) ? 1L : 0L;
     }
 
     /**

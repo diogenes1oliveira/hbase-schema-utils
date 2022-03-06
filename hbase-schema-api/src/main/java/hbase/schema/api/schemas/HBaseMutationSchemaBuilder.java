@@ -25,6 +25,7 @@ import static hbase.schema.api.utils.HBaseSchemaUtils.verifyNonNull;
  *
  * @param <T> result object instance
  */
+@SuppressWarnings("java:S4276")
 public class HBaseMutationSchemaBuilder<T> {
     private static final byte[] EMPTY = new byte[0];
     private final List<Function<T, NavigableMap<byte[], byte[]>>> valueBuilders = new ArrayList<>();

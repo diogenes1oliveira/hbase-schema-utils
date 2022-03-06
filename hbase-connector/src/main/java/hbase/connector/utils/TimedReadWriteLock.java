@@ -42,7 +42,6 @@ public class TimedReadWriteLock {
         } catch (InterruptedException e) {
             LOGGER.warn("interrupted while acquiring read lock", e);
             Thread.currentThread().interrupt();
-            throw new UncheckedInterruptionException("interrupted while acquiring read lock", e);
         } catch (TimeoutException e) {
             throw new UncheckedTimeoutException("read lock timeout exceeded", e);
         }
@@ -73,7 +72,6 @@ public class TimedReadWriteLock {
         } catch (InterruptedException e) {
             LOGGER.warn("interrupted while acquiring write lock", e);
             Thread.currentThread().interrupt();
-            throw new UncheckedInterruptionException("interrupted while acquiring write lock", e);
         } catch (TimeoutException e) {
             throw new UncheckedTimeoutException("write lock timeout exceeded", e);
         }

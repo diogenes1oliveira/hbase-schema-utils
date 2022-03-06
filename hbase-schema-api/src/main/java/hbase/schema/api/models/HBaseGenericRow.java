@@ -91,11 +91,11 @@ public class HBaseGenericRow {
 
     @Override
     public String toString() {
-        Instant timestamp = this.timestamp != null ? Instant.ofEpochMilli(this.timestamp) : null;
+        Instant instant = this.timestamp != null ? Instant.ofEpochMilli(this.timestamp) : null;
 
         return new ToStringBuilder(this, ToStringStyle.SHORT_PREFIX_STYLE)
                 .append("row_key", Bytes.toStringBinary(rowKey))
-                .append("timestamp", timestamp)
+                .append("timestamp", instant)
                 .append("values", valueCells)
                 .append("longs", longCells)
                 .toString();
