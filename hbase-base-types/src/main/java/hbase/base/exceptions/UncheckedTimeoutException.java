@@ -15,7 +15,7 @@ public class UncheckedTimeoutException extends RuntimeException {
     }
 
     @Override
-    public TimeoutException getCause() {
+    public synchronized TimeoutException getCause() {
         return (TimeoutException) super.getCause();
     }
 }

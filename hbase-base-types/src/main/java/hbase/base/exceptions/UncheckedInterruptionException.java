@@ -13,7 +13,7 @@ public class UncheckedInterruptionException extends RuntimeException {
     }
 
     @Override
-    public InterruptedException getCause() {
+    public synchronized InterruptedException getCause() {
         return (InterruptedException) super.getCause();
     }
 }
