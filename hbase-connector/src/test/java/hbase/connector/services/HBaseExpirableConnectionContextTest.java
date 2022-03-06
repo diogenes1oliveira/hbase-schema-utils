@@ -2,30 +2,26 @@ package hbase.connector.services;
 
 import hadoop.kerberos.utils.interfaces.IOSupplier;
 import hbase.connector.interfaces.HBaseConnectionProxy;
+import hbase.connector.utils.TimedReadWriteLock;
 import org.apache.hadoop.hbase.client.Connection;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
-import java.time.Duration;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.sameInstance;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 class HBaseExpirableConnectionContextTest {
     IOSupplier<Connection> mockConnectionSupplier;
-    ReadWriteLock readWriteLock;
+    TimedReadWriteLock readWriteLock;
 
     @BeforeEach
     void setUp() {
         mockConnectionSupplier = () -> mock(Connection.class);
-        readWriteLock = new ReentrantReadWriteLock();
+        readWriteLock = new TimedReadWriteLock(5_000L, 10_000L);
 
     }
 

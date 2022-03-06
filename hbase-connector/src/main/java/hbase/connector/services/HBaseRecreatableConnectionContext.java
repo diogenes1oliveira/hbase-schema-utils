@@ -3,11 +3,11 @@ package hbase.connector.services;
 import hadoop.kerberos.utils.interfaces.IOSupplier;
 import hbase.connector.interfaces.HBaseConnectionContext;
 import hbase.connector.interfaces.HBaseConnectionProxy;
+import hbase.connector.utils.TimedReadWriteLock;
 import org.apache.hadoop.hbase.client.Connection;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
-import java.util.concurrent.locks.ReadWriteLock;
 
 /**
  * Context that synchronizes the recreation of a context, using a Read/Write lock to avoid reconnections while the
@@ -15,7 +15,7 @@ import java.util.concurrent.locks.ReadWriteLock;
  */
 public class HBaseRecreatableConnectionContext implements HBaseConnectionContext {
     private final IOSupplier<Connection> connectionFactory;
-    private final ReadWriteLock readWriteLock;
+    private final TimedReadWriteLock readWriteLock;
     private volatile Connection connection = null;
     private final Object lock = new Object();
 
@@ -23,7 +23,7 @@ public class HBaseRecreatableConnectionContext implements HBaseConnectionContext
      * @param connectionCreator creator of new connection objects
      * @param readWriteLock     lock to synchronize read and write access to the connection
      */
-    public HBaseRecreatableConnectionContext(IOSupplier<Connection> connectionCreator, ReadWriteLock readWriteLock) {
+    public HBaseRecreatableConnectionContext(IOSupplier<Connection> connectionCreator, TimedReadWriteLock readWriteLock) {
         this.connectionFactory = connectionCreator;
         this.readWriteLock = readWriteLock;
     }
@@ -46,12 +46,12 @@ public class HBaseRecreatableConnectionContext implements HBaseConnectionContext
             }
         }
 
-        readWriteLock.readLock().lock();
+        readWriteLock.lockRead();
 
         return new HBaseConnectionProxy(connection) {
             @Override
             public void close() {
-                readWriteLock.readLock().unlock();
+                readWriteLock.unlockRead();
             }
         };
     }
@@ -65,7 +65,7 @@ public class HBaseRecreatableConnectionContext implements HBaseConnectionContext
      */
     @Override
     public void refresh() throws IOException {
-        readWriteLock.writeLock().lock();
+        readWriteLock.lockWrite();
         try {
             if (connection != null) {
                 connection.close();
@@ -73,7 +73,7 @@ public class HBaseRecreatableConnectionContext implements HBaseConnectionContext
             }
             connection = connectionFactory.get();
         } finally {
-            readWriteLock.writeLock().unlock();
+            readWriteLock.unlockWrite();
         }
     }
 
@@ -92,14 +92,14 @@ public class HBaseRecreatableConnectionContext implements HBaseConnectionContext
      */
     @Override
     public void disconnect() throws IOException {
-        readWriteLock.writeLock().lock();
+        readWriteLock.lockWrite();
         try {
             if (connection != null) {
                 connection.close();
                 connection = null;
             }
         } finally {
-            readWriteLock.writeLock().unlock();
+            readWriteLock.unlockWrite();
         }
 
     }

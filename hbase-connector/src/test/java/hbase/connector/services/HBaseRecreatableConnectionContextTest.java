@@ -1,36 +1,36 @@
 package hbase.connector.services;
 
 import hadoop.kerberos.utils.interfaces.IOSupplier;
+import hbase.base.exceptions.UncheckedTimeoutException;
 import hbase.connector.interfaces.HBaseConnectionProxy;
+import hbase.connector.utils.TimedReadWriteLock;
 import org.apache.hadoop.hbase.client.Connection;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import static hbase.test.utils.HBaseTestHelpers.safeSleep;
 import static hbase.testutils.HBaseConnectorTestUtils.startThread;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.not;
-import static org.hamcrest.Matchers.nullValue;
-import static org.hamcrest.Matchers.sameInstance;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
+import static org.hamcrest.Matchers.*;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
+import static org.mockito.Mockito.*;
 
 class HBaseRecreatableConnectionContextTest {
     IOSupplier<Connection> mockConnectionSupplier;
-    ReadWriteLock readWriteLock;
+    TimedReadWriteLock readWriteLock;
     HBaseRecreatableConnectionContext connectionContext;
     Thread thread;
 
     @BeforeEach
     void setUp() {
         mockConnectionSupplier = () -> mock(Connection.class);
-        readWriteLock = new ReentrantReadWriteLock();
+        readWriteLock = new TimedReadWriteLock(2000, 5000);
 
         connectionContext = new HBaseRecreatableConnectionContext(mockConnectionSupplier, readWriteLock);
         thread = null;
@@ -59,14 +59,14 @@ class HBaseRecreatableConnectionContextTest {
         startLatch.await();
         Thread.sleep(500);
 
-        assertThat(readWriteLock.readLock().tryLock(), equalTo(true));
-        assertThat(readWriteLock.writeLock().tryLock(), equalTo(false));
-        readWriteLock.readLock().unlock();
+        assertThat(readWriteLock.tryLockRead(), equalTo(true));
+        assertThat(readWriteLock.tryLockWrite(), equalTo(false));
+        readWriteLock.unlockRead();
 
         // once the context closes, I should be able to write again
         closeLatch.countDown();
         Thread.sleep(500);
-        assertThat(readWriteLock.writeLock().tryLock(), equalTo(true));
+        assertThat(readWriteLock.tryLockWrite(), equalTo(true));
     }
 
     @Test
@@ -115,4 +115,49 @@ class HBaseRecreatableConnectionContextTest {
         assertThat(connectionContext.getUnproxiedConnection(), nullValue());
     }
 
+    @Test
+    void enter_ThrowsIfWaitedTooLong() throws IOException {
+        // given a connection that takes forever to close
+        Connection mockConnection = mock(Connection.class);
+        doAnswer(i -> {
+            safeSleep(9_000_000L);
+            return null;
+        }).when(mockConnection).close();
+
+        // and a lock with low read timeout
+        readWriteLock = new TimedReadWriteLock(100, 5_000L);
+
+        // and a context
+        connectionContext = new HBaseRecreatableConnectionContext(() -> mockConnection, readWriteLock);
+
+        // create and destroy the connection, the thread hangs on the disconnect()
+        startThread(() -> {
+            connectionContext.refresh();
+            connectionContext.disconnect();
+        });
+        safeSleep(500);
+
+        assertTimeoutPreemptively(Duration.ofSeconds(1), () ->
+                assertThrows(UncheckedTimeoutException.class, connectionContext::enter)
+        );
+
+    }
+
+    @Test
+    void reconnect_ThrowsIfWaitedTooLong() throws IOException {
+        // given a lock with low write timeout
+        readWriteLock = new TimedReadWriteLock(5_000L, 100);
+
+        // and a context
+        connectionContext = new HBaseRecreatableConnectionContext(mockConnectionSupplier, readWriteLock);
+
+        // enter the context, therefore acquiring the read lock
+        startThread(() -> connectionContext.enter());
+        safeSleep(500);
+
+        assertTimeoutPreemptively(Duration.ofSeconds(1), () ->
+                assertThrows(UncheckedTimeoutException.class, connectionContext::refresh)
+        );
+
+    }
 }

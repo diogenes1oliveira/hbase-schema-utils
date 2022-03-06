@@ -13,12 +13,12 @@ Realistas:
 - Consertar o report do JaCoCo;
 - Decorator time???
 - Verificar pacote org.apache.hadoop.fs.shell.find.Result
-- Verificar um timeout no contextlock para não dar erro eterno em caso de uso errado do contexto;
 
 Feito:
 - Checar interrupted;
 - Consertar Conversions, too cumbersome all of those stringGetter() longGetter() etc;
 - Pacote separado para as interfaces e exceções;
+- Verificar um timeout no contextlock para não dar erro eterno em caso de uso errado do contexto;
 
 Desistido:
 

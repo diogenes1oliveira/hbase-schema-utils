@@ -2,6 +2,7 @@ package hbase.connector.services;
 
 import hadoop.kerberos.utils.interfaces.IOSupplier;
 import hbase.connector.interfaces.HBaseConnectionProxy;
+import hbase.connector.utils.TimedReadWriteLock;
 import org.apache.hadoop.hbase.client.Connection;
 
 import java.io.IOException;
@@ -25,7 +26,7 @@ public class HBaseExpirableConnectionContext extends HBaseRecreatableConnectionC
      */
     public HBaseExpirableConnectionContext(long expireMillis,
                                            IOSupplier<Connection> connectionCreator,
-                                           ReadWriteLock readWriteLock) {
+                                           TimedReadWriteLock readWriteLock) {
         super(connectionCreator, readWriteLock);
         this.expireMillis = expireMillis;
     }

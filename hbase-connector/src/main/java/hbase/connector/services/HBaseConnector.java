@@ -3,14 +3,13 @@ package hbase.connector.services;
 import hadoop.kerberos.utils.interfaces.IOSupplier;
 import hbase.connector.interfaces.HBaseConnectionFactory;
 import hbase.connector.interfaces.HBaseConnectionProxy;
+import hbase.connector.utils.TimedReadWriteLock;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.client.Connection;
 
 import java.io.IOException;
 import java.util.Map;
 import java.util.Properties;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import static hbase.connector.utils.HBaseHelpers.getMillisDuration;
 import static hbase.connector.utils.HBaseHelpers.toHBaseConf;
@@ -28,7 +27,17 @@ public class HBaseConnector {
     /**
      * Automatic reconnection period
      */
-    public static final String CONFIG_RECONNECTION_PERIOD = "hbase.custom.reconnection.period";
+    public static final String CONFIG_RECONNECTION_PERIOD = "custom.reconnection.period";
+
+    /**
+     * Timeout for acquiring a connection read lock
+     */
+    public static final String CONFIG_LOCK_READ_TIMEOUT = "custom.lock.read.timeout";
+
+    /**
+     * Timeout for acquiring a connection write lock
+     */
+    public static final String CONFIG_LOCK_WRITE_TIMEOUT = "custom.lock.write.timeout";
 
     /**
      * @param props Java properties for the new connection
@@ -92,7 +101,9 @@ public class HBaseConnector {
 
     protected HBaseRecreatableConnectionContext newContext(Configuration conf) {
         long expireMillis = getMillisDuration(conf, CONFIG_RECONNECTION_PERIOD, 0L);
-        ReadWriteLock readWriteLock = new ReentrantReadWriteLock();
+        long readTimeoutMs = getMillisDuration(conf, CONFIG_LOCK_READ_TIMEOUT, 60_000L);
+        long writeTimeoutMs = getMillisDuration(conf, CONFIG_LOCK_WRITE_TIMEOUT, 60_000L * 5);
+        TimedReadWriteLock readWriteLock = new TimedReadWriteLock(readTimeoutMs, writeTimeoutMs);
         HBaseConnectionFactory connectionFactory = new HBaseConnectionFactoryRegistry();
         IOSupplier<Connection> connectionCreator = () -> connectionFactory.create(conf);
 
