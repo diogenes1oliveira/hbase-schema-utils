@@ -13,6 +13,10 @@ Realistas:
 - Consertar o report do JaCoCo;
 - Decorator time???
 - Verificar pacote org.apache.hadoop.fs.shell.find.Result
+- Mergear os .exec do JaCoCo;
+- Verificar porque está sendo rodado o TestContainers no maven;
+- JavaDoc warnings;
+- Separate conversions to a different module?
 
 Feito:
 
