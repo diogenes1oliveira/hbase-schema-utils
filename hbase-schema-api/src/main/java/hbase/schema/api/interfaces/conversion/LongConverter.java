@@ -72,7 +72,7 @@ public interface LongConverter<T> extends BytesConverter<T> {
     /**
      * A dummy converter for {@code Long} values
      */
-    static LongConverter<Long> identity() {
+    static LongConverter<Long> longConverter() {
         return IDENTITY;
     }
 

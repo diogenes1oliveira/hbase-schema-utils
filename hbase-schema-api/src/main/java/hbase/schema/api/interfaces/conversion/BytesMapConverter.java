@@ -42,13 +42,13 @@ public interface BytesMapConverter<T> {
      * A dummy converter for bytes map values
      */
     BytesMapConverter<NavigableMap<byte[], byte[]>> IDENTITY = bytesMapConverter(
-            BytesConverter.identity(), BytesConverter.identity(), HBaseSchemaUtils::asBytesTreeMap
+            BytesConverter.bytesConverter(), BytesConverter.bytesConverter(), HBaseSchemaUtils::asBytesTreeMap
     );
 
     /**
      * A dummy converter for bytes map values
      */
-    static BytesMapConverter<NavigableMap<byte[], byte[]>> identity() {
+    static BytesMapConverter<NavigableMap<byte[], byte[]>> bytesMapConverter() {
         return IDENTITY;
     }
 

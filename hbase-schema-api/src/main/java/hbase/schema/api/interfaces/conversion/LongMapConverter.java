@@ -55,13 +55,13 @@ public interface LongMapConverter<T> extends BytesMapConverter<T> {
      * A dummy converter for bytes map values
      */
     LongMapConverter<NavigableMap<byte[], Long>> IDENTITY = longMapConverter(
-            BytesConverter.identity(), LongConverter.identity(), HBaseSchemaUtils::asBytesTreeMap
+            BytesConverter.bytesConverter(), LongConverter.longConverter(), HBaseSchemaUtils::asBytesTreeMap
     );
 
     /**
      * A dummy converter for bytes map values
      */
-    static LongMapConverter<NavigableMap<byte[], Long>> identity() {
+    static LongMapConverter<NavigableMap<byte[], Long>> longMapConverter() {
         return IDENTITY;
     }
 
@@ -119,6 +119,6 @@ public interface LongMapConverter<T> extends BytesMapConverter<T> {
      * @return new long HashMap converter
      */
     static <K> LongMapConverter<Map<K, Long>> longMapKeyConverter(BytesConverter<K> keyConverter) {
-        return longMapConverter(keyConverter, LongConverter.identity());
+        return longMapConverter(keyConverter, LongConverter.longConverter());
     }
 }
