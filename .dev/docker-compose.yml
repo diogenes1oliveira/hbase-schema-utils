@@ -15,6 +15,15 @@ services:
       HBASE_CONF_hbase_regionserver_hostname: hbase.localhost
       HBASE_CONF_hbase_master_hostname: hbase.localhost
 
+  sonar:
+    image: sonarqube:9.3-community
+    container_name: sonar
+    hostname: sonar.localhost
+    ports:
+      - "9000:9000"
+    environment:
+      SONAR_ES_BOOTSTRAP_CHECKS_DISABLE: "true"
+
 networks:
   default:
     name: localhost
