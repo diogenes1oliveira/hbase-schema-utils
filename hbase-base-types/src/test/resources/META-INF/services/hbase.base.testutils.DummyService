@@ -1,0 +1,4 @@
+otherpackage.DummyServiceFromOtherPackage
+hbase.base.testutils.DummyService1
+hbase.base.testutils.DummyService2
+hbase.base.testutils.DummyService0
