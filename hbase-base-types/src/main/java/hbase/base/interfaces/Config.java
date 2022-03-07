@@ -1,10 +1,10 @@
 package hbase.base.interfaces;
 
-import hbase.base.helpers.ConfigUtils;
 import hbase.base.services.PropertiesConfig;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Properties;
+import java.util.function.Function;
 
 /**
  * Generic interface for config objects.
@@ -13,6 +13,16 @@ import java.util.Properties;
  * implementation {@link PropertiesConfig} for a System properties-based config.
  */
 public interface Config {
+    /**
+     * Gets the config specified by the given key
+     * @param configKey
+     * @param <T>
+     * @return
+     */
+    default <T> T get(ConfigKey configKey) {
+        return configKey.fromConfig(this);
+    }
+
     /**
      * Gets all configurations with the given prefix
      *
@@ -44,8 +54,6 @@ public interface Config {
 
     /**
      * Gets a stringified value for the config
-     * <p>
-     * The default implementation delegates to {@link #getValue(String, Class, TypeArg...)}
      *
      * @param name config name
      * @return config value
@@ -53,27 +61,32 @@ public interface Config {
     @Nullable String getValue(String name);
 
     /**
-     * Checks if the config exists
+     * Gets a converted value for the config
      * <p>
-     * The default implementation calls {@link #getValue(String)}, considering {@code null} as a non-existing config
+     * The default implementation delegates to {@link #getValue(String)}
      *
-     * @param name config name
-     * @return result
+     * @param name      config name
+     * @param converter maps a string to another type
+     * @return converted config value
      */
-    default boolean hasConfig(String name) {
-        return getValue(name) != null;
+    default @Nullable <T> T getValue(String name, Function<String, T> converter) {
+        String value = getValue(name);
+        return value == null ? null : converter.apply(value);
     }
 
     /**
-     * Configures the instance with the values from this config
+     * Gets a converted value for the config
      * <p>
-     * The default implementation delegates to {@link ConfigUtils#configure(Configurable, Config, String)}
+     * The default implementation delegates to {@link #getValue(String)}
      *
-     * @param configurable instance to be configured
+     * @param name         config name
+     * @param converter    maps a string to another type
+     * @param defaultValue default value if null
+     * @return converted config value
      */
-    default void configure(Configurable configurable) {
-        for (String configSpec : configurable.configs()) {
-            ConfigUtils.configure(configurable, this, configSpec);
-        }
+    default <T> T getValue(String name, Function<String, T> converter, T defaultValue) {
+        String value = getValue(name);
+        return value == null ? defaultValue : converter.apply(value);
     }
+
 }

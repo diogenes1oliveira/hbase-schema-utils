@@ -1,18 +1,17 @@
 package hbase.connector.interfaces;
 
+import hbase.base.interfaces.Service;
+import hbase.base.services.ServiceRegistry;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.client.Connection;
 
 import java.io.IOException;
 
-import static hbase.connector.utils.HBaseHelpers.isFromThisModule;
-
 /**
  * Generic creator of HBase connections
  */
-public interface HBaseConnectionFactory {
+public interface HBaseConnectionFactory extends Service {
     /**
-     * @param conf Hadoop-style configuration for the new connection
      * @return new connection
      * @throws IOException failed to connect
      */
@@ -27,14 +26,16 @@ public interface HBaseConnectionFactory {
     boolean supports(Configuration conf);
 
     /**
-     * Returns a priority number in case two factories support the configuration
-     * <p>
-     * The default implementation returns 0 for implementations from this module and 100 otherwise
+     * Instantiates a factory that can handle the given config using the global {@link ServiceRegistry}
      *
      * @param conf Hadoop-style configuration for the new connection
-     * @return a number for the priority
+     * @return factory instance
+     * @throws IllegalArgumentException no factory available
      */
-    default int priority(Configuration conf) {
-        return isFromThisModule(this.getClass()) ? 0 : 100;
+    static HBaseConnectionFactory get(Configuration conf) {
+        return ServiceRegistry.findService(
+                HBaseConnectionFactory.class,
+                f -> f.supports(conf)
+        );
     }
 }

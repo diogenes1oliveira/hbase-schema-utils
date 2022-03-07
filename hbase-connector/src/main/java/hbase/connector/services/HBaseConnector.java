@@ -1,6 +1,7 @@
 package hbase.connector.services;
 
-import hadoop.kerberos.utils.interfaces.IOSupplier;
+import hbase.base.interfaces.Config;
+import hbase.base.interfaces.Configurable;
 import hbase.connector.interfaces.HBaseConnectionFactory;
 import hbase.connector.interfaces.HBaseConnectionProxy;
 import hbase.connector.utils.TimedReadWriteLock;
@@ -8,53 +9,31 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.client.Connection;
 
 import java.io.IOException;
-import java.util.Map;
 import java.util.Properties;
 
-import static hbase.connector.utils.HBaseHelpers.getMillisDuration;
 import static hbase.connector.utils.HBaseHelpers.toHBaseConf;
 
 /**
- * Manages a singleton instance of a HBase connection
- * <p>
- * {@link HBaseConnectionFactoryRegistry} is used to get the suitable factory for the given configuration
+ * Manages an instance of a HBase connection
  * <p>
  * Obs: connection and disconnection are mutually synchronized
  */
-public class HBaseConnector {
-    /**
-     * Automatic reconnection period
-     */
-    public static final String CONFIG_RECONNECTION_PERIOD = "custom.reconnection.period";
-    /**
-     * Timeout for acquiring a connection read lock
-     */
-    public static final String CONFIG_LOCK_READ_TIMEOUT = "custom.lock.read.timeout";
-    /**
-     * Timeout for acquiring a connection write lock
-     */
-    public static final String CONFIG_LOCK_WRITE_TIMEOUT = "custom.lock.write.timeout";
-    private final HBaseRecreatableConnectionContext connectionContext;
+public class HBaseConnector implements Configurable {
+    private long expireMillis = 0L;
+    private long readTimeoutMs = 60_000L;
+    private long writeTimeoutMs = 60_000L * 5;
+    private HBaseRecreatableConnectionContext connectionContext = null;
 
     /**
-     * @param props Java properties for the new connection
+     * @param config config object
      */
-    public HBaseConnector(Properties props) {
-        this(toHBaseConf(props));
-    }
+    public void configure(Config config) {
+        expireMillis = config.get(HBaseConnectorConfig.RECONNECTION_PERIOD);
+        readTimeoutMs = config.get(HBaseConnectorConfig.LOCK_READ_TIMEOUT);
+        writeTimeoutMs = config.get(HBaseConnectorConfig.LOCK_WRITE_TIMEOUT);
 
-    /**
-     * @param propsMap map of properties for the new connection
-     */
-    public HBaseConnector(Map<String, String> propsMap) {
-        this(toHBaseConf(propsMap));
-    }
-
-    /**
-     * @param conf Hadoop-style configuration for the connection
-     */
-    public HBaseConnector(Configuration conf) {
-        this.connectionContext = newContext(conf);
+        Properties props = config.get(HBaseConnectorConfig.PREFIX);
+        connectionContext = newContext(toHBaseConf(props));
     }
 
     /**
@@ -97,17 +76,14 @@ public class HBaseConnector {
     }
 
     protected HBaseRecreatableConnectionContext newContext(Configuration conf) {
-        long expireMillis = getMillisDuration(conf, CONFIG_RECONNECTION_PERIOD, 0L);
-        long readTimeoutMs = getMillisDuration(conf, CONFIG_LOCK_READ_TIMEOUT, 60_000L);
-        long writeTimeoutMs = getMillisDuration(conf, CONFIG_LOCK_WRITE_TIMEOUT, 60_000L * 5);
         TimedReadWriteLock readWriteLock = new TimedReadWriteLock(readTimeoutMs, writeTimeoutMs);
-        HBaseConnectionFactory connectionFactory = new HBaseConnectionFactoryRegistry();
-        IOSupplier<Connection> connectionCreator = () -> connectionFactory.create(conf);
+        HBaseConnectionFactory factory = HBaseConnectionFactory.get(conf);
 
         if (expireMillis > 0) {
-            return new HBaseExpirableConnectionContext(expireMillis, connectionCreator, readWriteLock);
+            return new HBaseExpirableConnectionContext(expireMillis, () -> factory.create(conf), readWriteLock);
         } else {
-            return new HBaseRecreatableConnectionContext(connectionCreator, readWriteLock);
+            return new HBaseRecreatableConnectionContext(() -> factory.create(conf), readWriteLock);
         }
     }
+
 }

@@ -24,7 +24,6 @@ public class HBaseDefaultConnectionFactory implements HBaseConnectionFactory {
     public static final String CONFIG_KEYTAB = "hbase.client.keytab.file";
 
     /**
-     * @param conf Hadoop-style configuration for the new connection
      * @return the new connection
      * @throws IOException failed to connect
      */
