@@ -27,13 +27,14 @@ public class HBaseConnector implements Configurable {
     /**
      * @param config config object
      */
+    @Override
     public void configure(Config config) {
         expireMillis = config.get(HBaseConnectorConfig.RECONNECTION_PERIOD);
         readTimeoutMs = config.get(HBaseConnectorConfig.LOCK_READ_TIMEOUT);
         writeTimeoutMs = config.get(HBaseConnectorConfig.LOCK_WRITE_TIMEOUT);
 
-        Properties props = config.get(HBaseConnectorConfig.PREFIX);
-        connectionContext = newContext(toHBaseConf(props));
+        Configuration conf = toHBaseConf((Properties) config.get(HBaseConnectorConfig.PREFIX));
+        this.connectionContext = newContext(conf);
     }
 
     /**
@@ -47,6 +48,7 @@ public class HBaseConnector implements Configurable {
      * @throws IOException failed to create connection
      */
     public HBaseConnectionProxy context() throws IOException {
+        assureConfigured();
         return connectionContext.enter();
     }
 
@@ -54,13 +56,15 @@ public class HBaseConnector implements Configurable {
      * Closes the current connection and creates it back up
      */
     public void reconnect() throws IOException {
+        assureConfigured();
         connectionContext.refresh();
     }
 
     /**
      * Closes the currently open connection
      * <p>
-     * Obs: this method is idempotent, i.e., it's a no-op if already disconnected
+     * <li>this method is idempotent, i.e., it's a no-op if already disconnected;</li>
+     * <li>you'll need to call {@link #configure(Config)} again after this call</li>
      *
      * @throws IOException failed to close the currently open connection
      */
@@ -86,4 +90,9 @@ public class HBaseConnector implements Configurable {
         }
     }
 
+    private void assureConfigured() {
+        if (connectionContext == null) {
+            throw new IllegalStateException("Connector not configured yet");
+        }
+    }
 }

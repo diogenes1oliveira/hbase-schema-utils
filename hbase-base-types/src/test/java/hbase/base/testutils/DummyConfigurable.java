@@ -3,57 +3,28 @@ package hbase.base.testutils;
 import hbase.base.interfaces.Config;
 import hbase.base.interfaces.Configurable;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-
-import static java.util.Arrays.asList;
-
 public class DummyConfigurable implements Configurable {
-    private final List<String> configs;
-    private final Map<String, Integer> integers = new HashMap<>();
-    private final Map<String, Double> doubles = new HashMap<>();
-    private final Map<String, Properties> properties = new HashMap<>();
+    private String string;
+    private int intValue;
+    private double doubleValue;
 
-    public DummyConfigurable(String... configs) {
-        this.configs = asList(configs);
+    public String getString() {
+        return string;
     }
 
-    public List<String> getConfigs() {
-        return configs;
+    public int getInt() {
+        return intValue;
     }
 
-    public Map<String, Integer> getIntegers() {
-        return integers;
-    }
-
-    public Map<String, Double> getDoubles() {
-        return doubles;
-    }
-
-    public Map<String, Properties> getProperties() {
-        return properties;
+    public double getDouble() {
+        return doubleValue;
     }
 
     @Override
-    public Collection<String> configs() {
-        return configs;
+    public void configure(Config config) {
+        string = config.getValue("some.string");
+        intValue = config.getValue("some.int", -1, Integer.class);
+        doubleValue = config.getValue("some.double", 0.0, Double.class);
     }
 
-    @Override
-    public void configure(String name, Config config) {
-        integers.put(name, config.getValue(name, Integer.class));
-    }
-
-    @Override
-    public void configureNullable(String name, Config config) {
-        doubles.put(name, config.getValue(name, Double.class));
-    }
-
-    @Override
-    public void configure(String prefix, Properties props) {
-        properties.put(prefix, props);
-    }
 }

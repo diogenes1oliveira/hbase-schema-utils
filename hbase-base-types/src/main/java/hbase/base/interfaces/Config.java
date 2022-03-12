@@ -15,6 +15,7 @@ import java.util.function.Function;
 public interface Config {
     /**
      * Gets the config specified by the given key
+     *
      * @param configKey
      * @param <T>
      * @return
@@ -53,6 +54,31 @@ public interface Config {
     }
 
     /**
+     * Gets a converted value for the configuration
+     * <p>
+     * The default implementation gets a string value using {@link #getValue(String)} and then converts it with
+     * {@link FromStringConverter#get(Class, TypeArg...)}
+     *
+     * @param name     config name
+     * @param type     config type
+     * @param typeArgs extra arguments to disambiguate the type
+     * @param <T>      configuration concrete type
+     * @return converted value
+     */
+    default <T> T getValue(String name, T defaultValue, Class<?> type, TypeArg... typeArgs) {
+        String stringValue = getValue(name);
+        if (stringValue == null) {
+            return defaultValue;
+        }
+        FromStringConverter<T> converter = FromStringConverter.get(type, typeArgs);
+        T converted = converter.convertTo(stringValue);
+        if(converted == null) {
+            return defaultValue;
+        }
+        return converted;
+    }
+
+    /**
      * Gets a stringified value for the config
      *
      * @param name config name
@@ -84,7 +110,7 @@ public interface Config {
      * @param defaultValue default value if null
      * @return converted config value
      */
-    default <T> T getValue(String name, Function<String, T> converter, T defaultValue) {
+    default <T> T getValue(String name, T defaultValue, Function<String, T> converter) {
         String value = getValue(name);
         return value == null ? defaultValue : converter.apply(value);
     }
