@@ -1,4 +1,4 @@
-version: "3.5"
+version: "2.4"
 services:
   hbase:
     image: diogenes1oliveira/hbase2-docker:1.0.0-hbase2.0.2
@@ -14,6 +14,7 @@ services:
     environment:
       - HBASE_CONF_hbase_regionserver_hostname=hbase.localhost
       - HBASE_CONF_hbase_master_hostname=hbase.localhost
+    mem_limit: 2g
 
   sonar:
     image: sonarqube:9.3-community
@@ -23,6 +24,7 @@ services:
       - "9000:9000"
     environment:
       - SONAR_ES_BOOTSTRAP_CHECKS_DISABLE=true
+    mem_limit: 2g
 
 networks:
   default:

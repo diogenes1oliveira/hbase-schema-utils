@@ -193,8 +193,8 @@ wait_for_success() {
       log_info "${name} is up"
       break
     elif ! [ "$i" -eq "${tries}" ]; then
-      log_info "${name} still isn't up, will retry in 5 seconds..."
-      sleep 5
+      log_info "${name} still isn't up, will retry in 10 seconds..."
+      sleep 10
     fi
   done
 }
