@@ -1,5 +1,6 @@
 package hbase.schema.connector.services;
 
+import hbase.base.services.PropertiesConfig;
 import hbase.connector.services.HBaseConnector;
 import hbase.schema.api.interfaces.HBaseSchema;
 import hbase.schema.connector.interfaces.HBaseFetcher;
@@ -40,7 +41,8 @@ class HBaseSchemaFetcherIT {
     @BeforeEach
     void setUp(TableName tempTable, Properties props, Connection connection) {
         this.tempTable = tempTable;
-        this.connector = new HBaseConnector(props);
+        this.connector = new HBaseConnector();
+        this.connector.configure(new PropertiesConfig(props));
         createTable(connection, newTableDescriptor(tempTable, family));
 
         fetcher = new HBaseSchemaFetcher<>(family, schema, connector);

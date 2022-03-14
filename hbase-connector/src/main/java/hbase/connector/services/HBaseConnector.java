@@ -29,11 +29,11 @@ public class HBaseConnector implements Configurable {
      */
     @Override
     public void configure(Config config) {
-        expireMillis = config.get(HBaseConnectorConfig.RECONNECTION_PERIOD);
-        readTimeoutMs = config.get(HBaseConnectorConfig.LOCK_READ_TIMEOUT);
-        writeTimeoutMs = config.get(HBaseConnectorConfig.LOCK_WRITE_TIMEOUT);
+        expireMillis = config.getValue(HBaseConnectorConfig.RECONNECTION_PERIOD, expireMillis, Long.class);
+        readTimeoutMs = config.getValue(HBaseConnectorConfig.LOCK_READ_TIMEOUT, readTimeoutMs, Long.class);
+        writeTimeoutMs = config.getValue(HBaseConnectorConfig.LOCK_WRITE_TIMEOUT, writeTimeoutMs, Long.class);
 
-        Configuration conf = toHBaseConf((Properties) config.get(HBaseConnectorConfig.PREFIX));
+        Configuration conf = toHBaseConf(config.getValue(HBaseConnectorConfig.PREFIX, new Properties(), Properties.class));
         this.connectionContext = newContext(conf);
     }
 
@@ -69,14 +69,16 @@ public class HBaseConnector implements Configurable {
      * @throws IOException failed to close the currently open connection
      */
     public void disconnect() throws IOException {
-        connectionContext.disconnect();
+        if (connectionContext != null) {
+            connectionContext.disconnect();
+        }
     }
 
     /**
      * Checks if there's an active connection
      */
     public boolean isConnected() {
-        return connectionContext.getUnproxiedConnection() != null;
+        return connectionContext != null && connectionContext.getUnproxiedConnection() != null;
     }
 
     protected HBaseRecreatableConnectionContext newContext(Configuration conf) {

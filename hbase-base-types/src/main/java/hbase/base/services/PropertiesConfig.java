@@ -45,4 +45,8 @@ public class PropertiesConfig implements Config {
         return props.getProperty(name);
     }
 
+    @Override
+    public <T> @Nullable T getValue(String name, Class<?> type) {
+        throw new IllegalArgumentException("Unsupported conversion for " + type);
+    }
 }
