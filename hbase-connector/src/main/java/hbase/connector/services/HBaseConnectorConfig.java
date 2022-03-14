@@ -1,39 +1,23 @@
 package hbase.connector.services;
 
-import hbase.base.interfaces.Config;
-import hbase.base.interfaces.ConfigKey;
+import hbase.base.interfaces.ConfigEnumType;
+import hbase.base.interfaces.NamedType;
 
-public enum HBaseConnectorConfig implements ConfigKey {
-    RECONNECTION_PERIOD("hbase.reconnection.period"),
-    LOCK_READ_TIMEOUT("hbase.lock.read.timeout"),
-    LOCK_WRITE_TIMEOUT("hbase.lock.write.timeout"),
-    PREFIX("hbase.conf.");
+import java.time.Duration;
+import java.util.Properties;
+
+public enum HBaseConnectorConfig implements ConfigEnumType {
+    RECONNECTION_PERIOD("hbase.reconnection.period<Duration>", Duration.class),
+    LOCK_READ_TIMEOUT("hbase.lock.read.timeout", Duration.class),
+    LOCK_WRITE_TIMEOUT("hbase.lock.write.timeout", Duration.class),
+    PREFIX("hbase.conf.", Properties.class);
 
     private final String name;
+    private final Class<?> type;
 
-    HBaseConnectorConfig(String name) {
+    HBaseConnectorConfig(String name, Class<?> type) {
         this.name = name;
+        this.type = type;
     }
 
-    @Override
-    public String key() {
-        return name;
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    public <T> T fromConfig(Config config) {
-        T value;
-        if (this == PREFIX) {
-            value = (T) config.getPrefix(name);
-        } else {
-            value = (T) config.getValue(name, Long::parseLong);
-        }
-
-        if (value == null) {
-            throw new IllegalArgumentException("No value for " + name);
-        }
-
-        return value;
-    }
 }

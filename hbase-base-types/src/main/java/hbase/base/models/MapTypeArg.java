@@ -2,37 +2,38 @@ package hbase.base.models;
 
 import hbase.base.interfaces.TypeArg;
 
+import java.util.Map;
+
 /**
  * Type specification for {@code Map}
  */
+@SuppressWarnings("rawtypes")
 public class MapTypeArg implements TypeArg {
-    private final TypeArg keyType;
-    private final TypeArg valueType;
+    private final Class keyType;
+    private final Class valueType;
 
-    /**
-     * @param keyType   generic key type
-     * @param valueType generic value type
-     */
-    public MapTypeArg(TypeArg keyType, TypeArg valueType) {
+    private MapTypeArg(Class keyType, Class valueType) {
         this.keyType = keyType;
         this.valueType = valueType;
     }
 
-    /**
-     * Returns {@code true} iff the target type is also a {@code Map} and the key and value types match
-     */
     @Override
-    public boolean isAssignableTo(TypeArg target) {
-        if (!(target instanceof MapTypeArg)) {
-            return false;
-        }
-        MapTypeArg other = (MapTypeArg) target;
-        return this.keyType.isAssignableTo(other.keyType) && this.valueType.isAssignableTo(other.keyType);
+    public Class<?> getTypeClass() {
+        return Map.class;
+    }
+
+    @Override
+    public Class[] getTypeArgs() {
+        return new Class[]{keyType, valueType};
     }
 
     @Override
     public String toString() {
         return "Map<" + keyType + ", " + valueType + ">";
+    }
+
+    public static MapTypeArg mapTypeArg(Class keyType, Class valueType) {
+        return new MapTypeArg(keyType, valueType);
     }
 
 }

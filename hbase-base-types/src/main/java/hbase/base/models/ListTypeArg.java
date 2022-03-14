@@ -2,34 +2,36 @@ package hbase.base.models;
 
 import hbase.base.interfaces.TypeArg;
 
+import java.util.List;
+
 /**
  * Type specification for {@code List}
  */
+@SuppressWarnings("rawtypes")
 public class ListTypeArg implements TypeArg {
-    private final TypeArg itemType;
+    private final Class itemType;
 
-    /**
-     * @param itemType generic item type
-     */
-    public ListTypeArg(TypeArg itemType) {
+    private ListTypeArg(Class itemType) {
         this.itemType = itemType;
     }
 
-    /**
-     * Returns {@code true} iff the target type is also a {@code List} and the item types match
-     */
     @Override
-    public boolean isAssignableTo(TypeArg target) {
-        if (!(target instanceof ListTypeArg)) {
-            return false;
-        }
-        ListTypeArg other = (ListTypeArg) target;
-        return this.itemType.isAssignableTo(other.itemType);
+    public Class getTypeClass() {
+        return List.class;
+    }
+
+    @Override
+    public Class[] getTypeArgs() {
+        return new Class[]{itemType};
     }
 
     @Override
     public String toString() {
         return "List<" + itemType + ">";
+    }
+
+    public static ListTypeArg listTypeArg(Class itemType) {
+        return new ListTypeArg(itemType);
     }
 
 }

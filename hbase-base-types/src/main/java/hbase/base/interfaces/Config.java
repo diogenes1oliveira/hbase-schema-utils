@@ -12,16 +12,17 @@ import java.util.function.Function;
  * This will likely be specialized to a framework such as Spring or Quarkus. If not, there's the reference
  * implementation {@link PropertiesConfig} for a System properties-based config.
  */
+@SuppressWarnings("unchecked")
 public interface Config {
     /**
      * Gets the config specified by the given key
      *
-     * @param configKey
+     * @param namedType
      * @param <T>
      * @return
      */
-    default <T> T get(ConfigKey configKey) {
-        return configKey.fromConfig(this);
+    default <T> T get(NamedType namedType) {
+        return namedType.getFromConfig(this);
     }
 
     /**
@@ -45,12 +46,7 @@ public interface Config {
      * @return converted value
      */
     default @Nullable <T> T getValue(String name, Class<?> type, TypeArg... typeArgs) {
-        String stringValue = getValue(name);
-        if (stringValue == null) {
-            return null;
-        }
-        FromStringConverter<T> converter = FromStringConverter.get(type, typeArgs);
-        return converter.convertTo(stringValue);
+        return getValue(name, null, type, typeArgs);
     }
 
     /**
@@ -66,16 +62,11 @@ public interface Config {
      * @return converted value
      */
     default <T> T getValue(String name, T defaultValue, Class<?> type, TypeArg... typeArgs) {
-        String stringValue = getValue(name);
-        if (stringValue == null) {
-            return defaultValue;
+        if(type == Properties.class) {
+            return (T) getPrefix(name);
         }
         FromStringConverter<T> converter = FromStringConverter.get(type, typeArgs);
-        T converted = converter.convertTo(stringValue);
-        if(converted == null) {
-            return defaultValue;
-        }
-        return converted;
+        return getValue(name, defaultValue, converter::convertTo);
     }
 
     /**
@@ -96,8 +87,7 @@ public interface Config {
      * @return converted config value
      */
     default @Nullable <T> T getValue(String name, Function<String, T> converter) {
-        String value = getValue(name);
-        return value == null ? null : converter.apply(value);
+        return getValue(name, null, converter);
     }
 
     /**
@@ -112,7 +102,14 @@ public interface Config {
      */
     default <T> T getValue(String name, T defaultValue, Function<String, T> converter) {
         String value = getValue(name);
-        return value == null ? defaultValue : converter.apply(value);
+        if (value == null) {
+            return defaultValue;
+        }
+        T converted = converter.apply(value);
+        if (converted == null) {
+            return defaultValue;
+        }
+        return converted;
     }
 
 }
