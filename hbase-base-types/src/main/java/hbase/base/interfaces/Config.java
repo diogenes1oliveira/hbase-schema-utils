@@ -37,6 +37,15 @@ public interface Config {
      */
     @Nullable <T> T getValue(String name, Class<?> type);
 
+    /**
+     * Gets a value from the given config key in a type-safe fashion
+     *
+     * @param configKey    config to get a value for
+     * @param defaultValue default value in case of null
+     * @param type         type class object
+     * @param <T>          value type
+     * @return converted config value
+     */
     @SuppressWarnings("unchecked")
     default <T> T getValue(ConfigKey configKey, T defaultValue, Class<T> type) {
         Object value = configKey.fromConfig(this);

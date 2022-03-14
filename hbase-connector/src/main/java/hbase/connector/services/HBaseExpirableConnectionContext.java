@@ -51,14 +51,23 @@ public class HBaseExpirableConnectionContext extends HBaseRecreatableConnectionC
         return super.enter();
     }
 
+    /**
+     * Duration in milliseconds since the last connection recreation
+     */
     public long getAgeMillis() {
         return (long) ((System.nanoTime() - creationNanos) / 1e6);
     }
 
+    /**
+     * true if the connection has been created, but its age has expired
+     */
     public boolean isExpired() {
         return creationNanos >= 0 && getAgeMillis() > expireMillis;
     }
 
+    /**
+     * Recreate the connection right away
+     */
     @Override
     public void refresh() throws IOException {
         super.refresh();
