@@ -1,18 +1,16 @@
 package hbase.schema.connector.interfaces;
 
 import org.apache.hadoop.hbase.TableName;
+import org.apache.hadoop.hbase.client.Mutation;
 
 import java.io.IOException;
 import java.util.List;
-
-import static java.util.Collections.singletonList;
 
 /**
  * Interface to insert objects into HBase
  *
  * @param <T> source object type
  */
-@FunctionalInterface
 public interface HBaseMutator<T> {
     /**
      * Builds and executes the mutations corresponding to the source objects
@@ -25,18 +23,11 @@ public interface HBaseMutator<T> {
     void mutate(TableName tableName, List<T> objects) throws IOException;
 
     /**
-     * Builds and executes the mutations corresponding to the source object
-     * <p>
-     * The default implementation just delegates to {@link #mutate(TableName, List)}
+     * Creates a list of mutations for the source object
      *
-     * @param tableName name of the table to insert data in
-     * @param object    source object
-     * @throws IOException           failed to execute the mutations
-     * @throws IllegalStateException interrupted while mutating
+     * @param object source object
+     * @return list of mutations corresponding to the source object
      */
-    default void mutate(TableName tableName, T object) throws IOException {
-        mutate(tableName, singletonList(object));
-    }
-
+    List<Mutation> toMutations(T object);
 
 }

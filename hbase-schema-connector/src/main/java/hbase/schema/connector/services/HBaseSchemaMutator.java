@@ -82,6 +82,7 @@ public class HBaseSchemaMutator<T> implements HBaseMutator<T> {
      * @param object source object
      * @return list of mutations corresponding to the source object
      */
+    @Override
     public List<Mutation> toMutations(T object) {
         List<Mutation> mutations = new ArrayList<>();
 
@@ -99,7 +100,7 @@ public class HBaseSchemaMutator<T> implements HBaseMutator<T> {
      * @return Put or null if no {@code byte[]} value was generated for the source object
      */
     @Nullable
-    public Put toPut(T object) {
+    private Put toPut(T object) {
         byte[] rowKey = mutationSchema.buildRowKey(object);
         Long rowTimestamp = mutationSchema.buildTimestamp(object);
         if (rowKey == null || rowTimestamp == null) {
@@ -129,7 +130,7 @@ public class HBaseSchemaMutator<T> implements HBaseMutator<T> {
      * @return Increment or null if no {@code Long} value was generated for the source object
      */
     @Nullable
-    public Increment toIncrement(T object) {
+    private Increment toIncrement(T object) {
         byte[] rowKey = mutationSchema.buildRowKey(object);
         Long rowTimestamp = mutationSchema.buildTimestamp(object);
         if (rowKey == null || rowTimestamp == null) {
