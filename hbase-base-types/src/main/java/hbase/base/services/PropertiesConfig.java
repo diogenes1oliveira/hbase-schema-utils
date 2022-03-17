@@ -5,8 +5,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Properties;
 
-import static hbase.base.helpers.ConfigUtils.filterProperties;
-
 /**
  * Config object that uses a {@link Properties} object as the value source
  */
@@ -34,7 +32,16 @@ public class PropertiesConfig implements Config {
      */
     @Override
     public Properties getPrefix(String prefix) {
-        return filterProperties(props, key -> key.startsWith(prefix));
+        Properties result = new Properties();
+
+        for (String name : props.stringPropertyNames()) {
+            if (name.startsWith(prefix)) {
+                String value = props.getProperty(name);
+                result.setProperty(name.substring(prefix.length()), value);
+            }
+        }
+
+        return result;
     }
 
     /**
