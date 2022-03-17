@@ -260,4 +260,13 @@ public final class HBaseSchemaUtils {
     public static Filter combineNullableFilters(FilterList.Operator operator, @Nullable Filter... filters) {
         return combineNullableFilters(operator, asList(filters).iterator());
     }
+
+    /**
+     * A dummy {@link BiConsumer} that doesn't do anything
+     */
+    public static <T, U> BiConsumer<T, U> dummyBiConsumer() {
+        return (t, u) -> {
+            // do nothing
+        };
+    }
 }
