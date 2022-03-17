@@ -28,6 +28,7 @@ import java.util.NavigableMap;
  * @param <R> result type
  */
 public class HBaseSchemaFetcher<Q, R> implements HBaseFetcher<Q, R> {
+    private final TableName tableName;
     private final byte[] family;
     private final HBaseFilterSchema<Q> filterSchema;
     private final HBaseQuerySchema<Q> querySchema;
@@ -35,11 +36,13 @@ public class HBaseSchemaFetcher<Q, R> implements HBaseFetcher<Q, R> {
     private final HBaseConnector connector;
 
     /**
+     * @param tableName name of the table
      * @param family    column family
      * @param schema    object schema
      * @param connector connector object
      */
-    public HBaseSchemaFetcher(byte[] family, HBaseSchema<?, Q, R> schema, HBaseConnector connector) {
+    public HBaseSchemaFetcher(TableName tableName, byte[] family, HBaseSchema<?, Q, R> schema, HBaseConnector connector) {
+        this.tableName = tableName;
         this.family = family;
         this.filterSchema = schema.filterSchema();
         this.querySchema = schema.querySchema();
@@ -75,14 +78,13 @@ public class HBaseSchemaFetcher<Q, R> implements HBaseFetcher<Q, R> {
     /**
      * Builds, executes and parses a Get request
      *
-     * @param tableName name of the table to query data in
-     * @param query     query object
+     * @param query query object
      * @return found result or null
      * @throws IOException failed to execute Get
      */
     @Override
     @Nullable
-    public R get(TableName tableName, Q query) throws IOException {
+    public R get(Q query) throws IOException {
         Get get = toGet(query);
         if (get == null) {
             return null;
@@ -143,13 +145,12 @@ public class HBaseSchemaFetcher<Q, R> implements HBaseFetcher<Q, R> {
     /**
      * Builds, executes and parses a Scan request
      *
-     * @param tableName name of the table to query data in
-     * @param queries   query objects
+     * @param queries query objects
      * @return list with non-null results
      * @throws IOException failed to execute Get
      */
     @Override
-    public List<R> scan(TableName tableName, List<? extends Q> queries) throws IOException {
+    public List<R> scan(List<? extends Q> queries) throws IOException {
         Scan scan = toScan(queries);
         List<R> results = new ArrayList<>();
 

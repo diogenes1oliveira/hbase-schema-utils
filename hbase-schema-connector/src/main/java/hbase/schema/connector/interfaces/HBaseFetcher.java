@@ -1,6 +1,5 @@
 package hbase.schema.connector.interfaces;
 
-import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.Get;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.Scan;
@@ -28,12 +27,11 @@ public interface HBaseFetcher<Q, R> {
     /**
      * Builds, executes and parses a Get request
      *
-     * @param tableName name of the table to query data in
-     * @param query     query object
+     * @param query query object
      * @return found result or null
      * @throws IOException failed to execute Get
      */
-    R get(TableName tableName, Q query) throws IOException;
+    R get(Q query) throws IOException;
 
     /**
      * Parses the data from a HBase result into a proper object
@@ -54,10 +52,9 @@ public interface HBaseFetcher<Q, R> {
     /**
      * Builds, executes and parses a Scan request
      *
-     * @param tableName name of the table to query data in
-     * @param queries   query objects
+     * @param queries query objects
      * @return list with non-null results
      * @throws IOException failed to execute Get
      */
-    List<R> scan(TableName tableName, List<? extends Q> queries) throws IOException;
+    List<R> scan(List<? extends Q> queries) throws IOException;
 }

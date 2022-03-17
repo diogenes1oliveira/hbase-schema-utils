@@ -32,16 +32,19 @@ import static org.apache.commons.lang3.ObjectUtils.firstNonNull;
 public class HBaseSchemaMutator<T> implements HBaseMutator<T> {
     private static final Logger LOGGER = LoggerFactory.getLogger(HBaseSchemaMutator.class);
 
+    private final TableName tableName;
     private final byte[] family;
     private final HBaseMutationSchema<T> mutationSchema;
     private final HBaseConnector connector;
 
     /**
+     * @param tableName name of the table to insert data in
      * @param family    column family
      * @param schema    object schema
      * @param connector connector object
      */
-    public HBaseSchemaMutator(byte[] family, HBaseSchema<T, ?, ?> schema, HBaseConnector connector) {
+    public HBaseSchemaMutator(TableName tableName, byte[] family, HBaseSchema<T, ?, ?> schema, HBaseConnector connector) {
+        this.tableName = tableName;
         this.family = family;
         this.mutationSchema = schema.mutationSchema();
         this.connector = connector;
@@ -50,13 +53,12 @@ public class HBaseSchemaMutator<T> implements HBaseMutator<T> {
     /**
      * Builds and executes the mutations corresponding to the source objects
      *
-     * @param tableName name of the table to insert data in
-     * @param objects   source objects
+     * @param objects source objects
      * @throws IOException                    failed to execute the mutations
      * @throws UncheckedInterruptionException interrupted while mutating
      */
     @Override
-    public void mutate(TableName tableName, List<T> objects) throws IOException {
+    public void mutate(List<T> objects) throws IOException {
         List<Mutation> mutations = new ArrayList<>();
 
         for (T object : objects) {
