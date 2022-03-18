@@ -1,8 +1,13 @@
 package hbase.schema.api.interfaces;
 
+import hbase.schema.api.models.HBaseDeltaCell;
+import hbase.schema.api.models.HBaseValueCell;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.List;
 import java.util.NavigableMap;
+
+import static java.util.Collections.emptyList;
 
 /**
  * Interface to generate the Puts and Increments corresponding to a Java object
@@ -60,4 +65,12 @@ public interface HBaseMutationSchema<T> {
      * @return map of (qualifier -> increment value)
      */
     NavigableMap<byte[], Long> buildIncrementValues(T object);
+
+    default List<HBaseDeltaCell> toDeltas(T object) {
+        return emptyList();
+    }
+
+    default List<HBaseValueCell> toValues(T object) {
+        return emptyList();
+    }
 }

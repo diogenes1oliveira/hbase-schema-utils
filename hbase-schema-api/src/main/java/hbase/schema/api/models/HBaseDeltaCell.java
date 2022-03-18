@@ -14,7 +14,7 @@ import static org.apache.commons.lang3.ObjectUtils.firstNonNull;
 /**
  * Data for a single HBase {@code long} cell
  */
-public class HBaseLongCell extends AbstractHBaseCell<Long> {
+public class HBaseDeltaCell extends AbstractHBaseCell<Long> {
     private static final Long VALUE_DEFAULT = 0L;
 
     /**
@@ -23,10 +23,18 @@ public class HBaseLongCell extends AbstractHBaseCell<Long> {
      * @param timestamp {@link #getTimestamp()}
      */
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
-    public HBaseLongCell(@JsonProperty("qualifier") byte[] qualifier,
-                         @Nullable @JsonProperty("value") Long value,
-                         @Nullable @JsonProperty("timestamp") Long timestamp) {
+    public HBaseDeltaCell(@JsonProperty("qualifier") byte[] qualifier,
+                          @Nullable @JsonProperty("value") Long value,
+                          @Nullable @JsonProperty("timestamp") Long timestamp) {
         super(qualifier, firstNonNull(value, VALUE_DEFAULT), timestamp);
+    }
+
+    /**
+     * @param qualifier {@link #getQualifier()}
+     * @param value     {@link #getValue()}
+     */
+    public HBaseDeltaCell(byte[] qualifier, Long value) {
+        this(qualifier, value, null);
     }
 
     /**
@@ -43,10 +51,10 @@ public class HBaseLongCell extends AbstractHBaseCell<Long> {
      * @param longCells input cell objects
      * @return map of (qualifier -> {@code Long} value)
      */
-    public static NavigableMap<byte[], Long> longCellsToMap(Collection<HBaseLongCell> longCells) {
+    public static NavigableMap<byte[], Long> longCellsToMap(Collection<HBaseDeltaCell> longCells) {
         NavigableMap<byte[], Long> result = asBytesTreeMap();
 
-        for (HBaseLongCell cell : longCells) {
+        for (HBaseDeltaCell cell : longCells) {
             result.put(cell.getQualifier(), cell.getValue());
         }
 

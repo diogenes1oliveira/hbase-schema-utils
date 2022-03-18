@@ -22,7 +22,7 @@ public class HBaseGenericRow {
     private static final byte[] EMPTY = new byte[0];
     private final Long timestamp;
     private final SortedSet<HBaseValueCell> valueCells;
-    private final SortedSet<HBaseLongCell> longCells;
+    private final SortedSet<HBaseDeltaCell> longCells;
     private byte[] rowKey;
 
     /**
@@ -35,7 +35,7 @@ public class HBaseGenericRow {
     public HBaseGenericRow(@JsonProperty("row_key") byte[] rowKey,
                            @JsonProperty("timestamp") @Nullable Long timestamp,
                            @JsonProperty("values") Collection<HBaseValueCell> valueCells,
-                           @JsonProperty("longs") Collection<HBaseLongCell> longCells) {
+                           @JsonProperty("longs") Collection<HBaseDeltaCell> longCells) {
         this.rowKey = rowKey;
         this.timestamp = timestamp;
         this.valueCells = new TreeSet<>(valueCells);
@@ -85,7 +85,7 @@ public class HBaseGenericRow {
      * Row {@code Long} cells
      */
     @JsonProperty("longs")
-    public SortedSet<HBaseLongCell> getLongCells() {
+    public SortedSet<HBaseDeltaCell> getLongCells() {
         return longCells;
     }
 

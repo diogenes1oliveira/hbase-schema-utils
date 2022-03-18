@@ -55,7 +55,7 @@ class HBaseSchemaFetcherIT {
         assertThat(fetcher.get(tempTable, query), nullValue());
         assertThat(fetcher.scan(tempTable, singletonList(query)), empty());
 
-        mutator.mutate(tempTable, pojo);
+        mutator.mutate(tempTable, singletonList(pojo));
 
         assertThat(fetcher.get(tempTable, query), equalTo(pojo));
         assertThat(fetcher.scan(tempTable, singletonList(query)), equalTo(singletonList(pojo)));
