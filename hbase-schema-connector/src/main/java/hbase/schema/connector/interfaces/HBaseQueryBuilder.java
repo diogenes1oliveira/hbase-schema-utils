@@ -13,7 +13,7 @@ import java.util.Set;
 
 import static hbase.schema.api.utils.HBaseSchemaUtils.asBytesTreeSet;
 
-public interface HBaseFilterBuilder<T> {
+public interface HBaseQueryBuilder<T> {
     Set<byte[]> EMPTY = Collections.unmodifiableSet(asBytesTreeSet());
 
     /**
@@ -35,13 +35,13 @@ public interface HBaseFilterBuilder<T> {
     /**
      * Builds the filter to be used in Scan requests
      * <p>
-     * The default implementation just forwards to {@link #toMultiRowRangeFilter(List)}
+     * The default implementation just returns {@code null}
      *
      * @param queries input query objects
      * @return filter for Scan requests
      */
     default @Nullable Filter toFilter(List<? extends T> queries) {
-        return toMultiRowRangeFilter(queries);
+        return null;
     }
 
     /**

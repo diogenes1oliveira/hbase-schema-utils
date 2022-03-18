@@ -1,8 +1,7 @@
 package hbase.schema.connector.services;
 
 
-import hbase.schema.api.interfaces.HBaseCellsMapper;
-import hbase.schema.api.interfaces.HBaseRowMapper;
+import hbase.schema.api.interfaces.HBaseMutationMapper;
 import hbase.schema.api.models.HBaseDeltaCell;
 import hbase.schema.api.models.HBaseValueCell;
 import hbase.schema.connector.interfaces.HBaseMutationBuilder;
@@ -15,12 +14,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class HBaseCellsMutationBuilder<T> implements HBaseMutationBuilder<T> {
-    private final HBaseRowMapper<T> rowMapper;
-    private final HBaseCellsMapper<T> cellsMapper;
+    private final HBaseMutationMapper<T> mutationMapper;
 
-    public HBaseCellsMutationBuilder(HBaseRowMapper<T> rowMapper, HBaseCellsMapper<T> cellsMapper) {
-        this.rowMapper = rowMapper;
-        this.cellsMapper = cellsMapper;
+    public HBaseCellsMutationBuilder(HBaseMutationMapper<T> mutationMapper) {
+        this.mutationMapper = mutationMapper;
     }
 
     @Override
@@ -49,12 +46,12 @@ public class HBaseCellsMutationBuilder<T> implements HBaseMutationBuilder<T> {
      */
     @Nullable
     private Put toPut(byte[] family, T obj) {
-        byte[] rowKey = rowMapper.toRowKey(obj);
+        byte[] rowKey = mutationMapper.toRowKey(obj);
         if (rowKey == null) {
             return null;
         }
         Put put;
-        Long rowTimestamp = rowMapper.toTimestamp(obj);
+        Long rowTimestamp = mutationMapper.toTimestamp(obj);
         if (rowTimestamp == null) {
             put = new Put(rowKey);
         } else {
@@ -62,7 +59,7 @@ public class HBaseCellsMutationBuilder<T> implements HBaseMutationBuilder<T> {
         }
         boolean hasValue = false;
 
-        for (HBaseValueCell cell : cellsMapper.toValues(obj)) {
+        for (HBaseValueCell cell : mutationMapper.toValues(obj)) {
             byte[] qualifier = cell.getQualifier();
             byte[] value = cell.getValue();
             if (value == null) {
@@ -70,6 +67,9 @@ public class HBaseCellsMutationBuilder<T> implements HBaseMutationBuilder<T> {
             }
             hasValue = true;
             Long timestamp = cell.getTimestamp();
+            if (timestamp == null) {
+                timestamp = rowTimestamp;
+            }
             if (timestamp == null) {
                 put = put.addColumn(family, qualifier, value);
             } else {
@@ -88,14 +88,14 @@ public class HBaseCellsMutationBuilder<T> implements HBaseMutationBuilder<T> {
      */
     @Nullable
     private Increment toIncrement(byte[] family, T obj) {
-        byte[] rowKey = rowMapper.toRowKey(obj);
+        byte[] rowKey = mutationMapper.toRowKey(obj);
         if (rowKey == null) {
             return null;
         }
         Increment increment = new Increment(rowKey);
         boolean hasValue = false;
 
-        for (HBaseDeltaCell cell : cellsMapper.toDeltas(obj)) {
+        for (HBaseDeltaCell cell : mutationMapper.toDeltas(obj)) {
             byte[] qualifier = cell.getQualifier();
             Long value = cell.getValue();
             if (value == null || value == 0L) {

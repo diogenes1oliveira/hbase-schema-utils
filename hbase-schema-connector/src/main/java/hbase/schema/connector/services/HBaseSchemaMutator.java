@@ -2,27 +2,18 @@ package hbase.schema.connector.services;
 
 import hbase.base.exceptions.UncheckedInterruptionException;
 import hbase.connector.services.HBaseConnector;
-import hbase.schema.api.interfaces.HBaseMutationSchema;
-import hbase.schema.api.interfaces.HBaseSchema;
+import hbase.schema.connector.interfaces.HBaseMutationBuilder;
 import hbase.schema.connector.interfaces.HBaseMutator;
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.Connection;
-import org.apache.hadoop.hbase.client.Increment;
 import org.apache.hadoop.hbase.client.Mutation;
-import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.client.Table;
-import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.NavigableMap;
-import java.util.Objects;
-
-import static org.apache.commons.lang3.ObjectUtils.firstNonNull;
 
 /**
  * Interface to insert objects into HBase according to a schema
@@ -32,21 +23,18 @@ import static org.apache.commons.lang3.ObjectUtils.firstNonNull;
 public class HBaseSchemaMutator<T> implements HBaseMutator<T> {
     private static final Logger LOGGER = LoggerFactory.getLogger(HBaseSchemaMutator.class);
 
-    private final TableName tableName;
     private final byte[] family;
-    private final HBaseMutationSchema<T> mutationSchema;
+    private final HBaseMutationBuilder<T> mutationBuilder;
     private final HBaseConnector connector;
 
     /**
-     * @param tableName name of the table to insert data in
-     * @param family    column family
-     * @param schema    object schema
-     * @param connector connector object
+     * @param family          column family
+     * @param mutationBuilder object to build mutations from Java objects
+     * @param connector       connector object
      */
-    public HBaseSchemaMutator(TableName tableName, byte[] family, HBaseSchema<T, ?, ?> schema, HBaseConnector connector) {
-        this.tableName = tableName;
+    public HBaseSchemaMutator(byte[] family, HBaseMutationBuilder<T> mutationBuilder, HBaseConnector connector) {
         this.family = family;
-        this.mutationSchema = schema.mutationSchema();
+        this.mutationBuilder = mutationBuilder;
         this.connector = connector;
     }
 
@@ -58,11 +46,11 @@ public class HBaseSchemaMutator<T> implements HBaseMutator<T> {
      * @throws UncheckedInterruptionException interrupted while mutating
      */
     @Override
-    public void mutate(List<T> objects) throws IOException {
+    public void mutate(String tableName, List<T> objects) throws IOException {
         List<Mutation> mutations = new ArrayList<>();
 
         for (T object : objects) {
-            mutations.addAll(toMutations(object));
+            mutations.addAll(mutationBuilder.toMutations(family, object));
         }
 
         if (mutations.isEmpty()) {
@@ -70,7 +58,7 @@ public class HBaseSchemaMutator<T> implements HBaseMutator<T> {
         }
 
         try (Connection connection = connector.context();
-             Table table = connection.getTable(tableName)) {
+             Table table = connection.getTable(TableName.valueOf(tableName))) {
             table.batch(mutations, new Object[mutations.size()]);
         } catch (InterruptedException e) {
             LOGGER.error("Interrupted while mutating", e);
@@ -78,79 +66,4 @@ public class HBaseSchemaMutator<T> implements HBaseMutator<T> {
         }
     }
 
-    /**
-     * Creates a list of mutations for the source object
-     *
-     * @param object source object
-     * @return list of mutations corresponding to the source object
-     */
-    @Override
-    public List<Mutation> toMutations(T object) {
-        List<Mutation> mutations = new ArrayList<>();
-
-        mutations.add(toPut(object));
-        mutations.add(toIncrement(object));
-
-        mutations.removeIf(Objects::isNull);
-        return mutations;
-    }
-
-    /**
-     * Creates a Put for the source object
-     *
-     * @param object source object
-     * @return Put or null if no {@code byte[]} value was generated for the source object
-     */
-    @Nullable
-    private Put toPut(T object) {
-        byte[] rowKey = mutationSchema.buildRowKey(object);
-        Long rowTimestamp = mutationSchema.buildTimestamp(object);
-        if (rowKey == null || rowTimestamp == null) {
-            return null;
-        }
-
-        NavigableMap<byte[], byte[]> putValues = mutationSchema.buildPutValues(object);
-        if (putValues.isEmpty()) {
-            return null;
-        }
-        Put put = new Put(rowKey, rowTimestamp);
-
-        for (Map.Entry<byte[], byte[]> entry : putValues.entrySet()) {
-            byte[] qualifier = entry.getKey();
-            byte[] value = entry.getValue();
-            long timestamp = firstNonNull(mutationSchema.buildTimestamp(object, qualifier), rowTimestamp);
-            put = put.addColumn(family, qualifier, timestamp, value);
-        }
-
-        return put;
-    }
-
-    /**
-     * Creates a Increment for the source object
-     *
-     * @param object source object
-     * @return Increment or null if no {@code Long} value was generated for the source object
-     */
-    @Nullable
-    private Increment toIncrement(T object) {
-        byte[] rowKey = mutationSchema.buildRowKey(object);
-        Long rowTimestamp = mutationSchema.buildTimestamp(object);
-        if (rowKey == null || rowTimestamp == null) {
-            return null;
-        }
-
-        NavigableMap<byte[], Long> incrementValues = mutationSchema.buildIncrementValues(object);
-        if (incrementValues.isEmpty()) {
-            return null;
-        }
-        Increment increment = new Increment(rowKey).setTimestamp(rowTimestamp);
-
-        for (Map.Entry<byte[], Long> entry : incrementValues.entrySet()) {
-            byte[] qualifier = entry.getKey();
-            Long value = entry.getValue();
-            increment = increment.addColumn(family, qualifier, value);
-        }
-
-        return increment;
-    }
 }

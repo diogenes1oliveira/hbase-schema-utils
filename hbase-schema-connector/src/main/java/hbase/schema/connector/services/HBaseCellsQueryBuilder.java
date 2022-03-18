@@ -1,8 +1,7 @@
 package hbase.schema.connector.services;
 
-import hbase.schema.api.interfaces.HBaseCellsMapper;
-import hbase.schema.api.interfaces.HBaseRowMapper;
-import hbase.schema.connector.interfaces.HBaseFilterBuilder;
+import hbase.schema.api.interfaces.HBaseMutationMapper;
+import hbase.schema.connector.interfaces.HBaseQueryBuilder;
 import org.apache.hadoop.hbase.filter.MultiRowRangeFilter;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.jetbrains.annotations.NotNull;
@@ -13,20 +12,18 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
-public class HBaseCellsFilterBuilder<T> implements HBaseFilterBuilder<T> {
+public class HBaseCellsQueryBuilder<T> implements HBaseQueryBuilder<T> {
     private final int scanKeySize;
-    private final HBaseRowMapper<T> rowMapper;
-    private final HBaseCellsMapper<T> cellsMapper;
+    private final HBaseMutationMapper<T> mutationMapper;
 
-    public HBaseCellsFilterBuilder(int scanKeySize, HBaseRowMapper<T> rowMapper, HBaseCellsMapper<T> cellsMapper) {
+    public HBaseCellsQueryBuilder(int scanKeySize, HBaseMutationMapper<T> mutationMapper) {
         this.scanKeySize = scanKeySize;
-        this.rowMapper = rowMapper;
-        this.cellsMapper = cellsMapper;
+        this.mutationMapper = mutationMapper;
     }
 
     @Override
     public byte @Nullable [] toRowKey(T query) {
-        return rowMapper.toRowKey(query);
+        return mutationMapper.toRowKey(query);
     }
 
     @Override
@@ -50,11 +47,11 @@ public class HBaseCellsFilterBuilder<T> implements HBaseFilterBuilder<T> {
 
     @Override
     public @NotNull Set<byte[]> getQualifiers(T query) {
-        return cellsMapper.qualifiers();
+        return mutationMapper.qualifiers();
     }
 
     @Override
     public @NotNull Set<byte[]> getPrefixes(T query) {
-        return cellsMapper.prefixes();
+        return mutationMapper.prefixes();
     }
 }

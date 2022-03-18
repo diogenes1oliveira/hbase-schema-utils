@@ -1,5 +1,6 @@
 package hbase.schema.api.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
@@ -57,6 +58,19 @@ public abstract class AbstractHBaseCell<T> implements Comparable<AbstractHBaseCe
     @Nullable
     public Long getTimestamp() {
         return timestamp;
+    }
+
+    @JsonIgnore
+    public boolean hasPrefix(byte[] prefix) {
+        if (prefix.length > qualifier.length) {
+            return false;
+        }
+        for (int i = 0; i < prefix.length; ++i) {
+            if (prefix[i] != qualifier[i]) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**

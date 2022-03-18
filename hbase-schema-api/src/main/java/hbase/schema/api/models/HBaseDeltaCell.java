@@ -20,21 +20,11 @@ public class HBaseDeltaCell extends AbstractHBaseCell<Long> {
     /**
      * @param qualifier {@link #getQualifier()}
      * @param value     {@link #getValue()}
-     * @param timestamp {@link #getTimestamp()}
      */
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
     public HBaseDeltaCell(@JsonProperty("qualifier") byte[] qualifier,
-                          @Nullable @JsonProperty("value") Long value,
-                          @Nullable @JsonProperty("timestamp") Long timestamp) {
-        super(qualifier, firstNonNull(value, VALUE_DEFAULT), timestamp);
-    }
-
-    /**
-     * @param qualifier {@link #getQualifier()}
-     * @param value     {@link #getValue()}
-     */
-    public HBaseDeltaCell(byte[] qualifier, Long value) {
-        this(qualifier, value, null);
+                          @Nullable @JsonProperty("value") Long value) {
+        super(qualifier, firstNonNull(value, VALUE_DEFAULT), null);
     }
 
     /**

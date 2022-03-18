@@ -1,7 +1,5 @@
 package hbase.schema.connector.interfaces;
 
-import org.apache.hadoop.hbase.TableName;
-
 import java.io.IOException;
 import java.util.List;
 
@@ -20,6 +18,6 @@ public interface HBaseMutator<T> {
      * @throws IOException           failed to execute the mutations
      * @throws IllegalStateException interrupted while mutating
      */
-    void mutate(TableName tableName, List<T> objects) throws IOException;
+    void mutate(String tableName, List<T> objects) throws IOException;
 
 }
