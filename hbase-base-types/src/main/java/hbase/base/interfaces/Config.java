@@ -16,7 +16,7 @@ public interface Config {
      * Gets all configurations with the given prefix
      *
      * @param prefix config prefix
-     * @return all prefixed configurations
+     * @return configurations with the prefix removed
      */
     Properties getPrefix(String prefix);
 

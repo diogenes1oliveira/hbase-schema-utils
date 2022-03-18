@@ -12,6 +12,8 @@ import hbase.schema.api.interfaces.conversion.LongMapConverter;
 import org.apache.hadoop.hbase.filter.Filter;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
@@ -21,6 +23,7 @@ import java.util.function.Function;
  * @param <T> mutation and query input type
  * @param <R> result type
  */
+@SuppressWarnings("SameParameterValue")
 public abstract class AbstractHBaseSchema<T, R> implements HBaseSchema<T, T, R> {
     private final HBaseMutationSchemaBuilder<T> mutationBuilder = new HBaseMutationSchemaBuilder<T>()
             .withTimestamp(this::buildTimestamp)
@@ -31,6 +34,7 @@ public abstract class AbstractHBaseSchema<T, R> implements HBaseSchema<T, T, R> 
             .withFilter(this::buildFilter);
     private final HBaseResultParserSchemaBuilder<R> resultBuilder = new HBaseResultParserSchemaBuilder<>(this::newInstance)
             .fromRowKey(this::parseRowKey);
+    private final Map<String, Function<T, Long>> timestampers = new HashMap<>();
 
     /**
      * Creates a new output instance
@@ -47,15 +51,18 @@ public abstract class AbstractHBaseSchema<T, R> implements HBaseSchema<T, T, R> 
 
     /**
      * Calculates a timestamp for a specific field
-     * <p>
-     * The default implementation just uses {@link #buildTimestamp(Object)}
      *
      * @param object input object
      * @param field  field name
      * @return timestamp in milliseconds
      */
     public @Nullable Long buildTimestamp(T object, String field) {
-        return buildTimestamp(object);
+        Function<T, Long> timestamper = timestampers.get(field);
+        if (timestamper != null) {
+            return timestamper.apply(object);
+        } else {
+            return buildTimestamp(object);
+        }
     }
 
     /**
@@ -138,13 +145,38 @@ public abstract class AbstractHBaseSchema<T, R> implements HBaseSchema<T, T, R> 
      * @param <F>       field type
      */
     protected <F> void withValue(String field,
-                                 Function<T, F> getter,
-                                 BiConsumer<R, F> setter,
-                                 BytesConverter<F> converter) {
-        mutationBuilder.withTimestamp(obj -> buildTimestamp(obj, field)).withValue(field, getter, converter);
-        queryBuilder.withQualifiers(field);
-        filterBuilder.withPrefixes(field);
-        resultBuilder.fromColumn(field, setter, converter);
+                                 @Nullable Function<T, F> getter,
+                                 @Nullable BiConsumer<R, F> setter,
+                                 @Nullable BytesConverter<F> converter) {
+        withValue(field, getter, setter, converter, null);
+    }
+
+    /**
+     * Adds a field corresponding to a single HBase value cell
+     *
+     * @param field       field name
+     * @param getter      gets the field value
+     * @param setter      sets the field value
+     * @param converter   converts the field to/from {@code byte[]}
+     * @param timestamper extracts a timestamp for the cell
+     * @param <F>         field type
+     */
+    protected <F> void withValue(String field,
+                                 @Nullable Function<T, F> getter,
+                                 @Nullable BiConsumer<R, F> setter,
+                                 BytesConverter<F> converter,
+                                 @Nullable Function<T, Long> timestamper) {
+        if(getter != null) {
+            mutationBuilder.withTimestamp(obj -> buildTimestamp(obj, field)).withValue(field, getter, converter);
+        }
+        if(setter != null) {
+            queryBuilder.withQualifiers(field);
+            filterBuilder.withPrefixes(field);
+            resultBuilder.fromColumn(field, setter, converter);
+        }
+        if(timestamper != null) {
+            timestampers.put(field, timestamper);
+        }
     }
 
     /**
@@ -157,13 +189,17 @@ public abstract class AbstractHBaseSchema<T, R> implements HBaseSchema<T, T, R> 
      * @param <F>       field type
      */
     protected <F> void withDelta(String field,
-                                 Function<T, F> getter,
-                                 BiConsumer<R, F> setter,
+                                 @Nullable Function<T, F> getter,
+                                 @Nullable BiConsumer<R, F> setter,
                                  LongConverter<F> converter) {
-        mutationBuilder.withTimestamp(obj -> buildTimestamp(obj, field)).withDelta(field, getter, converter);
-        queryBuilder.withQualifiers(field);
-        filterBuilder.withPrefixes(field);
-        resultBuilder.fromColumn(field, setter, converter);
+        if(getter != null) {
+            mutationBuilder.withTimestamp(obj -> buildTimestamp(obj, field)).withDelta(field, getter, converter);
+        }
+        if(setter != null) {
+            queryBuilder.withQualifiers(field);
+            filterBuilder.withPrefixes(field);
+            resultBuilder.fromColumn(field, setter, converter);
+        }
     }
 
     /**
@@ -174,8 +210,8 @@ public abstract class AbstractHBaseSchema<T, R> implements HBaseSchema<T, T, R> 
      * @param setter sets the field {@code byte[]} value
      */
     protected void withValue(String field,
-                             Function<T, byte[]> getter,
-                             BiConsumer<R, byte[]> setter) {
+                             @Nullable Function<T, byte[]> getter,
+                             @Nullable BiConsumer<R, byte[]> setter) {
         withValue(field, getter, setter, BytesConverter.bytesConverter());
     }
 
@@ -187,8 +223,8 @@ public abstract class AbstractHBaseSchema<T, R> implements HBaseSchema<T, T, R> 
      * @param setter sets the field {@code Long} value
      */
     protected void withDelta(String field,
-                             Function<T, Long> getter,
-                             BiConsumer<R, Long> setter) {
+                             @Nullable Function<T, Long> getter,
+                             @Nullable BiConsumer<R, Long> setter) {
         withDelta(field, getter, setter, LongConverter.longConverter());
     }
 
@@ -202,13 +238,17 @@ public abstract class AbstractHBaseSchema<T, R> implements HBaseSchema<T, T, R> 
      * @param <F>       field type
      */
     protected <F> void withValues(String prefix,
-                                  Function<T, F> getter,
-                                  BiConsumer<R, F> setter,
+                                  @Nullable Function<T, F> getter,
+                                  @Nullable BiConsumer<R, F> setter,
                                   BytesMapConverter<F> converter) {
-        mutationBuilder.withTimestamp(obj -> buildTimestamp(obj, prefix)).withValues(prefix, getter, converter);
-        queryBuilder.withPrefixes(prefix);
-        filterBuilder.withPrefixes(prefix);
-        resultBuilder.fromPrefix(prefix, setter, converter);
+        if (getter != null) {
+            mutationBuilder.withTimestamp(obj -> buildTimestamp(obj, prefix)).withValues(prefix, getter, converter);
+        }
+        if (setter != null) {
+            queryBuilder.withPrefixes(prefix);
+            filterBuilder.withPrefixes(prefix);
+            resultBuilder.fromPrefix(prefix, setter, converter);
+        }
     }
 
     /**
@@ -221,12 +261,16 @@ public abstract class AbstractHBaseSchema<T, R> implements HBaseSchema<T, T, R> 
      * @param <F>       field type
      */
     protected <F> void withDeltas(String prefix,
-                                  Function<T, F> getter,
-                                  BiConsumer<R, F> setter,
+                                  @Nullable Function<T, F> getter,
+                                  @Nullable BiConsumer<R, F> setter,
                                   LongMapConverter<F> converter) {
-        mutationBuilder.withTimestamp(obj -> buildTimestamp(obj, prefix)).withValues(prefix, getter, converter);
-        queryBuilder.withPrefixes(prefix);
-        filterBuilder.withPrefixes(prefix);
-        resultBuilder.fromPrefix(prefix, setter, converter);
+        if (getter != null) {
+            mutationBuilder.withTimestamp(obj -> buildTimestamp(obj, prefix)).withValues(prefix, getter, converter);
+        }
+        if (setter != null) {
+            queryBuilder.withPrefixes(prefix);
+            filterBuilder.withPrefixes(prefix);
+            resultBuilder.fromPrefix(prefix, setter, converter);
+        }
     }
 }
