@@ -3,28 +3,22 @@ package hbase.schema.api.interfaces;
 /**
  * Interface to map Java objects to and from HBase
  *
- * @param <T> mutation type
- * @param <Q> query and filter type
+ * @param <T> mutation and query type
  * @param <R> result type
  */
-public interface HBaseSchema<T, Q, R> {
+public interface HBaseSchema<T, R> {
     /**
      * Schema to generate the Mutations
      */
-    HBaseMutationSchema<T> mutationSchema();
+    HBaseMutationMapper<T> mutationMapper();
 
     /**
      * Schema to generate the Gets and Scans queries
      */
-    HBaseQuerySchema<Q> querySchema();
+    HBaseResultParser<R> resultParser();
 
     /**
-     * Schema to generate the Filters
+     * Size of scan key
      */
-    HBaseFilterSchema<Q> filterSchema();
-
-    /**
-     * Schema to parse fetched Results
-     */
-    HBaseResultParserSchema<R> resultParserSchema();
+    int scanKeySize();
 }

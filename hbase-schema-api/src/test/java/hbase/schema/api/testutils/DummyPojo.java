@@ -6,19 +6,42 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 
 import java.time.Instant;
-import java.util.List;
 import java.util.Map;
 
 public class DummyPojo {
-    private String id;
-    private String stringField;
-    private Long longField;
-    private Instant instantField;
-    private Boolean booleanField;
-    private List<String> listField;
+    public byte[] bytesField;
+    public String stringField;
+    public String id;
+    public Long longField;
+    public Instant instantField;
     private Map<String, String> map1;
-    private Map<String, String> map2;
-    private Map<String, Long> map3;
+    private Map<String, Long> map2;
+
+    public byte[] getBytes() {
+        return bytesField;
+    }
+
+    public void setBytes(byte[] bytes) {
+        this.bytesField = bytes;
+    }
+
+    public DummyPojo withBytes(byte[] bytes) {
+        this.bytesField = bytes;
+        return this;
+    }
+
+    public String getString() {
+        return stringField;
+    }
+
+    public void setString(String s) {
+        this.stringField = s;
+    }
+
+    public DummyPojo withString(String s) {
+        this.stringField = s;
+        return this;
+    }
 
     public String getId() {
         return id;
@@ -33,28 +56,15 @@ public class DummyPojo {
         return this;
     }
 
-    public String getString() {
-        return stringField;
-    }
-
-    public void setString(String field) {
-        this.stringField = field;
-    }
-
-    public DummyPojo withString(String field) {
-        this.stringField = field;
-        return this;
-    }
-
     public Long getLong() {
         return longField;
     }
 
-    public void setLong(Long l) {
+    public void setLong(long l) {
         this.longField = l;
     }
 
-    public DummyPojo withLong(Long l) {
+    public DummyPojo withLong(long l) {
         this.longField = l;
         return this;
     }
@@ -72,32 +82,6 @@ public class DummyPojo {
         return this;
     }
 
-    public Boolean getBoolean() {
-        return booleanField;
-    }
-
-    public void setBoolean(Boolean b) {
-        this.booleanField = b;
-    }
-
-    public DummyPojo withBoolean(Boolean b) {
-        this.booleanField = b;
-        return this;
-    }
-
-    public List<String> getListField() {
-        return listField;
-    }
-
-    public void setListField(List<String> listField) {
-        this.listField = listField;
-    }
-
-    public DummyPojo withListField(List<String> listField) {
-        this.listField = listField;
-        return this;
-    }
-
     public Map<String, String> getMap1() {
         return map1;
     }
@@ -111,77 +95,63 @@ public class DummyPojo {
         return this;
     }
 
-    public Map<String, String> getMap2() {
+    public Map<String, Long> getMap2() {
         return map2;
     }
 
-    public void setMap2(Map<String, String> map2) {
+    public void setMap2(Map<String, Long> map2) {
         this.map2 = map2;
     }
 
-    public DummyPojo withMap2(Map<String, String> map2) {
+    public DummyPojo withMap2(Map<String, Long> map2) {
         this.map2 = map2;
-        return this;
-    }
-
-    public Map<String, Long> getMap3() {
-        return map3;
-    }
-
-    public void setMap3(Map<String, Long> map3) {
-        this.map3 = map3;
-    }
-
-    public DummyPojo withMap3(Map<String, Long> map3) {
-        this.map3 = map3;
         return this;
     }
 
     @Override
     public String toString() {
         return new ToStringBuilder(this, ToStringStyle.SHORT_PREFIX_STYLE)
+                .append("bytesField", bytesField)
+                .append("stringField", stringField)
                 .append("id", id)
-                .append("field", stringField)
-                .append("long", longField)
-                .append("instant", instantField)
-                .append("boolean", booleanField)
+                .append("longField", longField)
+                .append("instantField", instantField)
                 .append("map1", map1)
                 .append("map2", map2)
-                .append("map3", map3)
                 .toString();
     }
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-
-        if (o == null || getClass() != o.getClass()) return false;
-
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
         DummyPojo other = (DummyPojo) o;
 
         return new EqualsBuilder()
-                .append(this.id, other.id)
+                .append(this.bytesField, other.bytesField)
                 .append(this.stringField, other.stringField)
+                .append(this.id, other.id)
                 .append(this.longField, other.longField)
                 .append(this.instantField, other.instantField)
-                .append(this.booleanField, other.booleanField)
                 .append(this.map1, other.map1)
                 .append(this.map2, other.map2)
-                .append(this.map3, other.map3)
                 .isEquals();
     }
 
     @Override
     public int hashCode() {
         return new HashCodeBuilder(17, 37)
-                .append(id)
+                .append(bytesField)
                 .append(stringField)
+                .append(id)
                 .append(longField)
                 .append(instantField)
-                .append(booleanField)
                 .append(map1)
                 .append(map2)
-                .append(map3)
                 .toHashCode();
     }
 }

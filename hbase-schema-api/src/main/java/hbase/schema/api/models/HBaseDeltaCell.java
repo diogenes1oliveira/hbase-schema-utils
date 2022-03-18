@@ -2,20 +2,20 @@ package hbase.schema.api.models;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
+import org.apache.hadoop.hbase.util.Bytes;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-import java.util.Collection;
-import java.util.NavigableMap;
-import java.util.Objects;
-
-import static hbase.schema.api.utils.HBaseSchemaUtils.asBytesTreeMap;
-import static org.apache.commons.lang3.ObjectUtils.firstNonNull;
 
 /**
  * Data for a single HBase {@code long} cell
  */
-public class HBaseDeltaCell extends AbstractHBaseCell<Long> {
-    private static final Long VALUE_DEFAULT = 0L;
+public class HBaseDeltaCell implements Comparable<HBaseDeltaCell> {
+    private final byte[] qualifier;
+    private final Long value;
 
     /**
      * @param qualifier {@link #getQualifier()}
@@ -24,31 +24,64 @@ public class HBaseDeltaCell extends AbstractHBaseCell<Long> {
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
     public HBaseDeltaCell(@JsonProperty("qualifier") byte[] qualifier,
                           @Nullable @JsonProperty("value") Long value) {
-        super(qualifier, firstNonNull(value, VALUE_DEFAULT), null);
+        this.qualifier = qualifier;
+        this.value = value;
     }
 
     /**
-     * Stringifies the long value with {@link Objects#toString(Object)}
+     * HBase cell qualifier
      */
+    @JsonProperty("qualifier")
+    public byte[] getQualifier() {
+        return qualifier;
+    }
+
+    /**
+     * HBase generic cell value
+     */
+    @JsonProperty("value")
+    @Nullable
+    public Long getValue() {
+        return value;
+    }
+
     @Override
-    public String toString(@Nullable Long value) {
-        return Objects.toString(value);
-    }
+    public String toString() {
+        ToStringBuilder builder = new ToStringBuilder(this, ToStringStyle.SHORT_PREFIX_STYLE)
+                .append("qualifier", Bytes.toStringBinary(qualifier));
 
-    /**
-     * Creates a map of {@code long} values given the cell objects
-     *
-     * @param longCells input cell objects
-     * @return map of (qualifier -> {@code Long} value)
-     */
-    public static NavigableMap<byte[], Long> longCellsToMap(Collection<HBaseDeltaCell> longCells) {
-        NavigableMap<byte[], Long> result = asBytesTreeMap();
-
-        for (HBaseDeltaCell cell : longCells) {
-            result.put(cell.getQualifier(), cell.getValue());
+        if (value != null) {
+            builder = builder.append("value", value);
         }
 
-        return result;
+        return builder.build();
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (o == this) {
+            return true;
+        } else if (!(o instanceof HBaseDeltaCell)) {
+            return false;
+        }
+
+        HBaseDeltaCell other = (HBaseDeltaCell) o;
+        return new EqualsBuilder()
+                .append(this.qualifier, other.qualifier)
+                .append(this.value, other.value)
+                .isEquals();
+    }
+
+    @Override
+    public int hashCode() {
+        return new HashCodeBuilder(3, 37)
+                .append(qualifier)
+                .append(value)
+                .toHashCode();
+    }
+
+    @Override
+    public int compareTo(@NotNull HBaseDeltaCell other) {
+        return Bytes.BYTES_COMPARATOR.compare(this.qualifier, other.qualifier);
+    }
 }

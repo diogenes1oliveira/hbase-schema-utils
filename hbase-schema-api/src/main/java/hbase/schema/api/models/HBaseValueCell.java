@@ -3,95 +3,119 @@ package hbase.schema.api.models;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
 import org.apache.hadoop.hbase.util.Bytes;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.nio.ByteBuffer;
+import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.NavigableMap;
 
-import static hbase.schema.api.utils.HBaseSchemaUtils.asBytesTreeMap;
-
 /**
- * Data for a single HBase {@code byte[]} cell
+ * Data for a single HBase {@code long} cell
  */
-public class HBaseValueCell extends AbstractHBaseCell<byte[]> {
+public class HBaseValueCell implements Comparable<HBaseValueCell> {
+    private final ByteBuffer qualifier;
+    private final ByteBuffer value;
+    private final Long timestamp;
+
     /**
      * @param qualifier {@link #getQualifier()}
      * @param value     {@link #getValue()}
      * @param timestamp {@link #getTimestamp()}
      */
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
-    public HBaseValueCell(@JsonProperty("qualifier") byte[] qualifier,
-                          @JsonProperty("value") byte @Nullable [] value,
+    public HBaseValueCell(@JsonProperty("qualifier") ByteBuffer qualifier,
+                          @JsonProperty("value") @Nullable ByteBuffer value,
                           @Nullable @JsonProperty("timestamp") Long timestamp) {
-        super(qualifier, value, timestamp);
+        this.qualifier = qualifier;
+        this.value = value;
+        this.timestamp = timestamp;
     }
 
     /**
      * @param qualifier {@link #getQualifier()}
      * @param value     {@link #getValue()}
      */
-    public HBaseValueCell(byte[] qualifier, byte @Nullable [] value) {
+    public HBaseValueCell(ByteBuffer qualifier, byte @Nullable [] value) {
         this(qualifier, value, null);
     }
 
-    public static NavigableMap<byte[], byte[]> withoutPrefix(byte[] prefix, Collection<HBaseValueCell> cells) {
-        NavigableMap<byte[], byte[]> map = asBytesTreeMap();
-
-        Iterator<HBaseValueCell> it = cells.iterator();
-        while (it.hasNext()) {
-            HBaseValueCell cell = it.next();
-            if (cell.hasPrefix(prefix)) {
-                byte[] qualifier = cell.getQualifier();
-                byte[] unprefixed = Arrays.copyOfRange(qualifier, prefix.length, qualifier.length);
-                byte[] value = cell.getValue();
-                it.remove();
-                map.put(unprefixed, value);
-            }
-        }
-        return map;
-    }
-
-    public static List<HBaseValueCell> fromPrefixMap(byte[] prefix, Long timestamp, NavigableMap<byte[], byte[]> prefixMap) {
-        List<HBaseValueCell> cells = new ArrayList<>();
-
-        for (Map.Entry<byte[], byte[]> entry : prefixMap.entrySet()) {
-            byte[] qualifier = ArrayUtils.addAll(prefix, entry.getKey());
-            byte[] value = entry.getValue();
-            HBaseValueCell cell = new HBaseValueCell(qualifier, value, timestamp);
-            cells.add(cell);
-        }
-
-        return cells;
+    /**
+     * HBase cell qualifier
+     */
+    @JsonProperty("qualifier")
+    public ByteBuffer getQualifier() {
+        return qualifier;
     }
 
     /**
-     * Creates a map of {@code byte[]} values given the cell objects
-     *
-     * @param valueCells input cell objects
-     * @return map of (qualifier -> {@code byte[]} value)
+     * HBase generic cell value
      */
-    public static NavigableMap<byte[], byte[]> valueCellsToMap(Collection<HBaseValueCell> valueCells) {
-        NavigableMap<byte[], byte[]> result = asBytesTreeMap();
-
-        for (HBaseValueCell cell : valueCells) {
-            result.put(cell.getQualifier(), cell.getValue());
-        }
-
-        return result;
+    @JsonProperty("value")
+    public ByteBuffer getValue() {
+        return value;
     }
 
     /**
-     * Stringifies the {@code byte[]} value with {@link Bytes#toStringBinary}
+     * HBase cell timestamp in milliseconds
      */
+    @JsonProperty("timestamp")
+    @Nullable
+    public Long getTimestamp() {
+        return timestamp;
+    }
+
     @Override
-    protected String toString(byte @Nullable [] value) {
-        return Bytes.toStringBinary(value);
+    public String toString() {
+        ToStringBuilder builder = new ToStringBuilder(this, ToStringStyle.SHORT_PREFIX_STYLE)
+                .append("qualifier", Bytes.toStringBinary(qualifier));
+
+        if (value != null) {
+            builder = builder.append("value", value);
+        }
+
+        if (timestamp != null) {
+            Instant instant = Instant.ofEpochMilli(timestamp);
+            builder = builder.append("timestamp", instant);
+        }
+
+        return builder.build();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == this) {
+            return true;
+        } else if (!(o instanceof HBaseValueCell)) {
+            return false;
+        }
+
+        HBaseValueCell other = (HBaseValueCell) o;
+        return new EqualsBuilder()
+                .append(this.qualifier, other.qualifier)
+                .append(this.value, other.value)
+                .isEquals();
+    }
+
+    @Override
+    public int hashCode() {
+        return new HashCodeBuilder(3, 37)
+                .append(qualifier)
+                .append(value)
+                .toHashCode();
+    }
+
+    @Override
+    public int compareTo(@NotNull HBaseValueCell other) {
+        return Bytes.BYTES_COMPARATOR.compare(this.qualifier, other.qualifier);
     }
 
 }
