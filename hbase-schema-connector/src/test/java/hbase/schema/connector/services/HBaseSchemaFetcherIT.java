@@ -29,7 +29,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.equalTo;
 
-@Disabled
 @ExtendWith(HBaseTestJunitExtension.class)
 class HBaseSchemaFetcherIT {
     DummyPojoSchema schema = new DummyPojoSchema();
@@ -58,15 +57,19 @@ class HBaseSchemaFetcherIT {
 
         mutator.mutate(tempTable, singletonList(pojo));
 
-        assertThat(fetcher.get(tempTable, singletonList(query)), equalTo(pojo));
+        assertThat(fetcher.get(tempTable, singletonList(query)), equalTo(singletonList(pojo)));
         assertThat(fetcher.scan(tempTable, singletonList(query)), equalTo(singletonList(pojo)));
     }
 
     static Stream<Arguments> providePojos() {
         return Stream.of(
                 Arguments.of(
-                        new DummyPojo().withInstant(Instant.ofEpochMilli(42_000L)).withId("some-id").withString("some-string"),
-                        new DummyPojo().withId("some-id").withMap1(emptyMap()).withMap2(emptyMap())
+                        new DummyPojo().withInstant(Instant.ofEpochMilli(42_000L))
+                                       .withId("some-id")
+                                       .withString("some-string")
+                                       .withMap1(emptyMap())
+                                       .withMap2(emptyMap()),
+                        new DummyPojo().withId("some-id")
                 )
         );
     }
