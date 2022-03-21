@@ -64,8 +64,8 @@ class HBaseMutationMapperBuilderTest {
 
         DummyPojo pojo = new DummyPojo().withId("some-id").withLong(42L);
 
-        assertThat(schema.toValues(pojo), equalTo(singletonList(
-                new HBaseDeltaCell(utf8ToBytes("some-string-field"), 42L))
+        assertThat(schema.toDeltas(pojo), equalTo(singletonList(
+                new HBaseDeltaCell(utf8ToBytes("some-delta-field"), 42L))
         ));
     }
 
@@ -86,6 +86,7 @@ class HBaseMutationMapperBuilderTest {
         DummyPojo pojo = new DummyPojo()
                 .withId("some-id")
                 .withLong(42L)
+                .withString("some-string")
                 .withMap1(map);
 
         List<HBaseValueCell> cells = schema.toValues(pojo);

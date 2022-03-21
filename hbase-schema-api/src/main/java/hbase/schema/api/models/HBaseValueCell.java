@@ -11,19 +11,23 @@ import org.apache.hadoop.hbase.util.Bytes;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.nio.ByteBuffer;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.NavigableMap;
 
+import static hbase.schema.api.utils.HBaseSchemaConversions.removePrefix;
+import static hbase.schema.api.utils.HBaseSchemaUtils.asBytesTreeMap;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.emptyNavigableMap;
+
 /**
  * Data for a single HBase {@code long} cell
  */
 public class HBaseValueCell implements Comparable<HBaseValueCell> {
-    private final ByteBuffer qualifier;
-    private final ByteBuffer value;
+    private final byte[] qualifier;
+    private final byte[] value;
     private final Long timestamp;
 
     /**
@@ -32,8 +36,8 @@ public class HBaseValueCell implements Comparable<HBaseValueCell> {
      * @param timestamp {@link #getTimestamp()}
      */
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
-    public HBaseValueCell(@JsonProperty("qualifier") ByteBuffer qualifier,
-                          @JsonProperty("value") @Nullable ByteBuffer value,
+    public HBaseValueCell(@JsonProperty("qualifier") byte[] qualifier,
+                          @JsonProperty("value") byte @Nullable [] value,
                           @Nullable @JsonProperty("timestamp") Long timestamp) {
         this.qualifier = qualifier;
         this.value = value;
@@ -44,7 +48,7 @@ public class HBaseValueCell implements Comparable<HBaseValueCell> {
      * @param qualifier {@link #getQualifier()}
      * @param value     {@link #getValue()}
      */
-    public HBaseValueCell(ByteBuffer qualifier, byte @Nullable [] value) {
+    public HBaseValueCell(byte[] qualifier, byte @Nullable [] value) {
         this(qualifier, value, null);
     }
 
@@ -52,7 +56,7 @@ public class HBaseValueCell implements Comparable<HBaseValueCell> {
      * HBase cell qualifier
      */
     @JsonProperty("qualifier")
-    public ByteBuffer getQualifier() {
+    public byte[] getQualifier() {
         return qualifier;
     }
 
@@ -60,7 +64,7 @@ public class HBaseValueCell implements Comparable<HBaseValueCell> {
      * HBase generic cell value
      */
     @JsonProperty("value")
-    public ByteBuffer getValue() {
+    public byte[] getValue() {
         return value;
     }
 
@@ -118,4 +122,37 @@ public class HBaseValueCell implements Comparable<HBaseValueCell> {
         return Bytes.BYTES_COMPARATOR.compare(this.qualifier, other.qualifier);
     }
 
+    public static List<HBaseValueCell> fromPrefixMap(byte[] prefix, Long timestamp, NavigableMap<byte[], byte[]> suffixMap) {
+        if (prefix == null) {
+            return emptyList();
+        }
+        List<HBaseValueCell> cells = new ArrayList<>();
+
+        for (Map.Entry<byte[], byte[]> entry : suffixMap.entrySet()) {
+            byte[] suffix = entry.getKey();
+            byte[] qualifier = ArrayUtils.addAll(prefix, suffix);
+            HBaseValueCell cell = new HBaseValueCell(qualifier, entry.getValue(), timestamp);
+            cells.add(cell);
+        }
+
+        return cells;
+    }
+
+    public static NavigableMap<byte[], byte[]> withoutPrefix(byte[] prefix, List<HBaseValueCell> cells) {
+        if (prefix == null) {
+            return emptyNavigableMap();
+        }
+        NavigableMap<byte[], byte[]> suffixMap = asBytesTreeMap();
+
+        for (HBaseValueCell cell : cells) {
+            byte[] value = cell.getValue();
+            byte[] unprefixed = removePrefix(cell.getQualifier(), prefix);
+            if (unprefixed == null || value == null) {
+                continue;
+            }
+            suffixMap.put(unprefixed, value);
+        }
+
+        return suffixMap;
+    }
 }

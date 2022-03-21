@@ -36,6 +36,7 @@ setup_env() {
 }
 
 command_up() {
+  check_requirements
   touch .env
   (
     cd .dev
@@ -93,6 +94,26 @@ command_sonar() {
     -Dsonar.language=java
 
   rm -rf .scannerwork/
+}
+
+check_requirements() {
+  if ! jq --version 2>&1 > /dev/null; then
+    echo >&2 "ERROR: jq is not available"
+    return 1
+  fi
+  if ! curl --version 2>&1 > /dev/null; then
+    echo >&2 "ERROR: curl is not available"
+    return 1
+  fi
+  if ! docker --version 2>&1 > /dev/null; then
+    echo >&2 "ERROR: docker is not available"
+    return 1
+  fi
+  if ! docker-compose --version 2>&1 > /dev/null; then
+    echo >&2 "ERROR: docker-compose is not available"
+    return 1
+  fi
+
 }
 
 hbase_exec() {

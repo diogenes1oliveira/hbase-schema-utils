@@ -2,6 +2,7 @@ package hbase.schema.connector.services;
 
 import hbase.base.exceptions.UncheckedInterruptionException;
 import hbase.connector.services.HBaseConnector;
+import hbase.schema.api.interfaces.HBaseSchema;
 import hbase.schema.connector.interfaces.HBaseMutationBuilder;
 import hbase.schema.connector.interfaces.HBaseMutator;
 import org.apache.hadoop.hbase.TableName;
@@ -28,13 +29,13 @@ public class HBaseSchemaMutator<T> implements HBaseMutator<T> {
     private final HBaseConnector connector;
 
     /**
-     * @param family          column family
-     * @param mutationBuilder object to build mutations from Java objects
-     * @param connector       connector object
+     * @param family    column family
+     * @param schema    schema
+     * @param connector connector object
      */
-    public HBaseSchemaMutator(byte[] family, HBaseMutationBuilder<T> mutationBuilder, HBaseConnector connector) {
+    public HBaseSchemaMutator(byte[] family, HBaseSchema<T, ?> schema, HBaseConnector connector) {
         this.family = family;
-        this.mutationBuilder = mutationBuilder;
+        this.mutationBuilder = new HBaseCellsMutationBuilder<>(schema.mutationMapper());
         this.connector = connector;
     }
 

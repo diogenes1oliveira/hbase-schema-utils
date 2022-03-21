@@ -1,6 +1,9 @@
 package hbase.schema.api.utils;
 
+import org.jetbrains.annotations.Nullable;
+
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.function.Function;
 
@@ -72,5 +75,17 @@ public final class HBaseSchemaConversions {
         }
 
         return destination;
+    }
+
+    public static byte @Nullable [] removePrefix(byte[] value, byte[] prefix) {
+        if (value == null || value.length < prefix.length) {
+            return null;
+        }
+        for (int i = 0; i < prefix.length; ++i) {
+            if (value[i] != prefix[i]) {
+                return null;
+            }
+        }
+        return Arrays.copyOfRange(value, prefix.length, value.length);
     }
 }
