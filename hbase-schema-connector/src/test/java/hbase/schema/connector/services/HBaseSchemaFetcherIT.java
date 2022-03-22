@@ -1,14 +1,12 @@
 package hbase.schema.connector.services;
 
 import hbase.base.services.PropertiesConfig;
-import hbase.connector.services.HBaseConnector;
 import hbase.schema.connector.interfaces.HBaseFetcher;
 import hbase.schema.connector.interfaces.HBaseMutator;
 import hbase.test.utils.HBaseTestJunitExtension;
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.Connection;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
