@@ -21,4 +21,13 @@ public interface HBaseSchema<T, R> {
      * Size of scan key
      */
     int scanKeySize();
+
+    /**
+     * Name to identify this schema
+     * <p>
+     * The default implementation returns the class' simple name
+     */
+    default String name() {
+        return this.getClass().getSimpleName();
+    }
 }
