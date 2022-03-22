@@ -24,16 +24,20 @@ import java.util.List;
 public class HBaseSchemaMutator<T> implements HBaseMutator<T> {
     private static final Logger LOGGER = LoggerFactory.getLogger(HBaseSchemaMutator.class);
 
+    private final TableName tableName;
     private final byte[] family;
     private final HBaseMutationBuilder<T> mutationBuilder;
     private final HBaseConnector connector;
 
     /**
-     * @param family    column family
      * @param schema    schema
      * @param connector connector object
      */
-    public HBaseSchemaMutator(byte[] family, HBaseSchema<T, ?> schema, HBaseConnector connector) {
+    public HBaseSchemaMutator(String tableName,
+                              byte[] family,
+                              HBaseSchema<T, ?> schema,
+                              HBaseConnector connector) {
+        this.tableName = TableName.valueOf(tableName);
         this.family = family;
         this.mutationBuilder = new HBaseCellsMutationBuilder<>(schema.mutationMapper());
         this.connector = connector;
@@ -47,7 +51,7 @@ public class HBaseSchemaMutator<T> implements HBaseMutator<T> {
      * @throws UncheckedInterruptionException interrupted while mutating
      */
     @Override
-    public void mutate(String tableName, List<T> objects) throws IOException {
+    public void mutate(List<T> objects) throws IOException {
         List<Mutation> mutations = new ArrayList<>();
 
         for (T object : objects) {
@@ -59,7 +63,7 @@ public class HBaseSchemaMutator<T> implements HBaseMutator<T> {
         }
 
         try (Connection connection = connector.context();
-             Table table = connection.getTable(TableName.valueOf(tableName))) {
+             Table table = connection.getTable(tableName)) {
             table.batch(mutations, new Object[mutations.size()]);
         } catch (InterruptedException e) {
             LOGGER.error("Interrupted while mutating", e);

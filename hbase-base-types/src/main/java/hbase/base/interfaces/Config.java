@@ -59,6 +59,29 @@ public interface Config {
     }
 
     /**
+     * Gets a value from the given config key
+     *
+     * @param configKey    config to get a value for
+     * @param defaultValue default value in case of null
+     * @return converted config value
+     */
+    @SuppressWarnings("unchecked")
+    default <T> T getValue(ConfigKey configKey, T defaultValue) {
+        return (T) getValue(configKey, defaultValue, Object.class);
+    }
+
+    /**
+     * Gets a value from the given config key
+     *
+     * @param configKey config to get a value for
+     * @return converted config value or null
+     */
+    @SuppressWarnings("unchecked")
+    default <T> T getValue(ConfigKey configKey) {
+        return (T) getValue(configKey, null, Object.class);
+    }
+
+    /**
      * Gets a converted value for the config
      * <p>
      * The default implementation delegates to {@link #getValue(String)}

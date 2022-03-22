@@ -34,19 +34,21 @@ import static java.util.Collections.emptyList;
  * @param <R> result type
  */
 public class HBaseSchemaFetcher<Q, R> implements HBaseFetcher<Q, R> {
+    private final TableName tableName;
     private final byte[] family;
     private final HBaseQueryBuilder<Q> queryBuilder;
     private final HBaseResultParser<R> resultParser;
     private final HBaseConnector connector;
 
     /**
-     * @param family    column family
      * @param schema    schema
      * @param connector connector object
      */
-    public HBaseSchemaFetcher(byte[] family,
+    public HBaseSchemaFetcher(String tableName,
+                              byte[] family,
                               HBaseSchema<Q, R> schema,
                               HBaseConnector connector) {
+        this.tableName = TableName.valueOf(tableName);
         this.family = family;
         this.queryBuilder = new HBaseCellsQueryBuilder<>(schema.scanKeySize(), schema.mutationMapper());
         this.resultParser = schema.resultParser();
@@ -54,14 +56,14 @@ public class HBaseSchemaFetcher<Q, R> implements HBaseFetcher<Q, R> {
     }
 
     @Override
-    public List<R> get(String tableName, List<? extends Q> queries) throws IOException {
+    public List<R> get(List<? extends Q> queries) throws IOException {
         List<Get> gets = toGets(queries);
         if (queries.isEmpty()) {
             return emptyList();
         }
 
         try (Connection connection = connector.context();
-             Table table = connection.getTable(TableName.valueOf(tableName))) {
+             Table table = connection.getTable(tableName)) {
             Result[] results = table.get(gets);
             if (results == null) {
                 return emptyList();
@@ -71,11 +73,11 @@ public class HBaseSchemaFetcher<Q, R> implements HBaseFetcher<Q, R> {
     }
 
     @Override
-    public List<R> scan(String tableName, List<? extends Q> queries) throws IOException {
+    public List<R> scan(List<? extends Q> queries) throws IOException {
         Scan scan = toScan(queries);
 
         try (Connection connection = connector.context();
-             Table table = connection.getTable(TableName.valueOf(tableName));
+             Table table = connection.getTable(tableName);
              ResultScanner scanner = table.getScanner(scan)) {
             if (scanner == null) {
                 return emptyList();

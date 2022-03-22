@@ -13,11 +13,10 @@ public interface HBaseMutator<T> {
     /**
      * Builds and executes the mutations corresponding to the source objects
      *
-     * @param tableName name of the table to insert data in
-     * @param objects   source objects
+     * @param objects source objects
      * @throws IOException           failed to execute the mutations
      * @throws IllegalStateException interrupted while mutating
      */
-    void mutate(String tableName, List<T> objects) throws IOException;
+    void mutate(List<T> objects) throws IOException;
 
 }

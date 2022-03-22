@@ -45,20 +45,20 @@ class HBaseSchemaFetcherIT {
         this.connector.configure(new PropertiesConfig(props));
         createTable(connection, newTableDescriptor(tempTable, family));
 
-        fetcher = new HBaseSchemaFetcher<>(family, schema, connector);
-        mutator = new HBaseSchemaMutator<>(family, schema, connector);
+        fetcher = new HBaseSchemaFetcher<>(this.tempTable, family, schema, connector);
+        mutator = new HBaseSchemaMutator<>(this.tempTable, family, schema, connector);
     }
 
     @ParameterizedTest
     @MethodSource("providePojos")
     void mutateAndFetchBack(DummyPojo pojo, DummyPojo query) throws IOException {
-        assertThat(fetcher.get(tempTable, singletonList(query)), empty());
-        assertThat(fetcher.scan(tempTable, singletonList(query)), empty());
+        assertThat(fetcher.get(singletonList(query)), empty());
+        assertThat(fetcher.scan(singletonList(query)), empty());
 
-        mutator.mutate(tempTable, singletonList(pojo));
+        mutator.mutate(singletonList(pojo));
 
-        assertThat(fetcher.get(tempTable, singletonList(query)), equalTo(singletonList(pojo)));
-        assertThat(fetcher.scan(tempTable, singletonList(query)), equalTo(singletonList(pojo)));
+        assertThat(fetcher.get(singletonList(query)), equalTo(singletonList(pojo)));
+        assertThat(fetcher.scan(singletonList(query)), equalTo(singletonList(pojo)));
     }
 
     static Stream<Arguments> providePojos() {

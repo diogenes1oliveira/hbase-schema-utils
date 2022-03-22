@@ -13,20 +13,18 @@ public interface HBaseFetcher<Q, R> {
     /**
      * Builds, executes and parses Get requests
      *
-     * @param tableName name of the table to query data from
-     * @param queries   query objects
+     * @param queries query objects
      * @return non-null results
      * @throws IOException failed to execute Get
      */
-    List<R> get(String tableName, List<? extends Q> queries) throws IOException;
+    List<R> get(List<? extends Q> queries) throws IOException;
 
     /**
      * Builds, executes and parses a Scan request
      *
-     * @param tableName name of the table to query data from
-     * @param queries   query objects
+     * @param queries query objects
      * @return list with non-null results
      * @throws IOException failed to execute Get
      */
-    List<R> scan(String tableName, List<? extends Q> queries) throws IOException;
+    List<R> scan(List<? extends Q> queries) throws IOException;
 }
