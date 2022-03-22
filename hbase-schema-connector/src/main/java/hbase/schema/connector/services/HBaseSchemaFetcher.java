@@ -2,7 +2,6 @@ package hbase.schema.connector.services;
 
 import hbase.connector.services.HBaseConnector;
 import hbase.schema.api.interfaces.HBaseResultParser;
-import hbase.schema.api.interfaces.HBaseSchema;
 import hbase.schema.api.models.HBaseValueCell;
 import hbase.schema.connector.interfaces.HBaseFetcher;
 import hbase.schema.connector.interfaces.HBaseQueryBuilder;
@@ -41,17 +40,17 @@ public class HBaseSchemaFetcher<Q, R> implements HBaseFetcher<Q, R> {
     private final HBaseConnector connector;
 
     /**
-     * @param schema    schema
      * @param connector connector object
      */
     public HBaseSchemaFetcher(String tableName,
                               byte[] family,
-                              HBaseSchema<Q, R> schema,
+                              HBaseQueryBuilder<Q> queryBuilder,
+                              HBaseResultParser<R> resultParser,
                               HBaseConnector connector) {
         this.tableName = TableName.valueOf(tableName);
         this.family = family;
-        this.queryBuilder = new HBaseCellsQueryBuilder<>(schema.scanKeySize(), schema.mutationMapper());
-        this.resultParser = schema.resultParser();
+        this.queryBuilder = queryBuilder;
+        this.resultParser = resultParser;
         this.connector = connector;
     }
 
