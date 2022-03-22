@@ -33,20 +33,19 @@ import static org.hamcrest.Matchers.equalTo;
 class HBaseSchemaFetcherIT {
     DummyPojoSchema schema = new DummyPojoSchema();
     String family = "f";
-    String tempTable;
-    HBaseConnector connector;
     HBaseFetcher<DummyPojo, DummyPojo> fetcher;
     HBaseMutator<DummyPojo> mutator;
     HBaseFactory factory;
 
     @BeforeEach
     void setUp(TableName tempTable, Properties props, Connection connection) {
-        createTable(connection, newTableDescriptor(tempTable, family));
+        String tableName = tempTable.getNameAsString();
+        createTable(connection, newTableDescriptor(tableName, family));
 
         this.factory = new HBaseFactory(new PropertiesConfig(props), schema);
 
-        fetcher = factory.getFetcher(family, this.tempTable, DummyPojoSchema.class.getSimpleName());
-        mutator = factory.getMutator(family, this.tempTable, DummyPojoSchema.class.getSimpleName());
+        fetcher = factory.getFetcher(family, tableName, DummyPojoSchema.class.getSimpleName());
+        mutator = factory.getMutator(family, tableName, DummyPojoSchema.class.getSimpleName());
     }
 
     @ParameterizedTest
