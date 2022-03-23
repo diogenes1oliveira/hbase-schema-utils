@@ -139,4 +139,61 @@ public abstract class ListMapAbstractJsonConverter<T> extends ListMapAbstractCon
         };
     }
 
+    /**
+     * Creates a new list to map converter for the given item type
+     *
+     * @param itemType    item type instance
+     * @param toStringKey function to map an item to a String key
+     * @param <T>         item type
+     * @return a new list converter
+     */
+    public static <T> ListMapAbstractJsonConverter<T> listMapJsonConverter(Class<T> itemType,
+                                                                           ObjectMapper mapper,
+                                                                           Function<T, String> toStringKey) {
+        return new ListMapAbstractJsonConverter<T>(itemType, mapper) {
+            @Override
+            public @Nullable String toStringKey(int index, T item) {
+                return toStringKey.apply(item);
+            }
+        };
+    }
+
+    /**
+     * Creates a new list to map converter for the given item type
+     *
+     * @param itemType    item type instance
+     * @param toStringKey function to map (index, item) to a String key
+     * @param <T>         item type
+     * @return a new list converter
+     */
+    public static <T> ListMapAbstractJsonConverter<T> listMapJsonConverter(Class<T> itemType,
+                                                                           ObjectMapper mapper,
+                                                                           BiFunction<Integer, T, String> toStringKey) {
+        return new ListMapAbstractJsonConverter<T>(itemType, mapper) {
+            @Override
+            public @Nullable String toStringKey(int index, T item) {
+                return toStringKey.apply(index, item);
+            }
+        };
+    }
+
+    /**
+     * Creates a new list to map converter for the given item type
+     * <p>
+     * The keys are generated as the strings "0", "1", "2", ...
+     *
+     * @param itemType item type instance
+     * @param <T>      item type
+     * @return a new list converter
+     */
+    public static <T> ListMapAbstractJsonConverter<T> listMapJsonConverter(Class<T> itemType,
+                                                                           ObjectMapper mapper) {
+        return new ListMapAbstractJsonConverter<T>(itemType, mapper) {
+            @Override
+            public String toStringKey(int index, T item) {
+                return Integer.toString(index);
+            }
+        };
+    }
+
 }
