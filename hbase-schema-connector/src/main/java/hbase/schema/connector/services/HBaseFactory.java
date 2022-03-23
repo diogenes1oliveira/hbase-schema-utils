@@ -7,12 +7,11 @@ import hbase.schema.api.interfaces.HBaseSchema;
 import hbase.schema.connector.interfaces.HBaseFetcher;
 import hbase.schema.connector.interfaces.HBaseMutationBuilder;
 import hbase.schema.connector.interfaces.HBaseMutator;
-import hbase.schema.connector.interfaces.HBaseQueryBuilder;
-import hbase.schema.connector.models.HBaseConfig;
+import hbase.schema.connector.interfaces.HBaseFilterBuilder;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.nio.charset.StandardCharsets;
-import java.util.Comparator;
+import java.util.ArrayList;
 import java.util.List;
 
 import static hbase.schema.connector.utils.HBaseConfigUtils.toKeyValuePairs;
@@ -21,31 +20,37 @@ import static java.util.stream.Collectors.toList;
 
 public class HBaseFactory {
     private final HBaseConnector connector;
-    private byte[] family;
-    private List<Pair<String, String>> tablesAndSchemas;
-    private final List<HBaseSchema<?, ?>> schemas;
+    private final List<HBaseSchema<?, ?>> schemas = new ArrayList<>();
 
     public HBaseFactory(Config config, HBaseSchema<?, ?>... schemas) {
+        this(config, asList(schemas));
+    }
+
+    public HBaseFactory(Config config, Iterable<HBaseSchema<?, ?>> schemas) {
         this.connector = new HBaseConnector();
-        this.schemas = asList(schemas);
+        schemas.forEach(this.schemas::add);
 
         this.connector.configure(config);
+    }
+
+    public HBaseConnector getConnector() {
+        return connector;
     }
 
     public <Q, R> HBaseFetcher<Q, R> getFetcher(String family, String tableName, String schemaName) {
         byte[] familyBytes = family.getBytes(StandardCharsets.UTF_8);
         HBaseSchema<Q, R> schema = getSchema(schemaName);
         HBaseMutationMapper<Q> mutationMapper = schema.mutationMapper();
-        HBaseQueryBuilder<Q> queryBuilder = new HBaseCellsQueryBuilder<>(schema.scanKeySize(), mutationMapper);
-        return new HBaseSchemaFetcher<>(tableName, familyBytes, queryBuilder, schema.resultParser(), connector);
+        HBaseFilterBuilder<Q> filterBuilder = new HBaseCellsFilterBuilder<>(schema.scanKeySize(), mutationMapper);
+        return new HBaseSchemaFetcher<>(tableName, familyBytes, filterBuilder, schema.resultParser(), connector);
     }
 
-    public <Q, R> HBaseFetcher<Q, R> getFetcher(String family, String schemaNamesByTable, Comparator<R> comparator) {
+    public <Q, R> HBaseFetcher<Q, R> getFetcher(String family, String schemaNamesByTable) {
         List<HBaseFetcher<Q, R>> fetchers = toKeyValuePairs(schemaNamesByTable)
                 .stream()
                 .map(pair -> this.<Q, R>getFetcher(family, pair.getLeft(), pair.getRight()))
                 .collect(toList());
-        return new HBaseMultiFetcher<>(comparator, fetchers);
+        return new HBaseMultiFetcher<>(fetchers);
     }
 
     public <T> HBaseMutator<T> getMutator(String family, String tableName, String schemaName) {

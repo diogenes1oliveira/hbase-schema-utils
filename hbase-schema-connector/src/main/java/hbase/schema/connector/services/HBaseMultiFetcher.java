@@ -6,19 +6,14 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.List;
-import java.util.TreeSet;
-import java.util.stream.Stream;
 
-import static java.util.stream.Collectors.toCollection;
+import static java.util.stream.Collectors.toList;
 
 public class HBaseMultiFetcher<Q, R> implements HBaseFetcher<Q, R> {
-    private final Comparator<R> resultComparator;
     private final List<HBaseFetcher<Q, R>> fetchers;
 
-    public HBaseMultiFetcher(Comparator<R> resultComparator, Collection<HBaseFetcher<Q, R>> fetchers) {
-        this.resultComparator = resultComparator;
+    public HBaseMultiFetcher(Collection<HBaseFetcher<Q, R>> fetchers) {
         this.fetchers = new ArrayList<>(fetchers);
     }
 
@@ -28,8 +23,7 @@ public class HBaseMultiFetcher<Q, R> implements HBaseFetcher<Q, R> {
             return fetchers.get(0).get(queries);
         }
         try {
-            Stream<R> stream = ioParallelMap(fetchers, f -> f.get(queries));
-            return uniqueCollect(stream);
+            return ioParallelMap(fetchers, f -> f.get(queries));
         } catch (UncheckedIOException e) {
             throw e.getCause();
         }
@@ -41,14 +35,13 @@ public class HBaseMultiFetcher<Q, R> implements HBaseFetcher<Q, R> {
             return fetchers.get(0).scan(queries);
         }
         try {
-            Stream<R> stream = ioParallelMap(fetchers, f -> f.scan(queries));
-            return uniqueCollect(stream);
+            return ioParallelMap(fetchers, f -> f.scan(queries));
         } catch (UncheckedIOException e) {
             throw e.getCause();
         }
     }
 
-    private <T, U> Stream<U> ioParallelMap(Collection<T> input, IOFunction<T, ? extends Collection<U>> mapper) {
+    private <T, U> List<U> ioParallelMap(Collection<T> input, IOFunction<T, ? extends Collection<U>> mapper) {
         return input.parallelStream()
                     .map(t -> {
                         try {
@@ -57,12 +50,8 @@ public class HBaseMultiFetcher<Q, R> implements HBaseFetcher<Q, R> {
                             throw new UncheckedIOException(e);
                         }
                     })
-                    .flatMap(Collection::stream);
-    }
-
-    private List<R> uniqueCollect(Stream<R> stream) {
-        TreeSet<R> result = stream.collect(toCollection(() -> new TreeSet<>(resultComparator)));
-        return new ArrayList<>(result);
+                    .flatMap(Collection::stream)
+                    .collect(toList());
     }
 
     @FunctionalInterface

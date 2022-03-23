@@ -4,7 +4,7 @@ import hbase.connector.services.HBaseConnector;
 import hbase.schema.api.interfaces.HBaseResultParser;
 import hbase.schema.api.models.HBaseValueCell;
 import hbase.schema.connector.interfaces.HBaseFetcher;
-import hbase.schema.connector.interfaces.HBaseQueryBuilder;
+import hbase.schema.connector.interfaces.HBaseFilterBuilder;
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.Connection;
 import org.apache.hadoop.hbase.client.Get;
@@ -35,7 +35,7 @@ import static java.util.Collections.emptyList;
 public class HBaseSchemaFetcher<Q, R> implements HBaseFetcher<Q, R> {
     private final TableName tableName;
     private final byte[] family;
-    private final HBaseQueryBuilder<Q> queryBuilder;
+    private final HBaseFilterBuilder<Q> filterBuilder;
     private final HBaseResultParser<R> resultParser;
     private final HBaseConnector connector;
 
@@ -44,12 +44,12 @@ public class HBaseSchemaFetcher<Q, R> implements HBaseFetcher<Q, R> {
      */
     public HBaseSchemaFetcher(String tableName,
                               byte[] family,
-                              HBaseQueryBuilder<Q> queryBuilder,
+                              HBaseFilterBuilder<Q> filterBuilder,
                               HBaseResultParser<R> resultParser,
                               HBaseConnector connector) {
         this.tableName = TableName.valueOf(tableName);
         this.family = family;
-        this.queryBuilder = queryBuilder;
+        this.filterBuilder = filterBuilder;
         this.resultParser = resultParser;
         this.connector = connector;
     }
@@ -92,16 +92,16 @@ public class HBaseSchemaFetcher<Q, R> implements HBaseFetcher<Q, R> {
      * @return list of non-null Get requests
      */
     public List<Get> toGets(List<? extends Q> queries) {
-        Filter filter = queryBuilder.toFilter(queries);
+        Filter filter = filterBuilder.toFilter(queries);
         List<Get> gets = new ArrayList<>();
 
         for (Q query : queries) {
-            byte[] rowKey = queryBuilder.toRowKey(query);
+            byte[] rowKey = filterBuilder.toRowKey(query);
             if (rowKey == null) {
                 continue;
             }
             Get get = new Get(rowKey);
-            queryBuilder.selectColumns(query, family, get);
+            filterBuilder.selectColumns(query, family, get);
             if (filter != null) {
                 get.setFilter(filter);
             }
@@ -168,10 +168,10 @@ public class HBaseSchemaFetcher<Q, R> implements HBaseFetcher<Q, R> {
         }
 
         Q firstQuery = queries.get(0);
-        queryBuilder.selectColumns(firstQuery, family, scan);
+        filterBuilder.selectColumns(firstQuery, family, scan);
 
-        Filter scanFilter = queryBuilder.toMultiRowRangeFilter(queries);
-        Filter genericFilter = queryBuilder.toFilter(queries);
+        Filter scanFilter = filterBuilder.toMultiRowRangeFilter(queries);
+        Filter genericFilter = filterBuilder.toFilter(queries);
         Filter filter = combineNullableFilters(FilterList.Operator.MUST_PASS_ALL, scanFilter, genericFilter);
 
         if (filter != null) {
