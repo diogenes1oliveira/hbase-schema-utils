@@ -1,4 +1,4 @@
-package hadoop.kerberos.utils.interfaces;
+package hbase.base.interfaces;
 
 import java.io.IOException;
 

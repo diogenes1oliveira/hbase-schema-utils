@@ -1,6 +1,6 @@
 package hbase.connector.services;
 
-import hadoop.kerberos.utils.interfaces.IOSupplier;
+import hbase.base.interfaces.IOSupplier;
 import hbase.connector.interfaces.HBaseConnectionProxy;
 import hbase.connector.utils.TimedReadWriteLock;
 import org.apache.hadoop.hbase.client.Connection;
