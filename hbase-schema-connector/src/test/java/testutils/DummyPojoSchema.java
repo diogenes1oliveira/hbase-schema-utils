@@ -1,9 +1,11 @@
 package testutils;
 
 import hbase.schema.api.interfaces.HBaseMutationMapper;
+import hbase.schema.api.interfaces.HBaseQueryMapper;
 import hbase.schema.api.interfaces.HBaseResultParser;
 import hbase.schema.api.interfaces.HBaseSchema;
 import hbase.schema.api.schemas.HBaseMutationMapperBuilder;
+import hbase.schema.api.schemas.HBaseQueryMapperBuilder;
 import hbase.schema.api.schemas.HBaseResultParserBuilder;
 
 import static hbase.schema.api.converters.InstantLongConverter.instantLongConverter;
@@ -19,7 +21,7 @@ public class DummyPojoSchema implements HBaseSchema<DummyPojo, DummyPojo> {
         return new HBaseMutationMapperBuilder<DummyPojo>()
                 .timestamp(DummyPojo::getInstant, instantLongConverter())
                 .rowKey(DummyPojo::getId, utf8Converter())
-                .columnBytes("bytes", DummyPojo::getBytes)
+                .column("bytes", DummyPojo::getBytes)
                 .column("string", DummyPojo::getString, utf8Converter())
                 .column("long", DummyPojo::getLong, longConverter())
                 .column("instant", DummyPojo::getInstant, instantStringConverter())
@@ -32,7 +34,7 @@ public class DummyPojoSchema implements HBaseSchema<DummyPojo, DummyPojo> {
     public HBaseResultParser<DummyPojo> resultParser() {
         return new HBaseResultParserBuilder<>(DummyPojo::new)
                 .rowKey(DummyPojo::setId, utf8Converter())
-                .columnBytes("bytes", DummyPojo::setBytes)
+                .column("bytes", DummyPojo::setBytes)
                 .column("string", DummyPojo::setString, utf8Converter())
                 .column("long", DummyPojo::setLong, longConverter())
                 .column("instant", DummyPojo::setInstant, instantStringConverter())
@@ -42,8 +44,13 @@ public class DummyPojoSchema implements HBaseSchema<DummyPojo, DummyPojo> {
     }
 
     @Override
-    public int scanKeySize() {
-        return 3;
+    public HBaseQueryMapper<DummyPojo> queryMapper() {
+        return new HBaseQueryMapperBuilder<DummyPojo>()
+                .rowKey(DummyPojo::getId, utf8Converter())
+                .searchKeySlice(3)
+                .columns("bytes", "string", "long", "instant")
+                .prefixes("map1-", "map2-")
+                .build();
     }
 
 }

@@ -40,8 +40,7 @@ public class HBaseFactory {
     public <Q, R> HBaseFetcher<Q, R> getFetcher(String family, String tableName, String schemaName) {
         byte[] familyBytes = family.getBytes(StandardCharsets.UTF_8);
         HBaseSchema<Q, R> schema = getSchema(schemaName);
-        HBaseMutationMapper<Q> mutationMapper = schema.mutationMapper();
-        HBaseFilterBuilder<Q> filterBuilder = new HBaseCellsFilterBuilder<>(schema.scanKeySize(), mutationMapper);
+        HBaseFilterBuilder<Q> filterBuilder = new HBaseCellsFilterBuilder<>(schema.queryMapper());
         return new HBaseSchemaFetcher<>(tableName, familyBytes, filterBuilder, schema.resultParser(), connector);
     }
 

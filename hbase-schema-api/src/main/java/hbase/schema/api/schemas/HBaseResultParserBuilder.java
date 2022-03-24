@@ -26,34 +26,34 @@ public class HBaseResultParserBuilder<T> {
         this.constructor = constructor;
     }
 
-    public HBaseResultParserBuilder<T> rowKeyBytes(BiConsumer<T, byte[]> rowKeyParser) {
+    public HBaseResultParserBuilder<T> rowKey(BiConsumer<T, byte[]> rowKeyParser) {
         this.rowKeyParser = rowKeyParser;
         return this;
     }
 
     public <F> HBaseResultParserBuilder<T> rowKey(BiConsumer<T, F> setter, Function<byte[], F> converter) {
-        return rowKeyBytes(chain(setter, converter));
+        return rowKey(chain(setter, converter));
     }
 
     public <F> HBaseResultParserBuilder<T> rowKey(BiConsumer<T, F> setter, BytesConverter<F> converter) {
         return rowKey(setter, converter::fromBytes);
     }
 
-    public HBaseResultParserBuilder<T> columnBytes(byte[] qualifier, BiConsumer<T, byte[]> cellParser) {
+    public HBaseResultParserBuilder<T> column(byte[] qualifier, BiConsumer<T, byte[]> cellParser) {
         columnParsers.put(qualifier, cellParser);
         return this;
     }
 
     public <F> HBaseResultParserBuilder<T> column(byte[] qualifier, BiConsumer<T, F> setter, Function<byte[], F> converter) {
-        return columnBytes(qualifier, chain(setter, converter));
+        return column(qualifier, chain(setter, converter));
     }
 
     public <F> HBaseResultParserBuilder<T> column(byte[] qualifier, BiConsumer<T, F> setter, BytesConverter<F> converter) {
         return column(qualifier, setter, converter::fromBytes);
     }
 
-    public HBaseResultParserBuilder<T> columnBytes(String qualifier, BiConsumer<T, byte[]> cellParser) {
-        return columnBytes(qualifier.getBytes(StandardCharsets.UTF_8), cellParser);
+    public HBaseResultParserBuilder<T> column(String qualifier, BiConsumer<T, byte[]> cellParser) {
+        return column(qualifier.getBytes(StandardCharsets.UTF_8), cellParser);
     }
 
     public <F> HBaseResultParserBuilder<T> column(String qualifier, BiConsumer<T, F> setter, Function<byte[], F> converter) {
@@ -64,7 +64,7 @@ public class HBaseResultParserBuilder<T> {
         return column(qualifier.getBytes(StandardCharsets.UTF_8), setter, converter);
     }
 
-    public HBaseResultParserBuilder<T> prefixBytes(byte[] prefix, BiConsumer<T, NavigableMap<byte[], byte[]>> cellsParser) {
+    public HBaseResultParserBuilder<T> prefix(byte[] prefix, BiConsumer<T, NavigableMap<byte[], byte[]>> cellsParser) {
         prefixParsers.put(prefix, cellsParser);
         return this;
     }
@@ -72,15 +72,15 @@ public class HBaseResultParserBuilder<T> {
     public <F> HBaseResultParserBuilder<T> prefix(byte[] prefix,
                                                   BiConsumer<T, F> setter,
                                                   Function<NavigableMap<byte[], byte[]>, F> converter) {
-        return prefixBytes(prefix, chain(setter, converter));
+        return prefix(prefix, chain(setter, converter));
     }
 
     public <F> HBaseResultParserBuilder<T> prefix(byte[] prefix, BiConsumer<T, F> setter, BytesMapConverter<F> converter) {
         return prefix(prefix, setter, converter::fromBytesMap);
     }
 
-    public HBaseResultParserBuilder<T> prefixBytes(String prefix, BiConsumer<T, NavigableMap<byte[], byte[]>> cellsParser) {
-        return prefixBytes(prefix.getBytes(StandardCharsets.UTF_8), cellsParser);
+    public HBaseResultParserBuilder<T> prefix(String prefix, BiConsumer<T, NavigableMap<byte[], byte[]>> cellsParser) {
+        return prefix(prefix.getBytes(StandardCharsets.UTF_8), cellsParser);
     }
 
     public <F> HBaseResultParserBuilder<T> prefix(String prefix,

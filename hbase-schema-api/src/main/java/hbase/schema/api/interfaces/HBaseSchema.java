@@ -13,14 +13,14 @@ public interface HBaseSchema<T, R> {
     HBaseMutationMapper<T> mutationMapper();
 
     /**
-     * Schema to generate the Gets and Scans queries
+     * Schema to parse the results from queries
      */
     HBaseResultParser<R> resultParser();
 
     /**
-     * Size of scan key
+     * Schema to generate queries
      */
-    int scanKeySize();
+    HBaseQueryMapper<T> queryMapper();
 
     /**
      * Name to identify this schema

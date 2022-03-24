@@ -25,7 +25,7 @@ class HBaseMutationMapperBuilderTest {
     @Test
     void prefix_SetsPrefixAccordingly() {
         HBaseMutationMapper<DummyPojo> schema = new HBaseMutationMapperBuilder<DummyPojo>()
-                .timestampLong(DummyPojo::getLong)
+                .timestamp(DummyPojo::getLong)
                 .rowKey(DummyPojo::getId, utf8Converter())
                 .prefix("prefix-", DummyPojo::getMap1, utf8BytesMapConverter())
                 .build();
@@ -57,9 +57,9 @@ class HBaseMutationMapperBuilderTest {
     @Test
     void withDelta_SetsCellAccordingly() {
         HBaseMutationMapper<DummyPojo> schema = new HBaseMutationMapperBuilder<DummyPojo>()
-                .timestampLong(DummyPojo::getLong)
+                .timestamp(DummyPojo::getLong)
                 .rowKey(DummyPojo::getId, utf8Converter())
-                .deltaLong("some-delta-field", DummyPojo::getLong)
+                .delta("some-delta-field", DummyPojo::getLong)
                 .build();
 
         DummyPojo pojo = new DummyPojo().withId("some-id").withLong(42L);
@@ -72,10 +72,10 @@ class HBaseMutationMapperBuilderTest {
     @Test
     void withTimestamp_setsFieldTimestamps() {
         HBaseMutationMapper<DummyPojo> schema = new HBaseMutationMapperBuilder<DummyPojo>()
-                .timestampLong(DummyPojo::getLong)
+                .timestamp(DummyPojo::getLong)
                 .rowKey(DummyPojo::getId, utf8Converter())
                 .prefix("first:", DummyPojo::getMap1, utf8BytesMapConverter())
-                .timestampLong(obj -> obj.getLong() + 10L)
+                .timestamp(obj -> obj.getLong() + 10L)
                 .column("last", DummyPojo::getString, utf8Converter())
                 .build();
 
