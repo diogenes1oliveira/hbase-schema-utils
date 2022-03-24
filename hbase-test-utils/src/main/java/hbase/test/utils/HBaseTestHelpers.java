@@ -203,7 +203,7 @@ public final class HBaseTestHelpers {
      * Retriably disabling a table in HBase
      *
      * @param admin     admin instance
-     * @param tableName name of the table to drop
+     * @param tableName name of the table to disable
      * @param retries   number of times to retry the operation before giving up
      * @throws IllegalStateException when retries < 0
      */
@@ -222,6 +222,55 @@ public final class HBaseTestHelpers {
             LOGGER.warn("Disabling failed, " + retries + " retries remaining", e);
             safeDisableTable(admin, tableName, retries - 1);
         }
+    }
+
+    /**
+     * Retriably disabling a table in HBase
+     *
+     * @param admin     admin instance
+     * @param tableName name of the table to disable
+     * @param retries   number of times to retry the operation before giving up
+     * @throws IllegalStateException when retries < 0
+     */
+    public static void safeDisableTable(Admin admin, String tableName, int retries) {
+        safeDisableTable(admin, TableName.valueOf(tableName), retries);
+    }
+
+    /**
+     * Retriably enabling a table in HBase
+     *
+     * @param admin     admin instance
+     * @param tableName name of the table to enable
+     * @param retries   number of times to retry the operation before giving up
+     * @throws IllegalStateException when retries < 0
+     */
+    public static void safeEnableTable(Admin admin, TableName tableName, int retries) {
+        if (retries < 0) {
+            throw new IllegalStateException("Failed too many times");
+        }
+        try {
+            if (admin.isTableEnabled(tableName)) {
+                safeSleep(RETRY_MILLIS);
+            }
+            admin.enableTable(tableName);
+        } catch (TableNotDisabledException e) {
+            // done
+        } catch (IOException e) {
+            LOGGER.warn("Enabling failed, " + retries + " retries remaining", e);
+            safeEnableTable(admin, tableName, retries - 1);
+        }
+    }
+
+    /**
+     * Retriably enabling a table in HBase
+     *
+     * @param admin     admin instance
+     * @param tableName name of the table to enable
+     * @param retries   number of times to retry the operation before giving up
+     * @throws IllegalStateException when retries < 0
+     */
+    public static void safeEnableTable(Admin admin, String tableName, int retries) {
+        safeEnableTable(admin, TableName.valueOf(tableName), retries);
     }
 
     /**

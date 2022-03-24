@@ -8,12 +8,11 @@ import org.apache.hadoop.hbase.client.ConnectionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
+import java.util.List;
 import java.util.Properties;
-import java.util.stream.IntStream;
 
-import static hbase.test.utils.HBaseTestHelpers.safeDropTables;
 import static java.util.Arrays.stream;
+import static java.util.stream.Collectors.toList;
 
 /**
  * Test instance that points to an already running local HBase instance
@@ -24,17 +23,22 @@ public class HBaseLocalInstance implements HBaseTestInstance {
     private static final Logger LOGGER = LoggerFactory.getLogger(HBaseLocalInstance.class);
     private static final String ZOOKEEPER_QUORUM = "localhost:2181";
     private int tableIndex = 0;
+    private Properties props = null;
 
     /**
      * This class refers to an externally started test instance, so this method
      * just returns the ZooKeeper localhost quorum
      */
     @Override
-    public Properties start() {
-        Properties props = new Properties();
-        props.setProperty("hbase.zookeeper.quorum", ZOOKEEPER_QUORUM);
+    public void start() {
+        if (props == null) {
+            props = new Properties();
+            props.setProperty("hbase.zookeeper.quorum", ZOOKEEPER_QUORUM);
+        }
+    }
 
-        cleanUpCurrent();
+    @Override
+    public Properties properties() {
         return props;
     }
 
@@ -46,27 +50,18 @@ public class HBaseLocalInstance implements HBaseTestInstance {
         return PREFIX + tableIndex++;
     }
 
-    /**
-     * Drops all tables ever returned by {@link #tempTableName()}
-     *
-     * @throws IOException           failed to get the Admin instance for the connection
-     * @throws IllegalStateException failed to drop the temporary tables
-     */
     @Override
-    public void cleanUp() throws IOException {
-        String[] tempNames = IntStream.range(0, tableIndex)
-                                      .mapToObj(i -> PREFIX + i)
-                                      .toArray(String[]::new);
-
+    public List<String> tempTableNames() {
         try (Connection connection = ConnectionFactory.createConnection();
              Admin admin = connection.getAdmin()) {
-            safeDropTables(admin, tempNames);
+            TableName[] tableNames = admin.listTableNames();
+            return stream(tableNames)
+                    .map(TableName::getNameAsString)
+                    .filter(name -> name.startsWith(PREFIX))
+                    .collect(toList());
+        } catch (Exception e) {
+            throw new IllegalStateException("Failed to get current temp tables", e);
         }
-    }
-
-    @Override
-    public void close() throws IOException {
-        cleanUp();
     }
 
     /**
@@ -79,18 +74,4 @@ public class HBaseLocalInstance implements HBaseTestInstance {
         return "local";
     }
 
-    private void cleanUpCurrent() {
-        try (Connection connection = ConnectionFactory.createConnection();
-             Admin admin = connection.getAdmin()) {
-            TableName[] tableNames = admin.listTableNames();
-            String[] tempNames = stream(tableNames)
-                    .map(TableName::getNameAsString)
-                    .filter(name -> name.startsWith(PREFIX))
-                    .toArray(String[]::new);
-            safeDropTables(admin, tempNames);
-        } catch (Exception e) {
-            LOGGER.error("Failed to drop current temp tables", e);
-            throw new IllegalStateException("Failed to drop current temp tables", e);
-        }
-    }
 }

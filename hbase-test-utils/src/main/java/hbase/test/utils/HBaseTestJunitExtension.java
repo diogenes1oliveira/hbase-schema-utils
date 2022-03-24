@@ -1,11 +1,11 @@
 package hbase.test.utils;
 
-import edu.umd.cs.findbugs.annotations.Nullable;
 import hbase.test.utils.interfaces.HBaseTestInstance;
 import org.apache.hadoop.hbase.TableName;
+import org.apache.hadoop.hbase.client.Admin;
 import org.apache.hadoop.hbase.client.Connection;
-import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
+import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ConditionEvaluationResult;
 import org.junit.jupiter.api.extension.ExecutionCondition;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -20,10 +20,12 @@ import java.util.List;
 import java.util.Properties;
 
 import static hbase.test.utils.HBaseTestHelpers.newConnection;
+import static hbase.test.utils.HBaseTestHelpers.safeDisableTable;
+import static hbase.test.utils.HBaseTestHelpers.safeEnableTable;
 import static java.util.Arrays.asList;
 
 public class HBaseTestJunitExtension implements
-        BeforeAllCallback, AfterAllCallback, ParameterResolver, ExecutionCondition {
+        BeforeAllCallback, BeforeEachCallback, ParameterResolver, ExecutionCondition {
     private static final Logger LOGGER = LoggerFactory.getLogger(HBaseTestJunitExtension.class);
     private HBaseTestInstance testInstance;
     private Properties properties;
@@ -43,14 +45,22 @@ public class HBaseTestJunitExtension implements
     @Override
     public void beforeAll(ExtensionContext extensionContext) throws IOException {
         testInstance = HBaseTestInstanceSingleton.instance();
-        properties = testInstance.start();
+        testInstance.start();
+        properties = testInstance.properties();
     }
 
     @Override
-    public void afterAll(@Nullable ExtensionContext extensionContext) throws IOException {
-        LOGGER.info("terminating test instance");
-        testInstance.close();
-        LOGGER.info("test instance terminated");
+    public void beforeEach(ExtensionContext extensionContext) throws Exception {
+        try (Connection connection = newConnection(properties);
+             Admin admin = connection.getAdmin()) {
+            for (String name : testInstance.tempTableNames()) {
+                LOGGER.info("Truncating table {}", name);
+                TableName tableName = TableName.valueOf(name);
+                safeDisableTable(admin, tableName, 5);
+                admin.truncateTable(tableName, true);
+                safeEnableTable(admin, tableName, 5);
+            }
+        }
     }
 
     @Override
