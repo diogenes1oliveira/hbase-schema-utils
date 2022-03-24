@@ -1,12 +1,12 @@
 package hbase.connector.services;
 
-import hadoop.kerberos.utils.UgiGlobalContextManager;
-import hadoop.kerberos.utils.interfaces.IOAuthContext;
+import hadoop.kerberos.utils.UgiContextManager;
 import hbase.connector.interfaces.HBaseConnectionFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.client.Connection;
 import org.apache.hadoop.hbase.client.ConnectionFactory;
-import org.apache.hadoop.security.UserGroupInformation;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
@@ -14,6 +14,8 @@ import java.io.IOException;
  * Creates standard HBase connections via {@link ConnectionFactory#createConnection(Configuration)}
  */
 public class HBaseDefaultConnectionFactory implements HBaseConnectionFactory {
+    private static final Logger LOGGER = LoggerFactory.getLogger(HBaseDefaultConnectionFactory.class);
+
     /**
      * Kerberos principal name
      */
@@ -29,9 +31,22 @@ public class HBaseDefaultConnectionFactory implements HBaseConnectionFactory {
      */
     @Override
     public Connection create(Configuration conf) throws IOException {
-        try (IOAuthContext<UserGroupInformation> context = enterUgiContext(conf)) {
-            return ConnectionFactory.createConnection(conf);
+        String principal = conf.getTrimmed(CONFIG_PRINCIPAL, "");
+        String keyTab = conf.getTrimmed(CONFIG_KEYTAB, "");
+
+        Connection connection;
+
+        if (principal.isEmpty() || keyTab.isEmpty()) {
+            LOGGER.info("Creating default connection");
+            connection = UgiContextManager.enterDefault(user -> ConnectionFactory.createConnection(conf));
+        } else {
+            LOGGER.info("Creating Kerberos connection from keytab");
+            UgiContextManager.enableKerberos();
+            connection = UgiContextManager.enterWithKeytab(principal, keyTab, user -> ConnectionFactory.createConnection(conf));
         }
+
+        LOGGER.info("Connection created successfully");
+        return connection;
     }
 
     /**
@@ -45,14 +60,4 @@ public class HBaseDefaultConnectionFactory implements HBaseConnectionFactory {
         return true;
     }
 
-    protected IOAuthContext<UserGroupInformation> enterUgiContext(Configuration hBaseConf) throws IOException {
-        String principal = hBaseConf.getTrimmed(CONFIG_PRINCIPAL, "");
-        String keytab = hBaseConf.getTrimmed(CONFIG_KEYTAB, "");
-
-        if (principal.isEmpty() || keytab.isEmpty()) {
-            return UgiGlobalContextManager.enterDefault();
-        } else {
-            return UgiGlobalContextManager.enterWithKeytab(principal, keytab);
-        }
-    }
 }
