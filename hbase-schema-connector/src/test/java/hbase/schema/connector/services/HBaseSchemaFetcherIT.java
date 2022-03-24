@@ -4,8 +4,10 @@ import hbase.base.services.PropertiesConfig;
 import hbase.schema.connector.interfaces.HBaseFetcher;
 import hbase.schema.connector.interfaces.HBaseMutator;
 import hbase.test.utils.HBaseTestJunitExtension;
+import hbase.test.utils.interfaces.HBaseTestInstance;
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.Connection;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -29,21 +31,27 @@ import static org.hamcrest.Matchers.equalTo;
 
 @ExtendWith(HBaseTestJunitExtension.class)
 class HBaseSchemaFetcherIT {
+    static String family = "f";
+    static String tableName;
+
     DummyPojoSchema schema = new DummyPojoSchema();
-    String family = "f";
     HBaseFetcher<DummyPojo, DummyPojo> fetcher;
     HBaseMutator<DummyPojo> mutator;
     HBaseFactory factory;
 
-    @BeforeEach
-    void setUp(TableName tempTable, Properties props, Connection connection) {
-        String tableName = tempTable.getNameAsString();
+    @BeforeAll
+    static void setUpTable(TableName tempTable, HBaseTestInstance testInstance, Connection connection) {
+        testInstance.cleanUp();
+        tableName = tempTable.getNameAsString();
         createTable(connection, newTableDescriptor(tableName, family));
+    }
 
+    @BeforeEach
+    void setUp(Properties props) {
         this.factory = new HBaseFactory(new PropertiesConfig(props), schema);
 
-        fetcher = factory.getFetcher(family, tableName, DummyPojoSchema.class.getSimpleName());
-        mutator = factory.getMutator(family, tableName, DummyPojoSchema.class.getSimpleName());
+        this.fetcher = factory.getFetcher(family, tableName, DummyPojoSchema.class.getSimpleName());
+        this.mutator = factory.getMutator(family, tableName, DummyPojoSchema.class.getSimpleName());
     }
 
     @ParameterizedTest
