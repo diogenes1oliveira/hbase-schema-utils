@@ -16,6 +16,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Function;
 
 import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.joining;
 
 /**
  * Miscellaneous utilities for schemas
@@ -259,6 +260,15 @@ public final class HBaseSchemaUtils {
     @Nullable
     public static Filter combineNullableFilters(FilterList.Operator operator, @Nullable Filter... filters) {
         return combineNullableFilters(operator, asList(filters).iterator());
+    }
+
+    /**
+     * A printable representation of a collection of {@code byte[]} values
+     */
+    public static String bytesCollectionToString(Collection<byte[]> bytesCollection) {
+        return "[" + bytesCollection.stream()
+                                    .map(Bytes::toStringBinary)
+                                    .collect(joining(", ")) + "]";
     }
 
     /**

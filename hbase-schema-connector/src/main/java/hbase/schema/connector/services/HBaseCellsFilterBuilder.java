@@ -7,11 +7,19 @@ import org.apache.hadoop.hbase.client.Get;
 import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.filter.MultiRowRangeFilter;
 import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+
+import static hbase.schema.api.utils.HBaseSchemaUtils.bytesCollectionToString;
+import static org.apache.hadoop.hbase.util.Bytes.toStringBinary;
 
 public class HBaseCellsFilterBuilder<T> implements HBaseFilterBuilder<T> {
+    private static final Logger LOGGER = LoggerFactory.getLogger(HBaseCellsFilterBuilder.class);
+
     private final HBaseQueryMapper<T> queryMapper;
 
     public HBaseCellsFilterBuilder(HBaseQueryMapper<T> queryMapper) {
@@ -20,7 +28,11 @@ public class HBaseCellsFilterBuilder<T> implements HBaseFilterBuilder<T> {
 
     @Override
     public byte @Nullable [] toRowKey(T query) {
-        return queryMapper.toRowKey(query);
+        byte[] rowKey = queryMapper.toRowKey(query);
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("Getting rowKey = {}", toStringBinary(rowKey));
+        }
+        return rowKey;
     }
 
     @Override
@@ -31,11 +43,19 @@ public class HBaseCellsFilterBuilder<T> implements HBaseFilterBuilder<T> {
             for (Pair<byte[], byte[]> range : queryMapper.toSearchRanges(query)) {
                 byte[] start = range.getLeft();
                 byte[] stop = range.getRight();
+                if (LOGGER.isDebugEnabled()) {
+                    LOGGER.debug("Scanning range {} - {}", toStringBinary(start), toStringBinary(stop));
+                }
                 ranges.add(new MultiRowRangeFilter.RowRange(start, true, stop, false));
             }
         }
 
-        return new MultiRowRangeFilter(ranges);
+        if (!ranges.isEmpty()) {
+            return new MultiRowRangeFilter(ranges);
+        } else {
+            LOGGER.debug("No MultiRowRangeFilter for there are no ranges");
+            return null;
+        }
     }
 
     /**
@@ -51,8 +71,18 @@ public class HBaseCellsFilterBuilder<T> implements HBaseFilterBuilder<T> {
      */
     @Override
     public void selectColumns(T query, byte[] family, Get get) {
-        if (queryMapper.prefixes().isEmpty()) {
-            for (byte[] qualifier : queryMapper.qualifiers()) {
+        Set<byte[]> prefixes = queryMapper.prefixes();
+        Set<byte[]> qualifiers = queryMapper.qualifiers();
+
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug(
+                    "Selecting columns in Get: prefixes={}, qualifiers={}",
+                    bytesCollectionToString(prefixes),
+                    bytesCollectionToString(qualifiers)
+            );
+        }
+        if (prefixes.isEmpty()) {
+            for (byte[] qualifier : qualifiers) {
                 get.addColumn(family, qualifier);
             }
         } else {
@@ -73,8 +103,18 @@ public class HBaseCellsFilterBuilder<T> implements HBaseFilterBuilder<T> {
      */
     @Override
     public void selectColumns(T query, byte[] family, Scan scan) {
-        if (queryMapper.prefixes().isEmpty()) {
-            for (byte[] qualifier : queryMapper.qualifiers()) {
+        Set<byte[]> prefixes = queryMapper.prefixes();
+        Set<byte[]> qualifiers = queryMapper.qualifiers();
+
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug(
+                    "Selecting columns in Scan: prefixes={}, qualifiers={}",
+                    bytesCollectionToString(prefixes),
+                    bytesCollectionToString(qualifiers)
+            );
+        }
+        if (prefixes.isEmpty()) {
+            for (byte[] qualifier : qualifiers) {
                 scan.addColumn(family, qualifier);
             }
         } else {

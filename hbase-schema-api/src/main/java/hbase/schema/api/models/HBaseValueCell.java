@@ -83,7 +83,7 @@ public class HBaseValueCell implements Comparable<HBaseValueCell> {
                 .append("qualifier", Bytes.toStringBinary(qualifier));
 
         if (value != null) {
-            builder = builder.append("value", value);
+            builder = builder.append("value", Bytes.toStringBinary(value));
         }
 
         if (timestamp != null) {
@@ -138,7 +138,7 @@ public class HBaseValueCell implements Comparable<HBaseValueCell> {
         return cells;
     }
 
-    public static NavigableMap<byte[], byte[]> withoutPrefix(byte[] prefix, List<HBaseValueCell> cells) {
+    public static NavigableMap<byte[], byte[]> withoutPrefix(byte[] prefix, Iterable<HBaseValueCell> cells) {
         if (prefix == null) {
             return emptyNavigableMap();
         }
@@ -155,4 +155,9 @@ public class HBaseValueCell implements Comparable<HBaseValueCell> {
 
         return suffixMap;
     }
+
+    public static NavigableMap<byte[], byte[]> toCellsMap(Iterable<HBaseValueCell> cells) {
+        return withoutPrefix(new byte[0], cells);
+    }
+
 }

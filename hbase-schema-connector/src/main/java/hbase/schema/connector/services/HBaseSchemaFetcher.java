@@ -1,6 +1,6 @@
 package hbase.schema.connector.services;
 
-import hbase.connector.services.HBaseConnector;
+import hbase.base.interfaces.IOSupplier;
 import hbase.schema.api.interfaces.HBaseResultParser;
 import hbase.schema.api.models.HBaseValueCell;
 import hbase.schema.connector.interfaces.HBaseFetcher;
@@ -14,6 +14,8 @@ import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.client.Table;
 import org.apache.hadoop.hbase.filter.Filter;
 import org.apache.hadoop.hbase.filter.FilterList;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -33,55 +35,67 @@ import static java.util.Collections.emptyList;
  * @param <R> result type
  */
 public class HBaseSchemaFetcher<Q, R> implements HBaseFetcher<Q, R> {
+    private static final Logger LOGGER = LoggerFactory.getLogger(HBaseSchemaFetcher.class);
+
     private final TableName tableName;
     private final byte[] family;
     private final HBaseFilterBuilder<Q> filterBuilder;
     private final HBaseResultParser<R> resultParser;
-    private final HBaseConnector connector;
+    private final IOSupplier<Connection> connectionSupplier;
 
-    /**
-     * @param connector connector object
-     */
     public HBaseSchemaFetcher(String tableName,
                               byte[] family,
                               HBaseFilterBuilder<Q> filterBuilder,
                               HBaseResultParser<R> resultParser,
-                              HBaseConnector connector) {
+                              IOSupplier<Connection> connectionSupplier) {
         this.tableName = TableName.valueOf(tableName);
         this.family = family;
         this.filterBuilder = filterBuilder;
         this.resultParser = resultParser;
-        this.connector = connector;
+        this.connectionSupplier = connectionSupplier;
     }
 
     @Override
     public List<R> get(List<? extends Q> queries) throws IOException {
+        LOGGER.debug("Building gets for queries {}", queries);
         List<Get> gets = toGets(queries);
         if (queries.isEmpty()) {
+            LOGGER.debug("No Get was created, returning empty list straight away");
             return emptyList();
         }
+        LOGGER.debug("Get objects were created: {}, now connecting to HBase to execute them", gets);
 
-        try (Connection connection = connector.context();
+        try (Connection connection = connectionSupplier.get();
              Table table = connection.getTable(tableName)) {
             Result[] results = table.get(gets);
+            LOGGER.debug("Got results: {}", (Object[]) results);
             if (results == null) {
                 return emptyList();
             }
+            LOGGER.debug("Will now iterate through the Get results");
             return parseResults(Arrays.stream(results).iterator());
+        } finally {
+            LOGGER.debug("Gets finalized");
         }
     }
 
     @Override
     public List<R> scan(List<? extends Q> queries) throws IOException {
+        LOGGER.debug("Building scan for queries {}", queries);
         Scan scan = toScan(queries);
+        LOGGER.debug("Scan object was created: {}, now connecting to HBase to execute it", scan);
 
-        try (Connection connection = connector.context();
+        try (Connection connection = connectionSupplier.get();
              Table table = connection.getTable(tableName);
              ResultScanner scanner = table.getScanner(scan)) {
             if (scanner == null) {
+                LOGGER.debug("Result scanner is null, returning an empty list");
                 return emptyList();
             }
+            LOGGER.debug("Will now iterate through the Scan results");
             return parseResults(scanner.iterator());
+        } finally {
+            LOGGER.debug("Scan finalized");
         }
     }
 
@@ -133,9 +147,14 @@ public class HBaseSchemaFetcher<Q, R> implements HBaseFetcher<Q, R> {
 
     public List<R> parseResults(Iterator<Result> hBaseResults) {
         List<R> results = new ArrayList<>();
+        int count = 0;
 
+        LOGGER.debug("Iterating through the results");
         while (hBaseResults.hasNext()) {
+            LOGGER.debug("Getting the next result");
             Result hBaseResult = hBaseResults.next();
+            LOGGER.debug("Got one result: {}", hBaseResult);
+            ++count;
             if (hBaseResult == null) {
                 continue;
             }
@@ -150,6 +169,7 @@ public class HBaseSchemaFetcher<Q, R> implements HBaseFetcher<Q, R> {
             results.add(result);
         }
 
+        LOGGER.debug("Parsed {} from {} rows", results.size(), count);
         return results;
     }
 
@@ -163,6 +183,7 @@ public class HBaseSchemaFetcher<Q, R> implements HBaseFetcher<Q, R> {
         Scan scan = new Scan();
 
         if (queries.isEmpty()) {
+            LOGGER.debug("Scan without any filter, for there are no queries");
             scan.addFamily(family);
             return scan;
         }
@@ -171,11 +192,16 @@ public class HBaseSchemaFetcher<Q, R> implements HBaseFetcher<Q, R> {
         filterBuilder.selectColumns(firstQuery, family, scan);
 
         Filter scanFilter = filterBuilder.toMultiRowRangeFilter(queries);
+        LOGGER.debug("Row range filter: {}", scanFilter);
         Filter genericFilter = filterBuilder.toFilter(queries);
+        LOGGER.debug("Generic filter: {}", scanFilter);
         Filter filter = combineNullableFilters(FilterList.Operator.MUST_PASS_ALL, scanFilter, genericFilter);
 
         if (filter != null) {
             scan.setFilter(filter);
+            LOGGER.debug("Scan filter: {}", filter);
+        } else {
+            LOGGER.debug("Scan without filter");
         }
 
         return scan;

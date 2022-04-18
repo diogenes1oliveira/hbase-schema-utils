@@ -1,6 +1,7 @@
 package hbase.schema.connector.services;
 
 import hbase.base.exceptions.UncheckedInterruptionException;
+import hbase.base.interfaces.IOSupplier;
 import hbase.connector.services.HBaseConnector;
 import hbase.schema.connector.interfaces.HBaseMutationBuilder;
 import hbase.schema.connector.interfaces.HBaseMutator;
@@ -26,19 +27,16 @@ public class HBaseSchemaMutator<T> implements HBaseMutator<T> {
     private final TableName tableName;
     private final byte[] family;
     private final HBaseMutationBuilder<T> mutationBuilder;
-    private final HBaseConnector connector;
+    private final IOSupplier<Connection> connectionSupplier;
 
-    /**
-     * @param connector connector object
-     */
     public HBaseSchemaMutator(String tableName,
                               byte[] family,
                               HBaseMutationBuilder<T> mutationBuilder,
-                              HBaseConnector connector) {
+                              IOSupplier<Connection> connectionSupplier) {
         this.tableName = TableName.valueOf(tableName);
         this.family = family;
         this.mutationBuilder = mutationBuilder;
-        this.connector = connector;
+        this.connectionSupplier = connectionSupplier;
     }
 
     /**
@@ -60,7 +58,7 @@ public class HBaseSchemaMutator<T> implements HBaseMutator<T> {
             return;
         }
 
-        try (Connection connection = connector.context();
+        try (Connection connection = connectionSupplier.get();
              Table table = connection.getTable(tableName)) {
             table.batch(mutations, new Object[mutations.size()]);
         } catch (InterruptedException e) {

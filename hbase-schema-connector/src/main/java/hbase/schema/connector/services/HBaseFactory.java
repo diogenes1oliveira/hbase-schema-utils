@@ -51,7 +51,7 @@ public class HBaseFactory {
         byte[] familyBytes = family.getBytes(StandardCharsets.UTF_8);
         HBaseSchema<Q, R> schema = getSchema(schemaName);
         HBaseFilterBuilder<Q> filterBuilder = new HBaseCellsFilterBuilder<>(schema.queryMapper());
-        return new HBaseSchemaFetcher<>(tableName, familyBytes, filterBuilder, schema.resultParser(), connector);
+        return new HBaseSchemaFetcher<>(tableName, familyBytes, filterBuilder, schema.resultParser(), connector::context);
     }
 
     public <Q, R> HBaseFetcher<Q, R> getFetcher(String family, String schemaNamesByTable) {
@@ -66,7 +66,7 @@ public class HBaseFactory {
         byte[] familyBytes = family.getBytes(StandardCharsets.UTF_8);
         HBaseSchema<T, ?> schema = getSchema(schemaName);
         HBaseMutationBuilder<T> mutationBuilder = new HBaseCellsMutationBuilder<>(schema.mutationMapper());
-        return new HBaseSchemaMutator<>(tableName, familyBytes, mutationBuilder, connector);
+        return new HBaseSchemaMutator<>(tableName, familyBytes, mutationBuilder, connector::context);
     }
 
     public <T> HBaseMutator<T> getMutator(String family, String schemaNamesByTable) {

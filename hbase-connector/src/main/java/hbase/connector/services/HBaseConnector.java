@@ -1,5 +1,6 @@
 package hbase.connector.services;
 
+import hadoop.kerberos.utils.UgiContextManager;
 import hbase.base.interfaces.Config;
 import hbase.base.interfaces.Configurable;
 import hbase.connector.interfaces.HBaseConnectionFactory;
@@ -7,8 +8,11 @@ import hbase.connector.interfaces.HBaseConnectionProxy;
 import hbase.connector.utils.TimedReadWriteLock;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.client.Connection;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.Locale;
 import java.util.Properties;
 
 import static hbase.connector.utils.HBaseHelpers.toHBaseConf;
@@ -19,6 +23,9 @@ import static hbase.connector.utils.HBaseHelpers.toHBaseConf;
  * Obs: connection and disconnection are mutually synchronized
  */
 public class HBaseConnector implements Configurable {
+    private static final Logger LOGGER = LoggerFactory.getLogger(HBaseConnector.class);
+
+
     private long expireMillis = 0L;
     private long readTimeoutMs = 60_000L;
     private long writeTimeoutMs = 60_000L * 5;
@@ -33,7 +40,13 @@ public class HBaseConnector implements Configurable {
         readTimeoutMs = config.getValue(HBaseConnectorConfig.LOCK_READ_TIMEOUT, readTimeoutMs, Long.class);
         writeTimeoutMs = config.getValue(HBaseConnectorConfig.LOCK_WRITE_TIMEOUT, writeTimeoutMs, Long.class);
 
+
         Configuration conf = toHBaseConf(config.getValue(HBaseConnectorConfig.PREFIX, new Properties(), Properties.class));
+        String hadoopAuth = conf.getTrimmed(UgiContextManager.HADOOP_AUTH, "").toLowerCase(Locale.ROOT);
+
+        if ("kerberos".equals(hadoopAuth)) {
+            UgiContextManager.enableKerberos();
+        }
         this.connectionContext = newContext(conf);
     }
 
@@ -49,6 +62,7 @@ public class HBaseConnector implements Configurable {
      */
     public HBaseConnectionProxy context() throws IOException {
         assureConfigured();
+        LOGGER.debug("Will now enter the connection context");
         return connectionContext.enter();
     }
 

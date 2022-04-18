@@ -3,6 +3,9 @@ package hbase.base.services;
 import hbase.base.interfaces.Config;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.util.Properties;
 
 /**
@@ -16,6 +19,13 @@ public class PropertiesConfig implements Config {
      */
     public PropertiesConfig(Properties props) {
         this.props = props;
+    }
+
+    /**
+     * @param propsLocation path to a {@code .properties} file
+     */
+    public PropertiesConfig(String propsLocation) {
+        this(loadProps(propsLocation));
     }
 
     /**
@@ -55,5 +65,15 @@ public class PropertiesConfig implements Config {
     @Override
     public <T> @Nullable T getValue(String name, Class<?> type) {
         throw new IllegalArgumentException("Unsupported conversion for " + type);
+    }
+
+    private static Properties loadProps(String propsLocation) {
+        Properties props = new Properties();
+        try (FileInputStream stream = new FileInputStream(propsLocation)) {
+            props.load(stream);
+        } catch (IOException e) {
+            throw new UncheckedIOException("Failed to load properties from " + propsLocation, e);
+        }
+        return props;
     }
 }

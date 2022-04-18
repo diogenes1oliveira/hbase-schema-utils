@@ -36,9 +36,11 @@ public class TimedReadWriteLock {
      */
     public void lockRead() {
         try {
+            LOGGER.debug("Trying to acquire the read lock...");
             if (!readWriteLock.readLock().tryLock(readTimeoutMs, TimeUnit.MILLISECONDS)) {
                 throw new TimeoutException();
             }
+            LOGGER.debug("Read lock acquired");
         } catch (InterruptedException e) {
             LOGGER.warn("interrupted while acquiring read lock", e);
             Thread.currentThread().interrupt();
@@ -66,9 +68,11 @@ public class TimedReadWriteLock {
      */
     public void lockWrite() {
         try {
+            LOGGER.debug("Trying to acquire the write lock...");
             if (!readWriteLock.writeLock().tryLock(writeTimeoutMs, TimeUnit.MILLISECONDS)) {
                 throw new TimeoutException();
             }
+            LOGGER.debug("Write lock acquired");
         } catch (InterruptedException e) {
             LOGGER.warn("interrupted while acquiring write lock", e);
             Thread.currentThread().interrupt();

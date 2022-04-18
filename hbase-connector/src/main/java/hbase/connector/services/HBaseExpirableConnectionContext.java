@@ -4,6 +4,8 @@ import hbase.base.interfaces.IOSupplier;
 import hbase.connector.interfaces.HBaseConnectionProxy;
 import hbase.connector.utils.TimedReadWriteLock;
 import org.apache.hadoop.hbase.client.Connection;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
@@ -14,6 +16,7 @@ import java.io.IOException;
  * lock to avoid reconnections while the connection is in use
  */
 public class HBaseExpirableConnectionContext extends HBaseRecreatableConnectionContext {
+    private static final Logger LOGGER = LoggerFactory.getLogger(HBaseExpirableConnectionContext.class);
     private final long expireMillis;
     private final Object lock = new Object();
     private volatile long creationNanos = -1L;
@@ -44,6 +47,7 @@ public class HBaseExpirableConnectionContext extends HBaseRecreatableConnectionC
         if (isExpired()) {
             synchronized (lock) {
                 if (isExpired()) {
+                    LOGGER.debug("Connection is expired, recreating now");
                     refresh();
                 }
             }

@@ -5,6 +5,7 @@ import hbase.connector.interfaces.HBaseConnectionFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.client.Connection;
 import org.apache.hadoop.hbase.client.ConnectionFactory;
+import org.apache.hadoop.hbase.security.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,11 +39,14 @@ public class HBaseDefaultConnectionFactory implements HBaseConnectionFactory {
 
         if (principal.isEmpty() || keyTab.isEmpty()) {
             LOGGER.info("Creating default connection");
-            connection = UgiContextManager.enterDefault(user -> ConnectionFactory.createConnection(conf));
+            connection = UgiContextManager.enterDefault(ugi ->
+                    ConnectionFactory.createConnection(conf, User.create(ugi))
+            );
         } else {
             LOGGER.info("Creating Kerberos connection from keytab");
-            UgiContextManager.enableKerberos();
-            connection = UgiContextManager.enterWithKeytab(principal, keyTab, user -> ConnectionFactory.createConnection(conf));
+            connection = UgiContextManager.enterWithKeytab(principal, keyTab, ugi ->
+                    ConnectionFactory.createConnection(conf, User.create(ugi))
+            );
         }
 
         LOGGER.info("Connection created successfully");

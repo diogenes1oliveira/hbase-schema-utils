@@ -17,6 +17,8 @@ public class UgiContextManager {
     private static final Logger LOGGER = LoggerFactory.getLogger(UgiContextManager.class);
     private static boolean kerberosEnabled = false;
 
+    public static final String HADOOP_AUTH = "hadoop.security.authentication";
+
     private UgiContextManager() {
         // utility class
     }
@@ -24,7 +26,7 @@ public class UgiContextManager {
     public synchronized static void enableKerberos() {
         if (!kerberosEnabled) {
             Configuration conf = new Configuration();
-            conf.set("hadoop.security.authentication", "Kerberos");
+            conf.set(HADOOP_AUTH, "Kerberos");
             UserGroupInformation.setConfiguration(conf);
             kerberosEnabled = true;
             LOGGER.info("Enabled Kerberos authentication for Hadoop");

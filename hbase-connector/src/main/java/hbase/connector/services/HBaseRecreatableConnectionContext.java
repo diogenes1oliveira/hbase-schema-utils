@@ -6,6 +6,8 @@ import hbase.connector.interfaces.HBaseConnectionProxy;
 import hbase.connector.utils.TimedReadWriteLock;
 import org.apache.hadoop.hbase.client.Connection;
 import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
@@ -14,6 +16,7 @@ import java.io.IOException;
  * connection is in use
  */
 public class HBaseRecreatableConnectionContext implements HBaseConnectionContext {
+    private static final Logger LOGGER = LoggerFactory.getLogger(HBaseRecreatableConnectionContext.class);
     private final IOSupplier<Connection> connectionFactory;
     private final TimedReadWriteLock readWriteLock;
     private final Object lock = new Object();
@@ -42,6 +45,7 @@ public class HBaseRecreatableConnectionContext implements HBaseConnectionContext
         if (connection == null) {
             synchronized (lock) {
                 if (connection == null) {
+                    LOGGER.debug("Creating connection, it is null now");
                     refresh();
                 }
             }
@@ -49,10 +53,12 @@ public class HBaseRecreatableConnectionContext implements HBaseConnectionContext
 
         readWriteLock.lockRead();
 
+        LOGGER.debug("Entered connection context");
         return new HBaseConnectionProxy(connection) {
             @Override
             public void close() {
                 readWriteLock.unlockRead();
+                LOGGER.debug("Left connection context");
             }
         };
     }
@@ -66,13 +72,16 @@ public class HBaseRecreatableConnectionContext implements HBaseConnectionContext
      */
     @Override
     public void refresh() throws IOException {
+        LOGGER.debug("Refreshing connection");
         readWriteLock.lockWrite();
         try {
             if (connection != null) {
+                LOGGER.debug("Closing old connection");
                 connection.close();
                 connection = null;
             }
             connection = connectionFactory.get();
+            LOGGER.debug("Connection successfully refreshed");
         } finally {
             readWriteLock.unlockWrite();
         }
