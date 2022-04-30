@@ -2,6 +2,7 @@ package hbase.schema.api.interfaces;
 
 import org.apache.hadoop.hbase.client.Get;
 import org.apache.hadoop.hbase.client.Scan;
+import org.apache.hadoop.hbase.filter.Filter;
 
 import java.nio.ByteBuffer;
 import java.util.List;
@@ -33,6 +34,18 @@ public interface HBaseReadSchema<Q, R> {
      */
     default Get toGet(Q query) {
         throw new UnsupportedOperationException("Get not supported by this schema: " + this.getClass().getName());
+    }
+
+    /**
+     * Generates a Filter corresponding to the query object
+     * <p>
+     * The default implementation just returns {@code null}
+     *
+     * @param query query object
+     * @return generated Filter or null
+     */
+    default Filter toFilter(Q query) {
+        return null;
     }
 
     /**

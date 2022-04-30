@@ -12,6 +12,7 @@ import hbase.schema.api.utils.ByteBufferPrefixComparator;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hadoop.hbase.client.Get;
 import org.apache.hadoop.hbase.client.Scan;
+import org.apache.hadoop.hbase.filter.Filter;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -46,6 +47,7 @@ public class HBaseReadSchemaBuilder<Q, R> {
     private HBaseBytesMapper<Q> scanStopsMapper = HBaseBytesMapper.empty();
     private final SortedMap<ByteBuffer, HBaseByteParser<R>> fixedCellParsers = new TreeMap<>(ByteBufferComparator.INSTANCE);
     private final SortedMap<ByteBuffer, HBaseCellParser<R>> prefixCellParsers = new TreeMap<>(ByteBufferPrefixComparator.INSTANCE);
+    private Function<Q, Filter> filterMapper = q -> null;
 
     /**
      * @param resultCreator lambda to create fresh result instances
@@ -243,6 +245,11 @@ public class HBaseReadSchemaBuilder<Q, R> {
         return scanStop(getter, converter::toBuffer);
     }
 
+    public HBaseReadSchemaBuilder<Q, R> filter(Function<Q, Filter> filterMapper) {
+        this.filterMapper = filterMapper;
+        return this;
+    }
+
     public HBaseReadSchema<Q, R> build() {
 
         return new HBaseReadSchema<Q, R>() {
@@ -253,14 +260,18 @@ public class HBaseReadSchemaBuilder<Q, R> {
                 for (Pair<byte[], byte[]> pair : generateScanLimits(query)) {
                     byte[] scanStart = pair.getLeft();
                     byte[] scanStop = pair.getRight();
+                    Scan scan;
 
                     LOGGER.info("Built scan keys: {} -> {}", Bytes.toStringBinary(scanStart), scanStop != null ?
                             Bytes.toStringBinary(scanStop) : "null");
                     if (scanStop != null) {
-                        scans.add(new Scan().withStartRow(scanStart).withStopRow(scanStop));
+                        scan = new Scan().withStartRow(scanStart).withStopRow(scanStop);
                     } else {
-                        scans.add(new Scan().setRowPrefixFilter(scanStart));
+                        scan = new Scan().setRowPrefixFilter(scanStart);
                     }
+
+                    setFilter(scan, query);
+                    scans.add(scan);
                 }
                 return scans;
             }
@@ -272,7 +283,9 @@ public class HBaseReadSchemaBuilder<Q, R> {
                 } else {
                     ByteBuffer rowKey = rowKeyMapper.toBuffer(query);
                     LOGGER.info("Built row key: {}", Bytes.toStringBinary(rowKey));
-                    return new Get(rowKey);
+                    Get get = new Get(rowKey);
+                    setFilter(get, query);
+                    return get;
                 }
             }
 
@@ -349,4 +362,17 @@ public class HBaseReadSchemaBuilder<Q, R> {
         }
     }
 
+    private void setFilter(Get get, Q query) {
+        Filter filter = filterMapper.apply(query);
+        if (filter != null) {
+            get.setFilter(filter);
+        }
+    }
+
+    private void setFilter(Scan scan, Q query) {
+        Filter filter = filterMapper.apply(query);
+        if (filter != null) {
+            scan.setFilter(filter);
+        }
+    }
 }
