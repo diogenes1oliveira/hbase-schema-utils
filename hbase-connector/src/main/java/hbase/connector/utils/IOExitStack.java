@@ -1,7 +1,7 @@
-package hbase.schema.connector.utils;
+package hbase.connector.utils;
 
 import hbase.base.interfaces.IORunnable;
-import org.apache.commons.lang3.tuple.Pair;
+import org.apache.hadoop.hbase.shaded.org.apache.commons.lang3.tuple.Pair;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;

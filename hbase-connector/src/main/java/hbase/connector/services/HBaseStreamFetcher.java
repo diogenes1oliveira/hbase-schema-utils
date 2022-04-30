@@ -1,9 +1,10 @@
-package hbase.schema.connector.services;
+package hbase.connector.services;
 
 import hbase.connector.interfaces.HBaseConnectionProxy;
-import hbase.connector.services.HBaseConnector;
-import hbase.schema.connector.utils.IOExitStack;
+import hbase.connector.utils.IOExitStack;
 import org.apache.hadoop.hbase.TableName;
+import org.apache.hadoop.hbase.client.Connection;
+import org.apache.hadoop.hbase.client.Get;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.client.Scan;
@@ -12,16 +13,39 @@ import org.apache.hadoop.hbase.client.Table;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.List;
+import java.util.Objects;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import static java.util.function.UnaryOperator.identity;
 
-public class HBaseStreamScanner {
+public class HBaseStreamFetcher {
+
     private final HBaseConnector connector;
 
-    public HBaseStreamScanner(HBaseConnector connector) {
+    public HBaseStreamFetcher(HBaseConnector connector) {
         this.connector = connector;
+    }
+
+    public Stream<Result> fetch(TableName tableName, Get get) {
+        AtomicInteger count = new AtomicInteger(0);
+
+        return Stream.generate(() -> {
+            try (Connection connection = connector.context(); Table table = connection.getTable(tableName)) {
+                Result result = table.get(get);
+                if (result != null && result.getRow() != null) {
+                    if (count.getAndIncrement() > 0) {
+                        throw new IllegalStateException("Should have run just once");
+                    }
+                    return result;
+                } else {
+                    return null;
+                }
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
+        }).limit(1).filter(Objects::nonNull);
     }
 
     public Stream<Result> fetch(TableName tableName, List<Scan> scans) {

@@ -4,6 +4,9 @@ import org.apache.hadoop.hbase.filter.Filter;
 import org.apache.hadoop.hbase.filter.FilterList;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Optional;
+import java.util.stream.Stream;
+
 public final class HBaseQueryUtils {
     private HBaseQueryUtils() {
         // utility class
@@ -36,4 +39,8 @@ public final class HBaseQueryUtils {
         }
     }
 
+    @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
+    public static <T> Stream<T> optionalToStream(Optional<T> optional) {
+        return optional.map(Stream::of).orElseGet(Stream::empty);
+    }
 }
