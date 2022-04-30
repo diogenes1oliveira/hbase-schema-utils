@@ -1,6 +1,5 @@
 package hbase.schema.api.utils;
 
-import hbase.base.interfaces.TriConsumer;
 import org.apache.hadoop.hbase.filter.Filter;
 import org.apache.hadoop.hbase.filter.FilterList;
 import org.apache.hadoop.hbase.util.Bytes;
@@ -225,26 +224,6 @@ public final class HBaseSchemaUtils {
             if (u != null) {
                 c1.accept(t, u);
             }
-        };
-    }
-
-    /**
-     * Builds a new bi-consumer that applies a transformer function beforehand, handling null values accordingly.
-     *
-     * @param c tri-consumer
-     * @return new bi-consumer equivalent to {@code }
-     */
-    public static <T, U1, V1, U2, V2> TriConsumer<T, U2, V2> chain(TriConsumer<T, U1, V1> c, Function<U2, U1> fU, Function<V2, V1> fV) {
-        return (t, u2, v2) -> {
-            if (u2 == null || v2 == null) {
-                return;
-            }
-            U1 u1 = fU.apply(u2);
-            V1 v1 = fV.apply(v2);
-            if (u1 == null || v1 == null) {
-                return;
-            }
-            c.accept(t, u1, v1);
         };
     }
 

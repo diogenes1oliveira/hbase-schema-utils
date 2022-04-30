@@ -69,13 +69,14 @@ public interface HBaseReadSchema<Q, R> {
     /**
      * Populates the result object with data from the row key
      * <p>
-     * The default implementation is a no-op
+     * The default implementation just returns {@code false}, signaling no data was parsed
      *
      * @param rowKey fetched row key
      * @param query  original query object
+     * @return {@code true} if some data was parsed
      */
-    default void parseRowKey(R result, ByteBuffer rowKey, Q query) {
-        // nothing to do, by default
+    default boolean parseRowKey(R result, ByteBuffer rowKey, Q query) {
+        return false;
     }
 
     /**
@@ -85,6 +86,7 @@ public interface HBaseReadSchema<Q, R> {
      * @param qualifier fetched column qualifier
      * @param value     fetched cell value
      * @param query     original query object
+     * @return {@code true} if some data was parsed
      */
-    void parseCell(R result, ByteBuffer qualifier, ByteBuffer value, Q query);
+    boolean parseCell(R result, ByteBuffer qualifier, ByteBuffer value, Q query);
 }

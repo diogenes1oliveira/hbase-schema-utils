@@ -26,6 +26,8 @@ import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import static hbase.schema.api.interfaces.HBaseByteParser.hBaseByteParser;
+import static hbase.schema.api.interfaces.HBaseCellParser.hBaseCellParser;
 import static hbase.schema.api.utils.HBaseSchemaUtils.chain;
 import static hbase.schema.api.utils.HBaseSchemaUtils.chainMap;
 import static java.util.Arrays.asList;
@@ -79,7 +81,7 @@ public class HBaseReadSchemaBuilder<Q, R> {
                                                       TriConsumer<R, K, V> setter,
                                                       Function<ByteBuffer, K> keyConverter,
                                                       Function<ByteBuffer, V> valueConverter) {
-        return prefix(prefix, chain(setter, keyConverter, valueConverter)::accept);
+        return prefix(prefix, hBaseCellParser(setter, keyConverter, valueConverter));
     }
 
     public <K, V> HBaseReadSchemaBuilder<Q, R> prefix(byte[] prefix,
@@ -113,7 +115,7 @@ public class HBaseReadSchemaBuilder<Q, R> {
     }
 
     public <T> HBaseReadSchemaBuilder<Q, R> cell(byte[] qualifier, BiConsumer<R, T> setter, Function<ByteBuffer, T> converter) {
-        return cell(qualifier, chain(setter, converter)::accept);
+        return cell(qualifier, hBaseByteParser(setter, converter));
     }
 
     public <T> HBaseReadSchemaBuilder<Q, R> cell(String qualifier, BiConsumer<R, T> setter, Function<ByteBuffer, T> converter) {
@@ -134,7 +136,7 @@ public class HBaseReadSchemaBuilder<Q, R> {
     }
 
     public <T> HBaseReadSchemaBuilder<Q, R> rowKey(BiConsumer<R, T> setter, Function<ByteBuffer, T> converter) {
-        return rowKey(chain(setter, converter)::accept);
+        return rowKey(hBaseByteParser(setter, converter));
     }
 
     public <T> HBaseReadSchemaBuilder<Q, R> rowKey(BiConsumer<R, T> setter, BytesConverter<T> converter) {
@@ -155,7 +157,7 @@ public class HBaseReadSchemaBuilder<Q, R> {
     }
 
     public HBaseReadSchemaBuilder<Q, R> scanKey(HBaseByteMapper<Q> mapper) {
-        return scanStart(mapper).scanStops(HBaseBytesMapper.singleton((ByteBuffer) null));
+        return scanStart(mapper).scanStops(HBaseBytesMapper.singleton(null));
     }
 
     public <T> HBaseReadSchemaBuilder<Q, R> scanKey(Function<Q, T> getter, Function<T, ByteBuffer> converter) {
@@ -264,17 +266,25 @@ public class HBaseReadSchemaBuilder<Q, R> {
             }
 
             @Override
-            public void parseRowKey(R result, ByteBuffer rowKey, Q query) {
+            public boolean parseRowKey(R result, ByteBuffer rowKey, Q query) {
+                boolean parsed = false;
+
                 for (HBaseByteParser<R> parser : rowKeyParsers) {
-                    parser.parse(result, rowKey);
+                    parsed = parser.parse(result, rowKey) || parsed;
                 }
+
+                return true;
             }
 
             @Override
-            public void parseCell(R result, ByteBuffer qualifier, ByteBuffer value, Q query) {
+            public boolean parseCell(R result, ByteBuffer qualifier, ByteBuffer value, Q query) {
+                boolean parsed = false;
+
                 for (HBaseCellParser<R> parser : cellParsers) {
-                    parser.parse(result, qualifier, value);
+                    parsed = parser.parse(result, qualifier, value) || parsed;
                 }
+
+                return parsed;
             }
         };
     }
@@ -302,18 +312,24 @@ public class HBaseReadSchemaBuilder<Q, R> {
         return pairs;
     }
 
-    private void parseFixedCell(R result, ByteBuffer column, ByteBuffer value) {
+    private boolean parseFixedCell(R result, ByteBuffer column, ByteBuffer value) {
         HBaseByteParser<R> parser = fixedCellParsers.get(column);
+
         if (parser != null) {
-            parser.parse(result, value);
+            return parser.parse(result, value);
+        } else {
+            return false;
         }
     }
 
-    private void parsePrefixCell(R result, ByteBuffer column, ByteBuffer value) {
+    private boolean parsePrefixCell(R result, ByteBuffer column, ByteBuffer value) {
         HBaseCellParser<R> parser = prefixCellParsers.get(column);
+
         if (parser != null) {
             ByteBuffer prefix = prefixCellParsers.tailMap(column).firstKey();
-            parser.parse(result, (ByteBuffer) column.position(prefix.limit()), value);
+            return parser.parse(result, (ByteBuffer) column.position(prefix.limit()), value);
+        } else {
+            return false;
         }
     }
 

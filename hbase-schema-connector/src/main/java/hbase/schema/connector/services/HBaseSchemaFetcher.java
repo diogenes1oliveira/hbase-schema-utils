@@ -96,15 +96,17 @@ public class HBaseSchemaFetcher<Q, R> implements HBaseFetcher<Q, R> {
                 continue;
             }
             R result = readSchema.newInstance();
-            readSchema.parseRowKey(result, ByteBuffer.wrap(rowKey), query);
+            boolean parsed = readSchema.parseRowKey(result, ByteBuffer.wrap(rowKey), query);
             for (Map.Entry<byte[], byte[]> entry : hBaseResult.getFamilyMap(family).entrySet()) {
                 byte[] qualifier = entry.getKey();
                 byte[] value = entry.getValue();
                 if (value != null) {
-                    readSchema.parseCell(result, ByteBuffer.wrap(qualifier), ByteBuffer.wrap(value), query);
+                    parsed = readSchema.parseCell(result, ByteBuffer.wrap(qualifier), ByteBuffer.wrap(value), query) || parsed;
                 }
             }
-            results.add(result);
+            if (parsed) {
+                results.add(result);
+            }
         }
 
         LOGGER.info("Parsed {} result from {} rows", results.size(), count);
