@@ -5,6 +5,7 @@ import hbase.schema.api.interfaces.HBaseByteMapper;
 import hbase.schema.api.interfaces.HBaseByteParser;
 import hbase.schema.api.interfaces.HBaseBytesMapper;
 import hbase.schema.api.interfaces.HBaseCellParser;
+import hbase.schema.api.interfaces.HBaseQueryCustomizer;
 import hbase.schema.api.interfaces.HBaseReadSchema;
 import hbase.schema.api.interfaces.conversion.BytesConverter;
 import hbase.schema.api.utils.ByteBufferComparator;
@@ -48,6 +49,7 @@ public class HBaseReadSchemaBuilder<Q, R> {
     private final SortedMap<ByteBuffer, HBaseByteParser<R>> fixedCellParsers = new TreeMap<>(ByteBufferComparator.INSTANCE);
     private final SortedMap<ByteBuffer, HBaseCellParser<R>> prefixCellParsers = new TreeMap<>(ByteBufferPrefixComparator.INSTANCE);
     private Function<Q, Filter> filterMapper = q -> null;
+    private final List<HBaseQueryCustomizer<Q>> queryCustomizers = new ArrayList<>();
 
     /**
      * @param resultCreator lambda to create fresh result instances
@@ -87,11 +89,23 @@ public class HBaseReadSchemaBuilder<Q, R> {
         return parsePrefix(prefix, hBaseCellParser(setter, keyConverter, valueConverter));
     }
 
+    public <T> HBaseReadSchemaBuilder<Q, R> parsePrefix(byte[] prefix,
+                                                        TriConsumer<R, T, T> setter,
+                                                        Function<ByteBuffer, T> converter) {
+        return parsePrefix(prefix, setter, converter, converter);
+    }
+
     public <K, V> HBaseReadSchemaBuilder<Q, R> parsePrefix(byte[] prefix,
                                                            TriConsumer<R, K, V> setter,
                                                            BytesConverter<K> keyConverter,
                                                            BytesConverter<V> valueConverter) {
         return parsePrefix(prefix, setter, keyConverter::fromBytes, valueConverter::fromBytes);
+    }
+
+    public <T> HBaseReadSchemaBuilder<Q, R> parsePrefix(byte[] prefix,
+                                                        TriConsumer<R, T, T> setter,
+                                                        BytesConverter<T> converter) {
+        return parsePrefix(prefix, setter, converter, converter);
     }
 
     public <K, V> HBaseReadSchemaBuilder<Q, R> parsePrefix(String prefix,
@@ -101,11 +115,23 @@ public class HBaseReadSchemaBuilder<Q, R> {
         return parsePrefix(prefix.getBytes(StandardCharsets.UTF_8), setter, keyConverter, valueConverter);
     }
 
+    public <T> HBaseReadSchemaBuilder<Q, R> parsePrefix(String prefix,
+                                                        TriConsumer<R, T, T> setter,
+                                                        Function<ByteBuffer, T> converter) {
+        return parsePrefix(prefix, setter, converter, converter);
+    }
+
     public <K, V> HBaseReadSchemaBuilder<Q, R> parsePrefix(String prefix,
                                                            TriConsumer<R, K, V> setter,
                                                            BytesConverter<K> keyConverter,
                                                            BytesConverter<V> valueConverter) {
         return parsePrefix(prefix, setter, keyConverter::fromBytes, valueConverter::fromBytes);
+    }
+
+    public <T> HBaseReadSchemaBuilder<Q, R> parsePrefix(String prefix,
+                                                        TriConsumer<R, T, T> setter,
+                                                        BytesConverter<T> converter) {
+        return parsePrefix(prefix, setter, converter, converter);
     }
 
     public HBaseReadSchemaBuilder<Q, R> parseColumn(byte[] qualifier, HBaseByteParser<R> byteParser) {
@@ -171,14 +197,6 @@ public class HBaseReadSchemaBuilder<Q, R> {
         return scanKey(getter, converter::toBuffer);
     }
 
-    public HBaseReadSchemaBuilder<Q, R> scanKey(HBaseByteMapper<Q> mapper, int size) {
-        return scanKey(mapper.crop(size));
-    }
-
-    public <T> HBaseReadSchemaBuilder<Q, R> scanKey(Function<Q, T> getter, Function<T, ByteBuffer> converter, int size) {
-        return scanKey(chain(getter, converter)::apply, size);
-    }
-
     public HBaseReadSchemaBuilder<Q, R> scanKeys(HBaseBytesMapper<Q> mapper) {
         return scanStarts(mapper).scanStops(mapper.andThen(b -> null));
     }
@@ -189,10 +207,6 @@ public class HBaseReadSchemaBuilder<Q, R> {
 
     public <T> HBaseReadSchemaBuilder<Q, R> scanKeys(Function<Q, List<T>> getter, BytesConverter<T> converter) {
         return scanKeys(getter, converter::toBuffer);
-    }
-
-    public <T> HBaseReadSchemaBuilder<Q, R> scanKey(Function<Q, T> getter, BytesConverter<T> converter, int size) {
-        return scanKey(getter, converter::toBuffer, size);
     }
 
     public HBaseReadSchemaBuilder<Q, R> scanStarts(HBaseBytesMapper<Q> mapper) {
@@ -250,6 +264,11 @@ public class HBaseReadSchemaBuilder<Q, R> {
         return this;
     }
 
+    public HBaseReadSchemaBuilder<Q, R> customize(HBaseQueryCustomizer<Q> customizer) {
+        this.queryCustomizers.add(customizer);
+        return this;
+    }
+
     public HBaseReadSchema<Q, R> build() {
 
         return new HBaseReadSchema<Q, R>() {
@@ -270,7 +289,8 @@ public class HBaseReadSchemaBuilder<Q, R> {
                         scan = new Scan().setRowPrefixFilter(scanStart);
                     }
 
-                    setFilter(scan, query);
+                    scan = setFilter(scan, query);
+                    scan = customize(scan, query);
                     scans.add(scan);
                 }
                 return scans;
@@ -284,7 +304,8 @@ public class HBaseReadSchemaBuilder<Q, R> {
                     ByteBuffer rowKey = rowKeyMapper.toBuffer(query);
                     LOGGER.info("Built row key: {}", Bytes.toStringBinary(rowKey));
                     Get get = new Get(rowKey);
-                    setFilter(get, query);
+                    get = setFilter(get, query);
+                    get = customize(get, query);
                     return get;
                 }
             }
@@ -362,17 +383,41 @@ public class HBaseReadSchemaBuilder<Q, R> {
         }
     }
 
-    private void setFilter(Get get, Q query) {
+    private Get setFilter(Get get, Q query) {
         Filter filter = filterMapper.apply(query);
         if (filter != null) {
-            get.setFilter(filter);
+            return get.setFilter(filter);
+        } else {
+            return get;
         }
     }
 
-    private void setFilter(Scan scan, Q query) {
+    private Scan setFilter(Scan scan, Q query) {
         Filter filter = filterMapper.apply(query);
         if (filter != null) {
-            scan.setFilter(filter);
+            return scan.setFilter(filter);
+        } else {
+            return scan;
         }
+    }
+
+    private Scan customize(Scan scan, Q query) {
+        Scan newScan = scan;
+
+        for (HBaseQueryCustomizer<Q> customizer : queryCustomizers) {
+            newScan = customizer.customize(query, newScan);
+        }
+
+        return newScan;
+    }
+
+    private Get customize(Get get, Q query) {
+        Get newGet = get;
+
+        for (HBaseQueryCustomizer<Q> customizer : queryCustomizers) {
+            newGet = customizer.customize(query, newGet);
+        }
+
+        return newGet;
     }
 }
