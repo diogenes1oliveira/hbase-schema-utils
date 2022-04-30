@@ -1,20 +1,24 @@
 package hbase.schema.api.interfaces;
 
 import java.nio.ByteBuffer;
+import java.util.function.Function;
 
 @FunctionalInterface
 public interface HBaseByteMapper<T> {
     ByteBuffer toBuffer(T value);
 
-    default HBaseByteMapper<T> crop(int size) {
-        return value -> (ByteBuffer) this.toBuffer(value).limit(size);
+    default HBaseByteMapper<T> andThen(Function<ByteBuffer, ByteBuffer> mapper) {
+        return value -> {
+            ByteBuffer buffer = this.toBuffer(value);
+            if (buffer == null) {
+                return null;
+            } else {
+                return mapper.apply(buffer);
+            }
+        };
     }
 
     static <T> HBaseByteMapper<T> singleton(ByteBuffer buffer) {
         return t -> buffer;
-    }
-
-    static <T> HBaseByteMapper<T> singleton(byte[] bytes) {
-        return singleton(ByteBuffer.wrap(bytes).asReadOnlyBuffer());
     }
 }
