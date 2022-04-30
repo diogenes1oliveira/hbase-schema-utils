@@ -1,12 +1,8 @@
-package hbase.schema.api.schemas;
+package hbase.schema.api.schema;
 
-import org.junit.jupiter.api.Test;
-
-import static hbase.schema.api.converters.Utf8Converter.utf8Converter;
 import static hbase.schema.api.utils.HBaseSchemaConversions.utf8ToBytes;
 import static hbase.schema.api.utils.HBaseSchemaUtils.asBytesTreeSet;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.equalTo;
 
 class HBaseQuerySchemaBuilderTest {
 //    @Test

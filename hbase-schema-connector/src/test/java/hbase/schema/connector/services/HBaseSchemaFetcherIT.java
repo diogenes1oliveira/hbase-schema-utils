@@ -31,51 +31,51 @@ import static org.hamcrest.Matchers.equalTo;
 
 @ExtendWith(HBaseTestJunitExtension.class)
 class HBaseSchemaFetcherIT {
-    static String family = "f";
-    static String tableName;
-
-    DummyPojoSchema schema = new DummyPojoSchema();
-    HBaseFetcher<DummyPojo, DummyPojo> fetcher;
-    HBaseMutator<DummyPojo> mutator;
-    HBaseFactory factory;
-
-    @BeforeAll
-    static void setUpTable(TableName tempTable, HBaseTestInstance testInstance, Connection connection) {
-        testInstance.cleanUp();
-        tableName = tempTable.getNameAsString();
-        createTable(connection, newTableDescriptor(tableName, family));
-    }
-
-    @BeforeEach
-    void setUp(Properties props) {
-        this.factory = new HBaseFactory(new PropertiesConfig(props), schema);
-
-        this.fetcher = factory.getFetcher(family, tableName, DummyPojoSchema.class.getSimpleName());
-        this.mutator = factory.getMutator(family, tableName, DummyPojoSchema.class.getSimpleName());
-    }
-
-    @ParameterizedTest
-    @MethodSource("providePojos")
-    void mutateAndFetchBack(DummyPojo pojo, DummyPojo query) throws IOException {
-        assertThat(fetcher.get(singletonList(query)), empty());
-        assertThat(fetcher.scan(singletonList(query)), empty());
-
-        mutator.mutate(singletonList(pojo));
-
-        assertThat(fetcher.get(singletonList(query)), equalTo(singletonList(pojo)));
-        assertThat(fetcher.scan(singletonList(query)), equalTo(singletonList(pojo)));
-    }
-
-    static Stream<Arguments> providePojos() {
-        return Stream.of(
-                Arguments.of(
-                        new DummyPojo().withInstant(Instant.ofEpochMilli(42_000L))
-                                       .withId("some-id")
-                                       .withString("some-string")
-                                       .withMap1(emptyMap())
-                                       .withMap2(emptyMap()),
-                        new DummyPojo().withId("some-id")
-                )
-        );
-    }
+//    static String family = "f";
+//    static String tableName;
+//
+//    DummyPojoSchema schema = new DummyPojoSchema();
+//    HBaseFetcher<DummyPojo, DummyPojo> fetcher;
+//    HBaseMutator<DummyPojo> mutator;
+//    HBaseFactory factory;
+//
+//    @BeforeAll
+//    static void setUpTable(TableName tempTable, HBaseTestInstance testInstance, Connection connection) {
+//        testInstance.cleanUp();
+//        tableName = tempTable.getNameAsString();
+//        createTable(connection, newTableDescriptor(tableName, family));
+//    }
+//
+//    @BeforeEach
+//    void setUp(Properties props) {
+//        this.factory = new HBaseFactory(new PropertiesConfig(props), schema);
+//
+//        this.fetcher = factory.getFetcher(family, tableName, DummyPojoSchema.class.getSimpleName());
+//        this.mutator = factory.getMutator(family, tableName, DummyPojoSchema.class.getSimpleName());
+//    }
+//
+//    @ParameterizedTest
+//    @MethodSource("providePojos")
+//    void mutateAndFetchBack(DummyPojo pojo, DummyPojo query) throws IOException {
+//        assertThat(fetcher.get(singletonList(query)), empty());
+//        assertThat(fetcher.scan(singletonList(query)), empty());
+//
+//        mutator.mutate(singletonList(pojo));
+//
+//        assertThat(fetcher.get(singletonList(query)), equalTo(singletonList(pojo)));
+//        assertThat(fetcher.scan(singletonList(query)), equalTo(singletonList(pojo)));
+//    }
+//
+//    static Stream<Arguments> providePojos() {
+//        return Stream.of(
+//                Arguments.of(
+//                        new DummyPojo().withInstant(Instant.ofEpochMilli(42_000L))
+//                                       .withId("some-id")
+//                                       .withString("some-string")
+//                                       .withMap1(emptyMap())
+//                                       .withMap2(emptyMap()),
+//                        new DummyPojo().withId("some-id")
+//                )
+//        );
+//    }
 }

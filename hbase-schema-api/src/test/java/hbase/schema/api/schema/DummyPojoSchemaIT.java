@@ -1,4 +1,4 @@
-package hbase.schema.api.schemas;
+package hbase.schema.api.schema;
 
 public class DummyPojoSchemaIT {
 }

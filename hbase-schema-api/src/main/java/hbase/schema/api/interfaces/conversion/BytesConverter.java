@@ -1,5 +1,8 @@
 package hbase.schema.api.interfaces.conversion;
 
+import org.apache.hadoop.hbase.util.Bytes;
+
+import java.nio.ByteBuffer;
 import java.util.function.Function;
 
 /**
@@ -36,6 +39,11 @@ public interface BytesConverter<T> {
      */
     byte[] toBytes(T value);
 
+    default ByteBuffer toBuffer(T value) {
+        byte[] bytes = toBytes(value);
+        return bytes == null ? null : ByteBuffer.wrap(bytes);
+    }
+
     /**
      * Parses a value from a {@code byte[]} payload
      *
@@ -43,6 +51,10 @@ public interface BytesConverter<T> {
      * @return corresponding parsed value
      */
     T fromBytes(byte[] bytes);
+
+    default T fromBytes(ByteBuffer bytes) {
+        return fromBytes(Bytes.toBytes(bytes));
+    }
 
     /**
      * Class instance for the value type

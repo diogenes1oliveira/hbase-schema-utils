@@ -1,19 +1,8 @@
-package hbase.schema.api.schemas;
+package hbase.schema.api.schema;
 
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
-
-import java.util.NavigableMap;
-import java.util.stream.Stream;
-
-import static hbase.schema.api.converters.Utf8BytesMapConverter.utf8BytesMapConverter;
-import static hbase.schema.api.converters.Utf8Converter.utf8Converter;
 import static hbase.schema.api.utils.HBaseSchemaConversions.utf8ToBytes;
 import static hbase.schema.api.utils.HBaseSchemaUtils.asBytesTreeMap;
-import static hbase.schema.api.utils.HBaseSchemaUtils.asStringMap;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.equalTo;
 
 class HBaseResultParserSchemaBuilderTest {
 //

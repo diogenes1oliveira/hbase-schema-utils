@@ -285,33 +285,6 @@
                     <groupId>org.codehaus.gmaven</groupId>
                     <artifactId>groovy-maven-plugin</artifactId>
                     <version>${groovy.plugin.version}</version>
-                    <dependencies>
-                        <dependency>
-                            <groupId>com.github.diogenes1oliveira</groupId>
-                            <artifactId>hadoop-auth-utils</artifactId>
-                            <version>${project.version}</version>
-                        </dependency>
-                        <dependency>
-                            <groupId>com.github.diogenes1oliveira</groupId>
-                            <artifactId>hbase-base-types</artifactId>
-                            <version>${project.version}</version>
-                        </dependency>
-                        <dependency>
-                            <groupId>com.github.diogenes1oliveira</groupId>
-                            <artifactId>hbase-connector</artifactId>
-                            <version>${project.version}</version>
-                        </dependency>
-                        <dependency>
-                            <groupId>com.github.diogenes1oliveira</groupId>
-                            <artifactId>hbase-schema-api</artifactId>
-                            <version>${project.version}</version>
-                        </dependency>
-                        <dependency>
-                            <groupId>com.github.diogenes1oliveira</groupId>
-                            <artifactId>hbase-schema-connector</artifactId>
-                            <version>${project.version}</version>
-                        </dependency>
-                    </dependencies>
                 </plugin>
             </plugins>
         </pluginManagement>

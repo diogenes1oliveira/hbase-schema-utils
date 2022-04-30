@@ -1,4 +1,4 @@
-package hbase.schema.api.schemas;
+package hbase.schema.api.schema;
 
 import hbase.schema.api.interfaces.HBaseMutationMapper;
 import hbase.schema.api.interfaces.conversion.BytesConverter;

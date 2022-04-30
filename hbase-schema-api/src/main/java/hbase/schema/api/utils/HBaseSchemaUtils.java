@@ -1,5 +1,6 @@
 package hbase.schema.api.utils;
 
+import hbase.base.interfaces.TriConsumer;
 import org.apache.hadoop.hbase.filter.Filter;
 import org.apache.hadoop.hbase.filter.FilterList;
 import org.apache.hadoop.hbase.util.Bytes;
@@ -10,13 +11,17 @@ import java.lang.reflect.Array;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Objects;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toList;
 
 /**
  * Miscellaneous utilities for schemas
@@ -220,6 +225,50 @@ public final class HBaseSchemaUtils {
             if (u != null) {
                 c1.accept(t, u);
             }
+        };
+    }
+
+    /**
+     * Builds a new bi-consumer that applies a transformer function beforehand, handling null values accordingly.
+     *
+     * @param c tri-consumer
+     * @return new bi-consumer equivalent to {@code }
+     */
+    public static <T, U1, V1, U2, V2> TriConsumer<T, U2, V2> chain(TriConsumer<T, U1, V1> c, Function<U2, U1> fU, Function<V2, V1> fV) {
+        return (t, u2, v2) -> {
+            if (u2 == null || v2 == null) {
+                return;
+            }
+            U1 u1 = fU.apply(u2);
+            V1 v1 = fV.apply(v2);
+            if (u1 == null || v1 == null) {
+                return;
+            }
+            c.accept(t, u1, v1);
+        };
+    }
+
+    /**
+     * Builds a new function that applies the functions in sequence, handling null and empty values accordingly.
+     *
+     * @param f1  first function in chain
+     * @param f2  second function in chain
+     * @param <L> first function input type
+     * @param <U> first function output list type and second function input type
+     * @param <V> second function output type
+     * @return new function equivalent to {@code f2(f1(t))}
+     */
+    @SuppressWarnings("ConstantConditions")
+    public static <L, U, V> Function<L, List<V>> chainMap(Function<L, List<U>> f1, Function<U, V> f2) {
+        return l -> {
+            if (l == null) {
+                return emptyList();
+            }
+            List<U> us = f1.apply(l);
+            if (l == null) {
+                return emptyList();
+            }
+            return us.stream().filter(Objects::nonNull).map(f2).filter(Objects::nonNull).collect(toList());
         };
     }
 
