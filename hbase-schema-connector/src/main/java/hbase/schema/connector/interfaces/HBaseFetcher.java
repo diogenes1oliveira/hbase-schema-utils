@@ -1,9 +1,12 @@
 package hbase.schema.connector.interfaces;
 
 import org.apache.hadoop.hbase.TableName;
+import org.apache.hadoop.hbase.client.Get;
 import org.apache.hadoop.hbase.client.Result;
+import org.apache.hadoop.hbase.client.Scan;
 
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -14,6 +17,14 @@ import java.util.stream.Stream;
  * @param <R> result type
  */
 public interface HBaseFetcher<Q, R> {
+    /**
+     * Builds a Get query based on the data from a Java object
+     *
+     * @param query query object
+     * @return built Get query object
+     */
+    Get toGet(Q query);
+
     /**
      * Builds, executes and parses Get requests
      *
@@ -35,6 +46,14 @@ public interface HBaseFetcher<Q, R> {
     default Stream<R> get(Q query, String tableName, String family) {
         return get(query, TableName.valueOf(tableName), family.getBytes(StandardCharsets.UTF_8));
     }
+
+    /**
+     * Builds a list of Scan queries based on the data from a Java object
+     *
+     * @param query query object
+     * @return built Scan query objects
+     */
+    List<Scan> toScans(Q query);
 
     /**
      * Builds, executes and parses a Scan request
