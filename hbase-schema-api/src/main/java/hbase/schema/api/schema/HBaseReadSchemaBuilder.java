@@ -12,6 +12,7 @@ import hbase.schema.api.utils.ByteBufferPrefixComparator;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hadoop.hbase.client.Get;
 import org.apache.hadoop.hbase.client.Scan;
+import org.apache.hadoop.hbase.util.Bytes;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,84 +64,84 @@ public class HBaseReadSchemaBuilder<Q, R> {
         this(resultCreator);
     }
 
-    public HBaseReadSchemaBuilder<Q, R> cell(HBaseCellParser<R> cellParser) {
+    public HBaseReadSchemaBuilder<Q, R> parseAny(HBaseCellParser<R> cellParser) {
         cellParsers.add(cellParser);
         return this;
     }
 
-    public HBaseReadSchemaBuilder<Q, R> prefix(byte[] prefix, HBaseCellParser<R> cellParser) {
+    public HBaseReadSchemaBuilder<Q, R> parsePrefix(byte[] prefix, HBaseCellParser<R> cellParser) {
         this.prefixCellParsers.put(ByteBuffer.wrap(prefix), cellParser);
         return this;
     }
 
-    public HBaseReadSchemaBuilder<Q, R> prefix(String prefix, HBaseCellParser<R> cellParser) {
-        return prefix(prefix.getBytes(StandardCharsets.UTF_8), cellParser);
+    public HBaseReadSchemaBuilder<Q, R> parsePrefix(String prefix, HBaseCellParser<R> cellParser) {
+        return parsePrefix(prefix.getBytes(StandardCharsets.UTF_8), cellParser);
     }
 
-    public <K, V> HBaseReadSchemaBuilder<Q, R> prefix(byte[] prefix,
-                                                      TriConsumer<R, K, V> setter,
-                                                      Function<ByteBuffer, K> keyConverter,
-                                                      Function<ByteBuffer, V> valueConverter) {
-        return prefix(prefix, hBaseCellParser(setter, keyConverter, valueConverter));
+    public <K, V> HBaseReadSchemaBuilder<Q, R> parsePrefix(byte[] prefix,
+                                                           TriConsumer<R, K, V> setter,
+                                                           Function<ByteBuffer, K> keyConverter,
+                                                           Function<ByteBuffer, V> valueConverter) {
+        return parsePrefix(prefix, hBaseCellParser(setter, keyConverter, valueConverter));
     }
 
-    public <K, V> HBaseReadSchemaBuilder<Q, R> prefix(byte[] prefix,
-                                                      TriConsumer<R, K, V> setter,
-                                                      BytesConverter<K> keyConverter,
-                                                      BytesConverter<V> valueConverter) {
-        return prefix(prefix, setter, keyConverter::fromBytes, valueConverter::fromBytes);
+    public <K, V> HBaseReadSchemaBuilder<Q, R> parsePrefix(byte[] prefix,
+                                                           TriConsumer<R, K, V> setter,
+                                                           BytesConverter<K> keyConverter,
+                                                           BytesConverter<V> valueConverter) {
+        return parsePrefix(prefix, setter, keyConverter::fromBytes, valueConverter::fromBytes);
     }
 
-    public <K, V> HBaseReadSchemaBuilder<Q, R> prefix(String prefix,
-                                                      TriConsumer<R, K, V> setter,
-                                                      Function<ByteBuffer, K> keyConverter,
-                                                      Function<ByteBuffer, V> valueConverter) {
-        return prefix(prefix.getBytes(StandardCharsets.UTF_8), setter, keyConverter, valueConverter);
+    public <K, V> HBaseReadSchemaBuilder<Q, R> parsePrefix(String prefix,
+                                                           TriConsumer<R, K, V> setter,
+                                                           Function<ByteBuffer, K> keyConverter,
+                                                           Function<ByteBuffer, V> valueConverter) {
+        return parsePrefix(prefix.getBytes(StandardCharsets.UTF_8), setter, keyConverter, valueConverter);
     }
 
-    public <K, V> HBaseReadSchemaBuilder<Q, R> prefix(String prefix,
-                                                      TriConsumer<R, K, V> setter,
-                                                      BytesConverter<K> keyConverter,
-                                                      BytesConverter<V> valueConverter) {
-        return prefix(prefix, setter, keyConverter::fromBytes, valueConverter::fromBytes);
+    public <K, V> HBaseReadSchemaBuilder<Q, R> parsePrefix(String prefix,
+                                                           TriConsumer<R, K, V> setter,
+                                                           BytesConverter<K> keyConverter,
+                                                           BytesConverter<V> valueConverter) {
+        return parsePrefix(prefix, setter, keyConverter::fromBytes, valueConverter::fromBytes);
     }
 
-    public HBaseReadSchemaBuilder<Q, R> cell(byte[] qualifier, HBaseByteParser<R> byteParser) {
+    public HBaseReadSchemaBuilder<Q, R> parseColumn(byte[] qualifier, HBaseByteParser<R> byteParser) {
         this.fixedCellParsers.put(ByteBuffer.wrap(qualifier), byteParser);
         return this;
     }
 
-    public HBaseReadSchemaBuilder<Q, R> cell(String qualifier, HBaseByteParser<R> byteParser) {
-        return cell(qualifier.getBytes(StandardCharsets.UTF_8), byteParser);
+    public HBaseReadSchemaBuilder<Q, R> parseColumn(String qualifier, HBaseByteParser<R> byteParser) {
+        return parseColumn(qualifier.getBytes(StandardCharsets.UTF_8), byteParser);
     }
 
-    public <T> HBaseReadSchemaBuilder<Q, R> cell(byte[] qualifier, BiConsumer<R, T> setter, Function<ByteBuffer, T> converter) {
-        return cell(qualifier, hBaseByteParser(setter, converter));
+    public <T> HBaseReadSchemaBuilder<Q, R> parseColumn(byte[] qualifier, BiConsumer<R, T> setter, Function<ByteBuffer, T> converter) {
+        return parseColumn(qualifier, hBaseByteParser(setter, converter));
     }
 
-    public <T> HBaseReadSchemaBuilder<Q, R> cell(String qualifier, BiConsumer<R, T> setter, Function<ByteBuffer, T> converter) {
-        return cell(qualifier.getBytes(StandardCharsets.UTF_8), setter, converter);
+    public <T> HBaseReadSchemaBuilder<Q, R> parseColumn(String qualifier, BiConsumer<R, T> setter, Function<ByteBuffer, T> converter) {
+        return parseColumn(qualifier.getBytes(StandardCharsets.UTF_8), setter, converter);
     }
 
-    public <T> HBaseReadSchemaBuilder<Q, R> cell(byte[] qualifier, BiConsumer<R, T> setter, BytesConverter<T> converter) {
-        return cell(qualifier, setter, converter::fromBytes);
+    public <T> HBaseReadSchemaBuilder<Q, R> parseColumn(byte[] qualifier, BiConsumer<R, T> setter, BytesConverter<T> converter) {
+        return parseColumn(qualifier, setter, converter::fromBytes);
     }
 
-    public <T> HBaseReadSchemaBuilder<Q, R> cell(String qualifier, BiConsumer<R, T> setter, BytesConverter<T> converter) {
-        return cell(qualifier.getBytes(StandardCharsets.UTF_8), setter, converter);
+    public <T> HBaseReadSchemaBuilder<Q, R> parseColumn(String qualifier, BiConsumer<R, T> setter, BytesConverter<T> converter) {
+        return parseColumn(qualifier.getBytes(StandardCharsets.UTF_8), setter, converter);
     }
 
-    public HBaseReadSchemaBuilder<Q, R> rowKey(HBaseByteParser<R> parser) {
+    public HBaseReadSchemaBuilder<Q, R> parseRowKey(HBaseByteParser<R> parser) {
         rowKeyParsers.add(parser);
         return this;
     }
 
-    public <T> HBaseReadSchemaBuilder<Q, R> rowKey(BiConsumer<R, T> setter, Function<ByteBuffer, T> converter) {
-        return rowKey(hBaseByteParser(setter, converter));
+    public <T> HBaseReadSchemaBuilder<Q, R> parseRowKey(BiConsumer<R, T> setter, Function<ByteBuffer, T> converter) {
+        return parseRowKey(hBaseByteParser(setter, converter));
     }
 
-    public <T> HBaseReadSchemaBuilder<Q, R> rowKey(BiConsumer<R, T> setter, BytesConverter<T> converter) {
-        return rowKey(setter, converter::fromBytes);
+    public <T> HBaseReadSchemaBuilder<Q, R> parseRowKey(BiConsumer<R, T> setter, BytesConverter<T> converter) {
+        return parseRowKey(setter, converter::fromBytes);
     }
 
     public HBaseReadSchemaBuilder<Q, R> getKey(HBaseByteMapper<Q> mapper) {
@@ -174,6 +175,18 @@ public class HBaseReadSchemaBuilder<Q, R> {
 
     public <T> HBaseReadSchemaBuilder<Q, R> scanKey(Function<Q, T> getter, Function<T, ByteBuffer> converter, int size) {
         return scanKey(chain(getter, converter)::apply, size);
+    }
+
+    public HBaseReadSchemaBuilder<Q, R> scanKeys(HBaseBytesMapper<Q> mapper) {
+        return scanStarts(mapper).scanStops(mapper.andThen(b -> null));
+    }
+
+    public <T> HBaseReadSchemaBuilder<Q, R> scanKeys(Function<Q, List<T>> getter, Function<T, ByteBuffer> converter) {
+        return scanKeys(chainMap(getter, converter)::apply);
+    }
+
+    public <T> HBaseReadSchemaBuilder<Q, R> scanKeys(Function<Q, List<T>> getter, BytesConverter<T> converter) {
+        return scanKeys(getter, converter::toBuffer);
     }
 
     public <T> HBaseReadSchemaBuilder<Q, R> scanKey(Function<Q, T> getter, BytesConverter<T> converter, int size) {
@@ -241,6 +254,8 @@ public class HBaseReadSchemaBuilder<Q, R> {
                     byte[] scanStart = pair.getLeft();
                     byte[] scanStop = pair.getRight();
 
+                    LOGGER.info("Built scan keys: {} -> {}", Bytes.toStringBinary(scanStart), scanStop != null ?
+                            Bytes.toStringBinary(scanStop) : "null");
                     if (scanStop != null) {
                         scans.add(new Scan().withStartRow(scanStart).withStopRow(scanStop));
                     } else {
@@ -256,6 +271,7 @@ public class HBaseReadSchemaBuilder<Q, R> {
                     return HBaseReadSchema.super.toGet(query);
                 } else {
                     ByteBuffer rowKey = rowKeyMapper.toBuffer(query);
+                    LOGGER.info("Built row key: {}", Bytes.toStringBinary(rowKey));
                     return new Get(rowKey);
                 }
             }
