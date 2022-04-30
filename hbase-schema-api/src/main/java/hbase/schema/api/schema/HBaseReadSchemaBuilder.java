@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.function.BiConsumer;
+import java.util.function.BiPredicate;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -49,6 +50,7 @@ public class HBaseReadSchemaBuilder<Q, R> {
     private final SortedMap<ByteBuffer, HBaseByteParser<R>> fixedCellParsers = new TreeMap<>(ByteBufferComparator.INSTANCE);
     private final SortedMap<ByteBuffer, HBaseCellParser<R>> prefixCellParsers = new TreeMap<>(ByteBufferPrefixComparator.INSTANCE);
     private Function<Q, Filter> filterMapper = q -> null;
+    private BiPredicate<R, Q> validator = (r, q) -> true;
     private final List<HBaseQueryCustomizer<Q>> queryCustomizers = new ArrayList<>();
 
     /**
@@ -269,6 +271,11 @@ public class HBaseReadSchemaBuilder<Q, R> {
         return this;
     }
 
+    public HBaseReadSchemaBuilder<Q, R> validate(BiPredicate<R, Q> validator) {
+        this.validator = validator;
+        return this;
+    }
+
     public HBaseReadSchema<Q, R> build() {
 
         return new HBaseReadSchema<Q, R>() {
@@ -335,6 +342,11 @@ public class HBaseReadSchemaBuilder<Q, R> {
                 }
 
                 return parsed;
+            }
+
+            @Override
+            public boolean validate(R result, Q query) {
+                return validator.test(result, query);
             }
         };
     }

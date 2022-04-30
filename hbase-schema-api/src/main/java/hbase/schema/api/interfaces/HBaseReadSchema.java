@@ -78,4 +78,17 @@ public interface HBaseReadSchema<Q, R> {
      * @return {@code true} if some data was parsed
      */
     boolean parseCell(R result, ByteBuffer qualifier, ByteBuffer value, Q query);
+
+    /**
+     * Validates whether the result parsed from the row is valid.
+     * <p>
+     * The default implementation always returns {@code true}
+     *
+     * @param result result object
+     * @param query  original query object
+     * @return {@code true} if the parsed result is valid
+     */
+    default boolean validate(R result, Q query) {
+        return true;
+    }
 }

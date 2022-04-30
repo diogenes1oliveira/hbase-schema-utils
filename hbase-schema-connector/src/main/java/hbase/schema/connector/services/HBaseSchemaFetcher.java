@@ -118,7 +118,7 @@ public class HBaseSchemaFetcher<Q, R> implements HBaseFetcher<Q, R> {
                     parsed = readSchema.parseCell(result, ByteBuffer.wrap(qualifier), ByteBuffer.wrap(value), query) || parsed;
                 }
             }
-            if (parsed) {
+            if (parsed && readSchema.validate(result, query)) {
                 results.add(result);
             }
         }
