@@ -42,39 +42,53 @@ public class HBaseSchemaFetcher<Q, R> implements HBaseFetcher<Q, R> {
 
     @Override
     public List<R> get(Q query, TableName tableName, byte[] family) throws IOException {
-        LOGGER.debug("Building Get for query {}", query);
+        LOGGER.info("Building Get for query {}", query);
         Get get = readSchema.toGet(query);
         get.addFamily(family);
 
-        LOGGER.debug("Get object was created: {}, now connecting to HBase to execute it", get);
+        LOGGER.info("Get object was created: {}, now connecting to HBase to execute it", get);
 
         try (Connection connection = connector.context();
              Table table = connection.getTable(tableName)) {
             Result result = table.get(get);
-            LOGGER.debug("Got result, will now parse it: {}", result);
+            LOGGER.info("Got result, will now parse it: {}", result);
             return parseResults(query, family, singleton(result).iterator());
         } finally {
-            LOGGER.debug("Get finalized");
+            LOGGER.info("Get finalized");
         }
     }
 
     @Override
     public List<R> scan(Q query, TableName tableName, byte[] family) throws IOException {
-        LOGGER.debug("Building scan for queries {}", query);
-        Scan scan = readSchema.toScan(query);
-        LOGGER.debug("Scan object was created: {}, now connecting to HBase to execute it", scan);
+        LOGGER.info("Building scans for queries {}", query);
+        List<Scan> scans = readSchema.toScans(query);
+        LOGGER.info("Scan objects were created: {}, now connecting to HBase to execute them", scans);
+
+        List<R> results = new ArrayList<>();
 
         try (Connection connection = connector.context();
-             Table table = connection.getTable(tableName);
-             ResultScanner scanner = table.getScanner(scan)) {
+             Table table = connection.getTable(tableName)) {
+            for (Scan scan : scans) {
+                results.addAll(scanResults(query, family, table, scan));
+            }
+        } finally {
+            LOGGER.info("Scans finalized");
+        }
+
+        return results;
+    }
+
+    private List<R> scanResults(Q query, byte[] family, Table table, Scan scan) throws IOException {
+        scan.addFamily(family);
+        LOGGER.info("Now executing Scan {}", scan);
+
+        try (ResultScanner scanner = table.getScanner(scan)) {
             if (scanner == null) {
-                LOGGER.debug("Result scanner is null, returning an empty list");
+                LOGGER.info("Result scanner for scan {} is null, returning an empty list", scan);
                 return emptyList();
             }
-            LOGGER.debug("Will now iterate through the Scan results");
+            LOGGER.info("Will now iterate through the Scan results");
             return parseResults(query, family, scanner.iterator());
-        } finally {
-            LOGGER.debug("Scan finalized");
         }
     }
 
@@ -82,11 +96,11 @@ public class HBaseSchemaFetcher<Q, R> implements HBaseFetcher<Q, R> {
         List<R> results = new ArrayList<>();
         int count = 0;
 
-        LOGGER.debug("Iterating through the results");
+        LOGGER.info("Iterating through the results");
         while (hBaseResults.hasNext()) {
-            LOGGER.debug("Getting the next result");
+            LOGGER.info("Getting the next result");
             Result hBaseResult = hBaseResults.next();
-            LOGGER.debug("Got one result: {}", hBaseResult);
+            LOGGER.info("Got one result: {}", hBaseResult);
             ++count;
             if (hBaseResult == null) {
                 continue;

@@ -2,10 +2,8 @@ package hbase.schema.api.interfaces;
 
 import org.apache.hadoop.hbase.client.Get;
 import org.apache.hadoop.hbase.client.Scan;
-import org.apache.hadoop.hbase.filter.MultiRowRangeFilter;
 
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -24,28 +22,6 @@ public interface HBaseReadSchema<Q, R> {
      */
     default List<Scan> toScans(Q query) {
         throw new UnsupportedOperationException("Multiple Scan not supported by this schema: " + this.getClass().getName());
-    }
-
-    /**
-     * Generates a Scan corresponding to the query object
-     * <p>
-     * The default implementation generates a Scan with a MultiRowRangeFilter combining the ones from {@link #toScans(Object)}
-     *
-     * @param query query object
-     * @return generated Scan
-     * @throws UnsupportedOperationException schema doesn't support this operation
-     */
-    default Scan toScan(Q query) {
-        List<MultiRowRangeFilter.RowRange> ranges = new ArrayList<>();
-
-        for (Scan scan : toScans(query)) {
-            MultiRowRangeFilter.RowRange range = new MultiRowRangeFilter.RowRange(scan.getStartRow(), true, scan.getStopRow(), false);
-            ranges.add(range);
-        }
-
-        Scan scan = new Scan();
-        scan.setFilter(new MultiRowRangeFilter(ranges));
-        return scan;
     }
 
     /**
