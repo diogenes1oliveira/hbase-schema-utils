@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 
@@ -25,6 +26,7 @@ public class HBaseScanRowPaginator<Q, R> extends HBaseFetcherWrapper<Q, R> {
     private static final Logger LOGGER = LoggerFactory.getLogger(HBaseScanRowPaginator.class);
 
     private final HBasePaginatedQuery paginatedQuery;
+    private final AtomicInteger resultCount = new AtomicInteger(0);
     private final AtomicReference<byte[]> resultRowRef = new AtomicReference<>();
 
     public HBaseScanRowPaginator(HBaseFetcher<Q, R> fetcher, HBasePaginatedQuery paginatedQuery) {
@@ -42,24 +44,28 @@ public class HBaseScanRowPaginator<Q, R> extends HBaseFetcherWrapper<Q, R> {
         for (Scan scan : scans) {
             scan.setLimit(limit);
         }
-        LOGGER.info("Remapping Scans");
+        LOGGER.info("Remapping {} old scans: {}", scans.size(), scans);
 
         ByteBuffer nextRow = paginatedQuery.getNextRow();
         if (nextRow == null || !nextRow.hasRemaining()) {
             LOGGER.info("Next row not set in {}", paginatedQuery);
             return scans;
         }
-        return scans.stream()
-                    .filter(scan -> isAfter(scan, nextRow))
-                    .map(scan -> checkBounds(scan, nextRow))
-                    .sorted(SCAN_COMPARATOR)
-                    .collect(toList());
+        List<Scan> newScans = scans.stream()
+                                   .filter(scan -> isAfter(scan, nextRow))
+                                   .map(scan -> checkBounds(scan, nextRow))
+                                   .sorted(SCAN_COMPARATOR)
+                                   .collect(toList());
+
+
+        LOGGER.info("Generated {} new scans: {}", newScans.size(), newScans);
+        return newScans;
     }
 
     @Override
     public Optional<R> parseResult(Q query, byte[] family, Result hBaseResult) {
         resultRowRef.set(hBaseResult.getRow());
-        LOGGER.info("Setting result row ref to {}", toStringBinary(resultRowRef.get()));
+        LOGGER.info("Setting result row ref to {}, now count = {}", toStringBinary(resultRowRef.get()), resultCount.incrementAndGet());
         return super.parseResult(query, family, hBaseResult);
     }
 
@@ -70,7 +76,9 @@ public class HBaseScanRowPaginator<Q, R> extends HBaseFetcherWrapper<Q, R> {
 
         return super.scan(query, tableName, family, scans).onClose(() -> {
             LOGGER.info("result row ref now is {}", toStringBinary(resultRowRef.get()));
-            paginatedQuery.setNextRow(resultRowRef.get());
+            if (resultCount.get() >= paginatedQuery.getPageSize()) {
+                paginatedQuery.setNextRow(resultRowRef.get());
+            }
         });
     }
 

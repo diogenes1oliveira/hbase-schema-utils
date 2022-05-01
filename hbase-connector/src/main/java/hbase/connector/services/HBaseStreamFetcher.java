@@ -55,7 +55,7 @@ public class HBaseStreamFetcher {
 
     public Stream<Result> fetch(TableName tableName, Scan scan) {
         return Stream.generate(() -> {
-            IOExitStack exitStack = new IOExitStack();
+            IOExitStack exitStack = new IOExitStack("Exit stack for scan " + scan);
 
             try {
                 HBaseConnectionProxy connection = connector.context();
