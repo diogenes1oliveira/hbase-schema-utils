@@ -47,7 +47,7 @@ public class HBaseReadSchemaBuilder<Q, R> {
     private HBaseByteMapper<Q> rowKeyMapper = null;
     private HBaseBytesMapper<Q> scanStartsMapper = HBaseBytesMapper.empty();
     private HBaseBytesMapper<Q> scanStopsMapper = HBaseBytesMapper.empty();
-    private final SortedMap<ByteBuffer, HBaseByteParser<R>> fixedCellParsers = new TreeMap<>(ByteBufferComparator.INSTANCE);
+    private final SortedMap<ByteBuffer, HBaseByteParser<R>> fixedCellParsers = new TreeMap<>(ByteBufferComparator.BYTE_BUFFER_COMPARATOR);
     private final SortedMap<ByteBuffer, HBaseCellParser<R>> prefixCellParsers = new TreeMap<>(ByteBufferPrefixComparator.INSTANCE);
     private Function<Q, Filter> filterMapper = q -> null;
     private BiPredicate<R, Q> validator = (r, q) -> true;
@@ -297,10 +297,9 @@ public class HBaseReadSchemaBuilder<Q, R> {
                     }
 
                     scan = setFilter(scan, query);
-                    scan = customize(scan, query);
                     scans.add(scan);
                 }
-                return scans;
+                return customize(scans, query);
             }
 
             @Override
@@ -413,14 +412,14 @@ public class HBaseReadSchemaBuilder<Q, R> {
         }
     }
 
-    private Scan customize(Scan scan, Q query) {
-        Scan newScan = scan;
+    private List<Scan> customize(List<Scan> scans, Q query) {
+        List<Scan> newScans = scans;
 
         for (HBaseQueryCustomizer<Q> customizer : queryCustomizers) {
-            newScan = customizer.customize(query, newScan);
+            newScans = customizer.customize(query, newScans);
         }
 
-        return newScan;
+        return newScans;
     }
 
     private Get customize(Get get, Q query) {

@@ -41,8 +41,7 @@ public class HBaseSchemaFetcher<Q, R> implements HBaseFetcher<Q, R> {
     }
 
     @Override
-    public Stream<R> get(Q query, TableName tableName, byte[] family) {
-        Get get = toGet(query);
+    public Stream<R> get(Q query, TableName tableName, byte[] family, Get get) {
         LOGGER.info("Get object was created: {}, now connecting to HBase to execute it", get);
 
         return streamFetcher.fetch(tableName, get)
@@ -57,16 +56,13 @@ public class HBaseSchemaFetcher<Q, R> implements HBaseFetcher<Q, R> {
     }
 
     @Override
-    public Stream<R> scan(Q query, TableName tableName, byte[] family) {
-        List<Scan> scans = toScans(query);
+    public Stream<Result> scan(Q query, TableName tableName, byte[] family, List<Scan> scans) {
         for (Scan scan : scans) {
             scan.addFamily(family);
         }
         LOGGER.info("Scan objects were created: {}, now connecting to HBase to execute them", scans);
 
-        return streamFetcher.fetch(tableName, scans)
-                            .map(result -> parseResult(query, family, result))
-                            .flatMap(HBaseQueryUtils::optionalToStream);
+        return streamFetcher.fetch(tableName, scans);
     }
 
     @Override

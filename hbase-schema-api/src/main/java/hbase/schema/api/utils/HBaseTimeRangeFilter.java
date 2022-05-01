@@ -8,9 +8,11 @@ import org.apache.hadoop.hbase.client.Get;
 import org.apache.hadoop.hbase.client.Scan;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.function.Function;
 
 import static hbase.schema.api.utils.HBaseSchemaUtils.chain;
+import static java.util.stream.Collectors.toList;
 
 public class HBaseTimeRangeFilter<Q> implements HBaseQueryCustomizer<Q> {
     private final HBaseLongMapper<Q> startGetter;
@@ -22,16 +24,20 @@ public class HBaseTimeRangeFilter<Q> implements HBaseQueryCustomizer<Q> {
     }
 
     @Override
-    public Scan customize(Q query, Scan scan) {
+    public List<Scan> customize(Q query, List<Scan> scans) {
         Pair<Long, Long> range = toRange(query);
         if (range == null) {
-            return scan;
+            return scans;
         }
-        try {
-            return scan.setTimeRange(range.getLeft(), range.getRight());
-        } catch (IOException e) {
-            throw new IllegalArgumentException("Invalid time range", e);
-        }
+        return scans.stream()
+                    .map(scan -> {
+                        try {
+                            return scan.setTimeRange(range.getLeft(), range.getRight());
+                        } catch (IOException e) {
+                            throw new IllegalArgumentException("Invalid time range", e);
+                        }
+                    })
+                    .collect(toList());
     }
 
     @Override

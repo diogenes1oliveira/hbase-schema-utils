@@ -3,9 +3,11 @@ package hbase.schema.api.interfaces;
 import org.apache.hadoop.hbase.client.Get;
 import org.apache.hadoop.hbase.client.Scan;
 
+import java.util.List;
+
 public interface HBaseQueryCustomizer<Q> {
-    default Scan customize(Q query, Scan scan) {
-        return scan;
+    default List<Scan> customize(Q query, List<Scan> scans) {
+        return scans;
     }
 
     default Get customize(Q query, Get get) {

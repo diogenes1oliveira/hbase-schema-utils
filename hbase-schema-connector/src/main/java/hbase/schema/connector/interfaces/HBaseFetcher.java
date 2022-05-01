@@ -1,5 +1,6 @@
 package hbase.schema.connector.interfaces;
 
+import hbase.schema.connector.utils.HBaseQueryUtils;
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.Get;
 import org.apache.hadoop.hbase.client.Result;
@@ -33,7 +34,7 @@ public interface HBaseFetcher<Q, R> {
      * @param family    column family to fetch data from
      * @return stream of valid parsed results
      */
-    Stream<R> get(Q query, TableName tableName, byte[] family);
+    Stream<R> get(Q query, TableName tableName, byte[] family, Get get);
 
     /**
      * Builds, executes and parses a Scan request
@@ -43,8 +44,8 @@ public interface HBaseFetcher<Q, R> {
      * @param family    column family to fetch data from
      * @return stream of valid parsed results
      */
-    default Stream<R> get(Q query, String tableName, String family) {
-        return get(query, TableName.valueOf(tableName), family.getBytes(StandardCharsets.UTF_8));
+    default Stream<R> get(Q query, String tableName, String family, Get get) {
+        return get(query, TableName.valueOf(tableName), family.getBytes(StandardCharsets.UTF_8), get);
     }
 
     /**
@@ -63,7 +64,34 @@ public interface HBaseFetcher<Q, R> {
      * @param family    column family to fetch data from
      * @return stream of valid parsed results
      */
-    Stream<R> scan(Q query, TableName tableName, byte[] family);
+    Stream<Result> scan(Q query, TableName tableName, byte[] family, List<Scan> scans);
+
+    /**
+     * Builds, executes and parses a Scan request
+     *
+     * @param query     query object
+     * @param tableName table to execute Get into
+     * @param family    column family to fetch data from
+     * @return stream of valid parsed results
+     */
+    default Stream<Result> scan(Q query, String tableName, String family, List<Scan> scans) {
+        return scan(query, TableName.valueOf(tableName), family.getBytes(StandardCharsets.UTF_8), scans);
+    }
+
+    /**
+     * Builds, executes and parses a Scan request
+     *
+     * @param query     query object
+     * @param tableName table to execute Get into
+     * @param family    column family to fetch data from
+     * @return stream of valid parsed results
+     */
+    default Stream<R> scan(Q query, TableName tableName, byte[] family) {
+        List<Scan> scans = toScans(query);
+        return scan(query, tableName, family, scans)
+                .map(result -> parseResult(query, family, result))
+                .flatMap(HBaseQueryUtils::optionalToStream);
+    }
 
     /**
      * Builds, executes and parses a Scan request
