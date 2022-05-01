@@ -4,10 +4,15 @@ import java.nio.ByteBuffer;
 import java.util.Comparator;
 
 public class ByteBufferComparator implements Comparator<ByteBuffer> {
+    private ByteBufferComparator() {
+        // singleton
+    }
+
     @Override
     public int compare(ByteBuffer byteBuffer1, ByteBuffer byteBuffer2) {
-        ByteBuffer buffer1 = byteBuffer1 == null ? ByteBuffer.allocate(0) : byteBuffer1.duplicate();
-        ByteBuffer buffer2 = byteBuffer2 == null ? ByteBuffer.allocate(0) : byteBuffer2.duplicate();
+        // manually because HBase tools don't like read-only buffers
+        ByteBuffer buffer1 = byteBuffer1 == null ? ByteBuffer.allocate(0) : byteBuffer1.slice();
+        ByteBuffer buffer2 = byteBuffer2 == null ? ByteBuffer.allocate(0) : byteBuffer2.slice();
 
         if (buffer1.remaining() > buffer2.remaining()) {
             return -compare(buffer2, buffer1);

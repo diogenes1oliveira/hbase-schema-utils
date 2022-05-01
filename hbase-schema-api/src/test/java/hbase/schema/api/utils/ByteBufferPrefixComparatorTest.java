@@ -24,7 +24,7 @@ class ByteBufferPrefixComparatorTest {
         ByteBuffer b1 = utf8(s1);
         ByteBuffer b2 = utf8(s2);
 
-        int actualResult = ByteBufferPrefixComparator.INSTANCE.compare(b1, b2);
+        int actualResult = ByteBufferPrefixComparator.BYTE_BUFFER_PREFIX_COMPARATOR.compare(b1, b2);
         assertThat(actualResult, equalTo(expectedResult));
     }
 

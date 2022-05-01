@@ -48,7 +48,7 @@ public class HBaseReadSchemaBuilder<Q, R> {
     private HBaseBytesMapper<Q> scanStartsMapper = HBaseBytesMapper.empty();
     private HBaseBytesMapper<Q> scanStopsMapper = HBaseBytesMapper.empty();
     private final SortedMap<ByteBuffer, HBaseByteParser<R>> fixedCellParsers = new TreeMap<>(ByteBufferComparator.BYTE_BUFFER_COMPARATOR);
-    private final SortedMap<ByteBuffer, HBaseCellParser<R>> prefixCellParsers = new TreeMap<>(ByteBufferPrefixComparator.INSTANCE);
+    private final SortedMap<ByteBuffer, HBaseCellParser<R>> prefixCellParsers = new TreeMap<>(ByteBufferPrefixComparator.BYTE_BUFFER_PREFIX_COMPARATOR);
     private Function<Q, Filter> filterMapper = q -> null;
     private BiPredicate<R, Q> validator = (r, q) -> true;
     private final List<HBaseQueryCustomizer<Q>> queryCustomizers = new ArrayList<>();
@@ -388,7 +388,7 @@ public class HBaseReadSchemaBuilder<Q, R> {
 
         if (parser != null) {
             ByteBuffer prefix = prefixCellParsers.tailMap(column).firstKey();
-            return parser.parse(result, (ByteBuffer) column.position(prefix.limit()), value);
+            return parser.parse(result, (ByteBuffer) column.position(prefix.remaining()), value);
         } else {
             return false;
         }

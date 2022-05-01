@@ -14,7 +14,7 @@ public class BytesNullableComparator implements Comparator<byte[]> {
     @Override
     public int compare(byte[] b1, byte[] b2) {
         if (b1 == null) {
-            return b2 == null ? 0 : -1;
+            return (b2 == null || b2.length == 0) ? 0 : -1;
         } else if (b2 == null) {
             return 1;
         } else {
