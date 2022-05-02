@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -64,11 +65,12 @@ public class HBaseSchemaFetcher<Q, R> implements HBaseFetcher<Q, R> {
     }
 
     @Override
-    public Stream<Result[]> scan(Q query, TableName tableName, byte[] family, List<Scan> scans, int rowBatchSize) {
+    public Stream<List<Result>> scan(Q query, TableName tableName, byte[] family, List<Scan> scans, int rowBatchSize) {
         for (Scan scan : scans) {
             scan.addFamily(family);
         }
-        return streamFetcher.fetch(tableName, scans, rowBatchSize);
+        return streamFetcher.fetch(tableName, scans, rowBatchSize)
+                            .map(Arrays::asList);
     }
 
     @Override

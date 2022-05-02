@@ -8,7 +8,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Consumer;
+import java.util.function.Function;
 
 import static hbase.schema.api.utils.ScanComparator.SCAN_COMPARATOR;
 import static hbase.schema.connector.utils.HBaseQueryUtils.toHBaseShell;
@@ -18,7 +18,7 @@ public class HBaseScansSlicer {
     private static final Logger LOGGER = LoggerFactory.getLogger(HBaseScansSlicer.class);
 
     private final TableName tableName;
-    private final List<Scan> scans;
+    private List<Scan> scans;
 
     public HBaseScansSlicer(TableName tableName, List<Scan> scans) {
         this.tableName = tableName;
@@ -27,20 +27,20 @@ public class HBaseScansSlicer {
     }
 
     public List<Scan> getScans() {
-        return this.scans;
+        return scans;
     }
 
-    public void forEach(Consumer<Scan> consumer) {
-        this.scans.forEach(consumer);
+    public void map(Function<Scan, Scan> mapper) {
+        scans = scans.stream().map(mapper).collect(toList());
     }
 
     public void removeBefore(byte[] rowKey) {
-        this.scans.removeIf(scan -> scanStopsBefore(scan, rowKey));
+        scans.removeIf(scan -> scanStopsBefore(scan, rowKey));
 
-        for (int i = 0; i < this.scans.size(); ++i) {
-            Scan scan = this.scans.get(i);
+        for (int i = 0; i < scans.size(); ++i) {
+            Scan scan = scans.get(i);
             if (rowKey != null && scanIntersects(scan, rowKey)) {
-                this.scans.set(i, scan.withStartRow(rowKey));
+                scans.set(i, scan.withStartRow(rowKey));
             }
         }
     }
@@ -103,7 +103,7 @@ public class HBaseScansSlicer {
     @Override
     public String toString() {
         return "HBaseScansSlicer{" +
-                "this.scans=" + this.scans.stream().map(s -> toHBaseShell(s, tableName)).collect(toList()) +
+                "scans=" + this.scans.stream().map(s -> toHBaseShell(s, tableName)).collect(toList()) +
                 '}';
     }
 }

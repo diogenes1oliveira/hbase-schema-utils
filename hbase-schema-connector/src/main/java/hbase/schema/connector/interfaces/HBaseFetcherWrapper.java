@@ -38,8 +38,13 @@ public abstract class HBaseFetcherWrapper<Q, R> implements HBaseFetcher<Q, R> {
     }
 
     @Override
-    public Stream<Result[]> scan(Q query, TableName tableName, byte[] family, List<Scan> scans, int rowBatchSize) {
+    public Stream<List<Result>> scan(Q query, TableName tableName, byte[] family, List<Scan> scans, int rowBatchSize) {
         return wrapped.scan(query, tableName, family, scans, rowBatchSize);
+    }
+
+    @Override
+    public Stream<List<R>> scan(Q query, TableName tableName, byte[] family, int rowBatchSize) {
+        return wrapped.scan(query, tableName, family, rowBatchSize);
     }
 
     @Override
@@ -79,13 +84,8 @@ public abstract class HBaseFetcherWrapper<Q, R> implements HBaseFetcher<Q, R> {
     }
 
     @Override
-    public final Stream<Result[]> scan(Q query, String tableName, String family, List<Scan> scans, int rowBatchSize) {
+    public final Stream<List<Result>> scan(Q query, String tableName, String family, List<Scan> scans, int rowBatchSize) {
         return HBaseFetcher.super.scan(query, tableName, family, scans, rowBatchSize);
-    }
-
-    @Override
-    public final Stream<List<R>> scan(Q query, TableName tableName, byte[] family, int rowBatchSize) {
-        return HBaseFetcher.super.scan(query, tableName, family, rowBatchSize);
     }
 
     @Override
@@ -104,7 +104,7 @@ public abstract class HBaseFetcherWrapper<Q, R> implements HBaseFetcher<Q, R> {
     }
 
     @Override
-    public final Stream<Result[]> scan(Q query, String tableName, String family, List<Scan> scans) {
+    public final Stream<List<Result>> scan(Q query, String tableName, String family, List<Scan> scans) {
         return HBaseFetcher.super.scan(query, tableName, family, scans);
     }
 

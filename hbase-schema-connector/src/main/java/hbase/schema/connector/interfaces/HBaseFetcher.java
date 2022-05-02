@@ -8,7 +8,6 @@ import org.apache.hadoop.hbase.client.Scan;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -63,7 +62,21 @@ public interface HBaseFetcher<Q, R> {
      * @param rowBatchSize number of rows in a Scan batch
      * @return stream of raw results
      */
-    Stream<Result[]> scan(Q query, TableName tableName, byte[] family, List<Scan> scans, int rowBatchSize);
+    Stream<List<Result>> scan(Q query, TableName tableName, byte[] family, List<Scan> scans, int rowBatchSize);
+
+    /**
+     * Builds, executes and parses a Scan request
+     *
+     * @param query     query object
+     * @param tableName table to execute the Scan into
+     * @param family    column family to fetch data from
+     * @return stream of valid parsed results
+     */
+    default Stream<List<R>> scan(Q query, TableName tableName, byte[] family, int rowBatchSize) {
+        List<Scan> scans = toScans(query);
+        return scan(query, tableName, family, scans, rowBatchSize)
+                .flatMap(results -> parseResults(query, family, results.stream()));
+    }
 
     /**
      * Parses data incoming from a HBase query
@@ -123,22 +136,8 @@ public interface HBaseFetcher<Q, R> {
      * @param rowBatchSize number of rows in a Scan batch
      * @return stream of raw results
      */
-    default Stream<Result[]> scan(Q query, String tableName, String family, List<Scan> scans, int rowBatchSize) {
+    default Stream<List<Result>> scan(Q query, String tableName, String family, List<Scan> scans, int rowBatchSize) {
         return scan(query, TableName.valueOf(tableName), family.getBytes(StandardCharsets.UTF_8), scans, rowBatchSize);
-    }
-
-    /**
-     * Builds, executes and parses a Scan request
-     *
-     * @param query     query object
-     * @param tableName table to execute the Scan into
-     * @param family    column family to fetch data from
-     * @return stream of valid parsed results
-     */
-    default Stream<List<R>> scan(Q query, TableName tableName, byte[] family, int rowBatchSize) {
-        List<Scan> scans = toScans(query);
-        return scan(query, tableName, family, scans, rowBatchSize)
-                .flatMap(results -> parseResults(query, family, Arrays.stream(results)));
     }
 
     /**
@@ -190,7 +189,7 @@ public interface HBaseFetcher<Q, R> {
      * @param family    column family to fetch data from
      * @return stream of raw results
      */
-    default Stream<Result[]> scan(Q query, String tableName, String family, List<Scan> scans) {
+    default Stream<List<Result>> scan(Q query, String tableName, String family, List<Scan> scans) {
         return scan(query, tableName, family, scans, defaultRowBatchSize());
     }
 
