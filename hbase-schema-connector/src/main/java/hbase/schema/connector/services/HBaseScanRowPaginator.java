@@ -23,13 +23,24 @@ public class HBaseScanRowPaginator<Q, R> extends HBaseFetcherWrapper<Q, R> {
     private static final Logger LOGGER = LoggerFactory.getLogger(HBaseScanRowPaginator.class);
 
     private final int pageSize;
+    private final Type type;
     private byte[] startRow;
     private byte[] lastRow = null;
 
+    public enum Type {
+        DESIRED,
+        EXACT
+    }
+
     public HBaseScanRowPaginator(HBaseFetcher<Q, R> fetcher, byte[] startRow, int pageSize) {
+        this(fetcher, startRow, pageSize, Type.DESIRED);
+    }
+
+    public HBaseScanRowPaginator(HBaseFetcher<Q, R> fetcher, byte[] startRow, int pageSize, Type type) {
         super(fetcher);
 
         this.pageSize = pageSize;
+        this.type = type;
         setStartRow(startRow);
     }
 
@@ -77,10 +88,6 @@ public class HBaseScanRowPaginator<Q, R> extends HBaseFetcherWrapper<Q, R> {
         return super.parseResults(query, family, updatePagination(hBaseResults));
     }
 
-    public void reset() {
-        this.lastRow = null;
-    }
-
     public ByteBuffer nextRow() {
         if (lastRow == null || BYTES_NULLABLE_COMPARATOR.compare(lastRow, startRow) == 0) {
             return null;
@@ -91,9 +98,16 @@ public class HBaseScanRowPaginator<Q, R> extends HBaseFetcherWrapper<Q, R> {
 
     private List<Result> updatePagination(List<Result> results) {
         if (results.size() > pageSize) {
-            Result last = results.get(results.size() - 1);
-            lastRow = last.getRow();
-            return results.subList(0, results.size() - 1);
+            int newSize;
+
+            if (type == Type.EXACT) {
+                newSize = pageSize;
+            } else {
+                newSize = results.size() - 1;
+            }
+
+            lastRow = results.get(newSize).getRow();
+            return results.subList(0, newSize);
         } else {
             lastRow = null;
             return results;
