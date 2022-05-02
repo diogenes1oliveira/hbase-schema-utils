@@ -287,6 +287,17 @@ public final class HBaseSchemaUtils {
     }
 
     /**
+     * Combines the filters with {@link FilterList.Operator#MUST_PASS_ALL}, skipping the null ones
+     *
+     * @param filters array of filters to be combined
+     * @return a FilterList, the only non-null Filter or null if no valid filter was found
+     */
+    @Nullable
+    public static Filter combineNullableFilters(@Nullable Filter... filters) {
+        return combineNullableFilters(FilterList.Operator.MUST_PASS_ALL, filters);
+    }
+
+    /**
      * Combines the filters, skipping the null ones
      *
      * @param operator operator to combine the filters into a {@link FilterList}
