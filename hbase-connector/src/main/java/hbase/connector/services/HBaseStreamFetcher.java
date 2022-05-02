@@ -52,10 +52,10 @@ public class HBaseStreamFetcher {
 
     public Stream<Result[]> fetch(TableName tableName, List<Scan> scans, int batchSize) {
         return scans.stream()
-                    .flatMap(scan -> fetch(tableName, scan, batchSize));
+                    .flatMap(scan -> fetchSingleScan(tableName, scan, batchSize));
     }
 
-    public Stream<Result[]> fetch(TableName tableName, Scan scan, int batchSize) {
+    private Stream<Result[]> fetchSingleScan(TableName tableName, Scan scan, int batchSize) {
         IOExitStack exitStack = new IOExitStack("Exit stack for scan " + scan);
 
         IOLazyRef<HBaseConnectionProxy> connectionRef = new IOLazyRef<>(() -> {

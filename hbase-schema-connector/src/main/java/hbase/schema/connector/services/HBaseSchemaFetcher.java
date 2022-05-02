@@ -18,8 +18,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-import static java.util.stream.Collectors.toList;
-
 /**
  * Object to query and parse data from HBase based on a Schema
  *
@@ -74,15 +72,14 @@ public class HBaseSchemaFetcher<Q, R> implements HBaseFetcher<Q, R> {
     }
 
     @Override
-    public Stream<List<R>> parseResults(Q query, byte[] family, Stream<Result> hBaseResults) {
-        List<R> results = hBaseResults.map(hBaseResult -> parseResult(query, family, hBaseResult))
-                                      .flatMap(HBaseQueryUtils::optionalToStream)
-                                      .collect(toList());
-        return Stream.of(results);
+    public Stream<R> parseResults(Q query, byte[] family, List<Result> hBaseResults) {
+        return hBaseResults.stream()
+                           .map(hBaseResult -> parseResultToOptional(query, family, hBaseResult))
+                           .flatMap(HBaseQueryUtils::optionalToStream);
     }
 
-    @Override
-    public Optional<R> parseResult(Q query, byte[] family, Result hBaseResult) {
+    // don't override #parseResult(Object, byte[], Result) so it doesn't mess up with the default interface methods
+    private Optional<R> parseResultToOptional(Q query, byte[] family, Result hBaseResult) {
 //        LOGGER.info("Trying to parse result {}", hBaseResult);
         if (hBaseResult == null || hBaseResult.getRow() == null) {
             LOGGER.info("Invalid empty result {}", hBaseResult);

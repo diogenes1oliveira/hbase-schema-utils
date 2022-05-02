@@ -10,11 +10,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Stream;
 
-import static hbase.connector.utils.TakeWhileIterator.streamTakeWhile;
 import static hbase.schema.api.utils.BytesNullableComparator.BYTES_NULLABLE_COMPARATOR;
 import static org.apache.hadoop.hbase.util.Bytes.toStringBinary;
 
@@ -67,11 +68,24 @@ public class HBaseScanRowPaginator<Q, R> extends HBaseFetcherWrapper<Q, R> {
         slicer.removeBefore(startRow);
         slicer.map(scan -> scan.setLimit(rowBatchSize));
 
-        LOGGER.info("Starting scans {}", slicer);
-        return streamTakeWhile(
-                super.scan(query, tableName, family, slicer.getScans(), rowBatchSize),
-                results -> resultCount < pageSize
-        ).peek(this::updatePagination);
+        return Stream.generate(() -> {
+            List<Result> allResults = new ArrayList<>();
+            LOGGER.info("Starting scans {}", slicer);
+
+            try (Stream<List<Result>> baseStream = super.scan(query, tableName, family, slicer.getScans(), rowBatchSize)) {
+                for (Iterator<List<Result>> it = baseStream.iterator(); it.hasNext() && resultCount <= pageSize; ) {
+                    allResults.addAll(it.next());
+                }
+            }
+
+            return updatePagination(allResults);
+        });
+
+//        return streamTakeWhile(stream, results -> resultCount < pageSize);
+//        return streamTakeWhile(
+//                super.scan(query, tableName, family, slicer.getScans(), rowBatchSize),
+//                results -> resultCount < pageSize
+//        ).peek(this::updatePagination);
     }
 
     public void reset() {
@@ -86,7 +100,7 @@ public class HBaseScanRowPaginator<Q, R> extends HBaseFetcherWrapper<Q, R> {
         }
     }
 
-    private void updatePagination(List<Result> hBaseResults) {
+    private List<Result> updatePagination(List<Result> hBaseResults) {
         resultCount += hBaseResults.size();
 
         if (hBaseResults.size() > 0) {
@@ -98,7 +112,8 @@ public class HBaseScanRowPaginator<Q, R> extends HBaseFetcherWrapper<Q, R> {
             }
         }
 
-        LOGGER.info("New next row: {}", toStringBinary(nextRow));
+        LOGGER.info("New next row after {} results: {}", hBaseResults, toStringBinary(nextRow));
+        return hBaseResults;
     }
 
     @Override

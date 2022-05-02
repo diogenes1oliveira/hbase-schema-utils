@@ -43,12 +43,7 @@ public abstract class HBaseFetcherWrapper<Q, R> implements HBaseFetcher<Q, R> {
     }
 
     @Override
-    public Stream<List<R>> scan(Q query, TableName tableName, byte[] family, int rowBatchSize) {
-        return wrapped.scan(query, tableName, family, rowBatchSize);
-    }
-
-    @Override
-    public Stream<List<R>> parseResults(Q query, byte[] family, Stream<Result> hBaseResults) {
+    public Stream<R> parseResults(Q query, byte[] family, List<Result> hBaseResults) {
         return wrapped.parseResults(query, family, hBaseResults);
     }
 
@@ -89,7 +84,12 @@ public abstract class HBaseFetcherWrapper<Q, R> implements HBaseFetcher<Q, R> {
     }
 
     @Override
-    public final Stream<List<R>> scan(Q query, String tableName, String family, int rowBatchSize) {
+    public final Stream<R> scan(Q query, TableName tableName, byte[] family, int rowBatchSize) {
+        return HBaseFetcher.super.scan(query, tableName, family, rowBatchSize);
+    }
+
+    @Override
+    public final Stream<R> scan(Q query, String tableName, String family, int rowBatchSize) {
         return HBaseFetcher.super.scan(query, tableName, family, rowBatchSize);
     }
 
@@ -109,12 +109,12 @@ public abstract class HBaseFetcherWrapper<Q, R> implements HBaseFetcher<Q, R> {
     }
 
     @Override
-    public final Stream<List<R>> scan(Q query, TableName tableName, byte[] family) {
+    public final Stream<R> scan(Q query, TableName tableName, byte[] family) {
         return HBaseFetcher.super.scan(query, tableName, family);
     }
 
     @Override
-    public final Stream<List<R>> scan(Q query, String tableName, String family) {
+    public final Stream<R> scan(Q query, String tableName, String family) {
         return HBaseFetcher.super.scan(query, tableName, family);
     }
 
@@ -137,7 +137,7 @@ public abstract class HBaseFetcherWrapper<Q, R> implements HBaseFetcher<Q, R> {
      * @return Stream with the valid parsed results
      */
     @Override
-    public final Stream<List<R>> parseResults(Q query, String family, Stream<Result> hBaseResults) {
+    public final Stream<R> parseResults(Q query, String family, List<Result> hBaseResults) {
         return HBaseFetcher.super.parseResults(query, family, hBaseResults);
     }
 
