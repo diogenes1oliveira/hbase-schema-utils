@@ -73,7 +73,7 @@ public interface HBaseFetcher<Q, R> {
      * @param hBaseResults HBase result objects
      * @return Stream with the valid parsed results
      */
-    Stream<R> parseResults(Q query, byte[] family, Stream<Result> hBaseResults);
+    Stream<List<R>> parseResults(Q query, byte[] family, Stream<Result> hBaseResults);
 
     /**
      * Executes one Get request
@@ -138,7 +138,7 @@ public interface HBaseFetcher<Q, R> {
     default Stream<List<R>> scan(Q query, TableName tableName, byte[] family, int rowBatchSize) {
         List<Scan> scans = toScans(query);
         return scan(query, tableName, family, scans, rowBatchSize)
-                .map(results -> parseResults(query, family, Arrays.stream(results)).collect(toList()));
+                .flatMap(results -> parseResults(query, family, Arrays.stream(results)));
     }
 
     /**
@@ -250,7 +250,7 @@ public interface HBaseFetcher<Q, R> {
      * @param hBaseResults HBase result objects
      * @return Stream with the valid parsed results
      */
-    default Stream<R> parseResults(Q query, String family, Stream<Result> hBaseResults) {
+    default Stream<List<R>> parseResults(Q query, String family, Stream<Result> hBaseResults) {
         return parseResults(query, family.getBytes(StandardCharsets.UTF_8), hBaseResults);
     }
 
@@ -263,7 +263,9 @@ public interface HBaseFetcher<Q, R> {
      * @return Optional with the parsed result or empty if nothing could be parsed
      */
     default Optional<R> parseResult(Q query, byte[] family, Result hBaseResult) {
-        return parseResults(query, family, Stream.of(hBaseResult)).findFirst();
+        return parseResults(query, family, Stream.of(hBaseResult))
+                .flatMap(Collection::stream)
+                .findFirst();
     }
 
     /**

@@ -43,7 +43,7 @@ public abstract class HBaseFetcherWrapper<Q, R> implements HBaseFetcher<Q, R> {
     }
 
     @Override
-    public Stream<R> parseResults(Q query, byte[] family, Stream<Result> hBaseResults) {
+    public Stream<List<R>> parseResults(Q query, byte[] family, Stream<Result> hBaseResults) {
         return wrapped.parseResults(query, family, hBaseResults);
     }
 
@@ -137,7 +137,7 @@ public abstract class HBaseFetcherWrapper<Q, R> implements HBaseFetcher<Q, R> {
      * @return Stream with the valid parsed results
      */
     @Override
-    public final Stream<R> parseResults(Q query, String family, Stream<Result> hBaseResults) {
+    public final Stream<List<R>> parseResults(Q query, String family, Stream<Result> hBaseResults) {
         return HBaseFetcher.super.parseResults(query, family, hBaseResults);
     }
 

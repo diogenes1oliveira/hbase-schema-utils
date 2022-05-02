@@ -3,6 +3,7 @@ package hbase.schema.connector.services;
 import hbase.connector.services.HBaseStreamFetcher;
 import hbase.schema.api.interfaces.HBaseReadSchema;
 import hbase.schema.connector.interfaces.HBaseFetcher;
+import hbase.schema.connector.utils.HBaseQueryUtils;
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.Get;
 import org.apache.hadoop.hbase.client.Result;
@@ -13,7 +14,10 @@ import org.slf4j.LoggerFactory;
 import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Stream;
+
+import static java.util.stream.Collectors.toList;
 
 /**
  * Object to query and parse data from HBase based on a Schema
@@ -68,15 +72,19 @@ public class HBaseSchemaFetcher<Q, R> implements HBaseFetcher<Q, R> {
     }
 
     @Override
-    public Stream<R> parseResults(Q query, byte[] family, Stream<Result> hBaseResults) {
-        return hBaseResults.flatMap(hBaseResult -> parseResultToStream(query, family, hBaseResult));
+    public Stream<List<R>> parseResults(Q query, byte[] family, Stream<Result> hBaseResults) {
+        List<R> results = hBaseResults.map(hBaseResult -> parseResult(query, family, hBaseResult))
+                                      .flatMap(HBaseQueryUtils::optionalToStream)
+                                      .collect(toList());
+        return Stream.of(results);
     }
 
-    private Stream<R> parseResultToStream(Q query, byte[] family, Result hBaseResult) {
+    @Override
+    public Optional<R> parseResult(Q query, byte[] family, Result hBaseResult) {
 //        LOGGER.info("Trying to parse result {}", hBaseResult);
         if (hBaseResult == null || hBaseResult.getRow() == null) {
             LOGGER.info("Invalid empty result {}", hBaseResult);
-            return Stream.empty();
+            return Optional.empty();
         }
         byte[] rowKey = hBaseResult.getRow();
         R result = readSchema.newInstance();
@@ -89,10 +97,10 @@ public class HBaseSchemaFetcher<Q, R> implements HBaseFetcher<Q, R> {
             }
         }
         if (parsed && readSchema.validate(result, query)) {
-            return Stream.of(result);
+            return Optional.of(result);
         } else {
             LOGGER.info("Invalid unparseable result {}", hBaseResult);
-            return Stream.empty();
+            return Optional.empty();
         }
     }
 

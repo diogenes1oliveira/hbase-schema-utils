@@ -66,11 +66,6 @@ public class HBaseScanRowPaginator<Q, R> extends HBaseFetcherWrapper<Q, R> {
         ).onClose(this::checkNextRow).peek(this::updatePagination);
     }
 
-    @Override
-    public Stream<R> parseResults(Q query, byte[] family, Stream<Result> hBaseResults) {
-        return super.parseResults(query, family, hBaseResults).limit(rowBatchSize - 1);
-    }
-
     private void checkNextRow() {
         if (nextRow != null && startRow != null && Bytes.compareTo(nextRow, startRow) == 0) {
             nextRow = null;
