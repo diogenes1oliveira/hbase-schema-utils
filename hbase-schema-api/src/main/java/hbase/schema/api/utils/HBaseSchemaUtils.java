@@ -205,6 +205,14 @@ public final class HBaseSchemaUtils {
         };
     }
 
+    public static <T, U, V, W> Function<T, W> chain(Function<T, U> f1, Function<U, V> f2, Function<V, W> f3) {
+        return chain(chain(f1, f2), f3);
+    }
+
+    public static <T, U, V, W, Z> Function<T, Z> chain(Function<T, U> f1, Function<U, V> f2, Function<V, W> f3, Function<W, Z> f4) {
+        return chain(chain(chain(f1, f2), f3), f4);
+    }
+
     /**
      * Builds a new bi-consumer that applies a transformer function beforehand, handling null values accordingly.
      *

@@ -20,7 +20,7 @@ public class IOExitStack implements AutoCloseable {
     public IOExitStack(String name) {
         this.name = name;
 
-        LOGGER.info("Entering {}: {}", IOExitStack.class.getSimpleName(), name);
+        LOGGER.debug("Entering {}: {}", IOExitStack.class.getSimpleName(), name);
     }
 
     public void add(String message, IORunnable onClose) {
@@ -29,33 +29,40 @@ public class IOExitStack implements AutoCloseable {
 
     @Override
     public void close() {
+        RuntimeException main;
 
-        LOGGER.info("Starting to close {}: {}", IOExitStack.class.getSimpleName(), name);
-        List<RuntimeException> exceptions = new ArrayList<>();
+        try {
+            LOGGER.debug("Starting to close {}: {}", IOExitStack.class.getSimpleName(), name);
+            List<RuntimeException> exceptions = new ArrayList<>();
 
-        while (!callbacks.isEmpty()) {
-            Pair<String, IORunnable> pair = callbacks.pop();
-            String message = pair.getLeft();
-            IORunnable callback = pair.getRight();
-            try {
-                callback.run();
-            } catch (IOException e) {
-                exceptions.add(new UncheckedIOException(message, e));
-            } catch (RuntimeException e) {
-                exceptions.add(e);
+            while (!callbacks.isEmpty()) {
+                Pair<String, IORunnable> pair = callbacks.pop();
+                String message = pair.getLeft();
+                IORunnable callback = pair.getRight();
+                try {
+                    callback.run();
+                } catch (IOException e) {
+                    LOGGER.warn("IOException occurred in IOExitSTack", e);
+                    exceptions.add(new UncheckedIOException(message, e));
+                } catch (RuntimeException e) {
+                    LOGGER.warn("RuntimeException occurred in IOExitSTack", e);
+                    exceptions.add(e);
+                }
             }
-        }
 
-        LOGGER.info("Ran all finalizers of {}: {}", IOExitStack.class.getSimpleName(), name);
-        if (exceptions.isEmpty()) {
-            return;
-        }
+            LOGGER.debug("Ran all finalizers of {}: {}", IOExitStack.class.getSimpleName(), name);
+            if (exceptions.isEmpty()) {
+                return;
+            }
 
-        RuntimeException main = exceptions.get(0);
-        for (int i = 1; i < exceptions.size(); ++i) {
-            main.addSuppressed(exceptions.get(i));
+            main = exceptions.get(0);
+            for (int i = 1; i < exceptions.size(); ++i) {
+                main.addSuppressed(exceptions.get(i));
+            }
+        } catch (RuntimeException e) {
+            LOGGER.error("IOExitStack: unexpected error while closing()", e);
+            throw e;
         }
-
         throw main;
     }
 }

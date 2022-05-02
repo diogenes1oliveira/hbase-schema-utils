@@ -14,7 +14,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hadoop.hbase.client.Get;
 import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.filter.Filter;
-import org.apache.hadoop.hbase.util.Bytes;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,6 +36,7 @@ import static hbase.schema.api.utils.HBaseSchemaUtils.chainMap;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.apache.hadoop.hbase.util.Bytes.toBytes;
+import static org.apache.hadoop.hbase.util.Bytes.toStringBinary;
 
 public class HBaseReadSchemaBuilder<Q, R> {
     private static final Logger LOGGER = LoggerFactory.getLogger(HBaseReadSchemaBuilder.class);
@@ -288,8 +288,9 @@ public class HBaseReadSchemaBuilder<Q, R> {
                     byte[] scanStop = pair.getRight();
                     Scan scan;
 
-                    LOGGER.info("Built scan keys: {} -> {}", Bytes.toStringBinary(scanStart), scanStop != null ?
-                            Bytes.toStringBinary(scanStop) : "null");
+                    if (LOGGER.isDebugEnabled()) {
+                        LOGGER.debug("Built scan keys: {} -> {}", toStringBinary(scanStart), toStringBinary(scanStop));
+                    }
                     if (scanStop != null) {
                         scan = new Scan().withStartRow(scanStart).withStopRow(scanStop);
                     } else {
@@ -308,7 +309,7 @@ public class HBaseReadSchemaBuilder<Q, R> {
                     return HBaseReadSchema.super.toGet(query);
                 } else {
                     ByteBuffer rowKey = rowKeyMapper.toBuffer(query);
-                    LOGGER.info("Built row key: {}", Bytes.toStringBinary(rowKey));
+                    LOGGER.info("Built row key: {}", toStringBinary(rowKey));
                     Get get = new Get(rowKey);
                     get = setFilter(get, query);
                     get = customize(get, query);
