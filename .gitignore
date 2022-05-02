@@ -29,6 +29,7 @@ hs_err_pid*
 # Environment files
 .env
 .envrc
+.env.properties
 
 # Temporary directories
 /var
