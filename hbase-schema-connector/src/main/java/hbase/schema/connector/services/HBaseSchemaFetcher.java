@@ -74,12 +74,12 @@ public class HBaseSchemaFetcher<Q, R> implements HBaseFetcher<Q, R> {
     @Override
     public Stream<R> parseResults(Q query, byte[] family, List<Result> hBaseResults) {
         return hBaseResults.stream()
-                           .map(hBaseResult -> parseResultToOptional(query, family, hBaseResult))
+                           .map(hBaseResult -> parseResult(query, family, hBaseResult))
                            .flatMap(HBaseQueryUtils::optionalToStream);
     }
 
-    // don't override #parseResult(Object, byte[], Result) so it doesn't mess up with the default interface methods
-    private Optional<R> parseResultToOptional(Q query, byte[] family, Result hBaseResult) {
+    @Override
+    public Optional<R> parseResult(Q query, byte[] family, Result hBaseResult) {
 //        LOGGER.info("Trying to parse result {}", hBaseResult);
         if (hBaseResult == null || hBaseResult.getRow() == null) {
             LOGGER.info("Invalid empty result {}", hBaseResult);
