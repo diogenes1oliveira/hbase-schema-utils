@@ -23,24 +23,13 @@ public class HBaseScanRowPaginator<Q, R> extends HBaseFetcherWrapper<Q, R> {
     private static final Logger LOGGER = LoggerFactory.getLogger(HBaseScanRowPaginator.class);
 
     private final int pageSize;
-    private final Type type;
     private byte[] startRow;
     private byte[] lastRow = null;
 
-    public enum Type {
-        DESIRED,
-        EXACT
-    }
-
     public HBaseScanRowPaginator(HBaseFetcher<Q, R> fetcher, byte[] startRow, int pageSize) {
-        this(fetcher, startRow, pageSize, Type.DESIRED);
-    }
-
-    public HBaseScanRowPaginator(HBaseFetcher<Q, R> fetcher, byte[] startRow, int pageSize, Type type) {
         super(fetcher);
 
         this.pageSize = pageSize;
-        this.type = type;
         setStartRow(startRow);
     }
 
@@ -115,7 +104,6 @@ public class HBaseScanRowPaginator<Q, R> extends HBaseFetcherWrapper<Q, R> {
     public String toString() {
         return "HBaseScanRowPaginator{" +
                 "pageSize=" + pageSize +
-                ", type=" + type +
                 ", startRow=" + toStringBinary(startRow) +
                 ", lastRow=" + toStringBinary(lastRow) +
                 '}';
