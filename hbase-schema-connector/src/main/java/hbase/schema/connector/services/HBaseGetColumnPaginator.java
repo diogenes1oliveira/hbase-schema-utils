@@ -1,15 +1,14 @@
-package hbase.schema.connector.models;
+package hbase.schema.connector.services;
 
 import hbase.schema.api.interfaces.HBaseFilterBuilder;
 import hbase.schema.connector.interfaces.HBaseFetcher;
 import hbase.schema.connector.interfaces.HBaseFetcherWrapper;
+import hbase.schema.connector.models.HBaseResultRow;
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.Get;
-import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.filter.ColumnPaginationFilter;
 import org.apache.hadoop.hbase.filter.Filter;
 
-import java.util.NavigableMap;
 import java.util.stream.Stream;
 
 import static hbase.schema.api.utils.HBaseSchemaUtils.combineNullableFilters;
@@ -40,14 +39,14 @@ public class HBaseGetColumnPaginator<Q, R> extends HBaseFetcherWrapper<Q, R> imp
     }
 
     @Override
-    public Stream<Result> get(Q query, TableName tableName, byte[] family, Get get) {
+    public Stream<HBaseResultRow> get(Q query, TableName tableName, byte[] family, Get get) {
         Get newGet = get;
         Filter combined = combineNullableFilters(get.getFilter(), toFilter(query));
         if (combined != null) {
             newGet = newGet.setFilter(combined);
         }
         return super.get(query, tableName, family, newGet)
-                    .peek(result -> checkResultSize(result, family));
+                    .peek(this::checkResultSize);
     }
 
     @Override
@@ -64,13 +63,12 @@ public class HBaseGetColumnPaginator<Q, R> extends HBaseFetcherWrapper<Q, R> imp
                 '}';
     }
 
-    private void checkResultSize(Result result, byte[] family) {
-        NavigableMap<byte[], byte[]> familyMap = result.getFamilyMap(family);
-        if (familyMap.size() <= pageSize) {
+    private void checkResultSize(HBaseResultRow resultRow) {
+        if (resultRow.columnCount() <= pageSize) {
             nextPageIndex = 0;
         } else {
             nextPageIndex = pageIndex + 1;
-            familyMap.remove(familyMap.lastKey());
+            resultRow.cellsMap().remove(resultRow.cellsMap().lastKey());
         }
     }
 }

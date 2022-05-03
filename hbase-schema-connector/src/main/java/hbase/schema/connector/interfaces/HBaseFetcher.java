@@ -1,8 +1,8 @@
 package hbase.schema.connector.interfaces;
 
+import hbase.schema.connector.models.HBaseResultRow;
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.Get;
-import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.Scan;
 
 import java.io.IOException;
@@ -38,7 +38,7 @@ public interface HBaseFetcher<Q, R> {
      * @param family    column family to fetch data from
      * @return stream of valid parsed results
      */
-    Stream<Result> get(Q query, TableName tableName, byte[] family, Get get);
+    Stream<HBaseResultRow> get(Q query, TableName tableName, byte[] family, Get get);
 
     /**
      * Builds a list of Scan queries based on the data from a Java object
@@ -62,17 +62,16 @@ public interface HBaseFetcher<Q, R> {
      * @param rowBatchSize number of rows in a Scan batch
      * @return stream of raw results
      */
-    Stream<List<Result>> scan(Q query, TableName tableName, byte[] family, List<Scan> scans, int rowBatchSize);
+    Stream<List<HBaseResultRow>> scan(Q query, TableName tableName, byte[] family, List<Scan> scans, int rowBatchSize);
 
     /**
      * Parses data incoming from a HBase query
      *
-     * @param query        original query object
-     * @param family       column family the result came from
-     * @param hBaseResults HBase result objects
+     * @param query      original query object
+     * @param resultRows HBase result objects
      * @return Stream with the valid parsed results
      */
-    Stream<R> parseResults(Q query, byte[] family, List<Result> hBaseResults);
+    Stream<R> parseResults(Q query, List<HBaseResultRow> resultRows);
 
     /**
      * Executes one Get request
@@ -82,7 +81,7 @@ public interface HBaseFetcher<Q, R> {
      * @param family    column family to fetch data from
      * @return stream with one or zero raw results
      */
-    default Stream<Result> get(Q query, String tableName, String family, Get get) {
+    default Stream<HBaseResultRow> get(Q query, String tableName, String family, Get get) {
         return get(query, TableName.valueOf(tableName), family.getBytes(StandardCharsets.UTF_8), get);
     }
 
@@ -96,8 +95,8 @@ public interface HBaseFetcher<Q, R> {
      */
     default Optional<R> getOptional(Q query, TableName tableName, byte[] family) {
         Get get = toGet(query);
-        try (Stream<Result> stream = get(query, tableName, family, get)) {
-            return stream.findFirst().flatMap(hBaseResult -> parseResult(query, family, hBaseResult));
+        try (Stream<HBaseResultRow> stream = get(query, tableName, family, get)) {
+            return stream.findFirst().flatMap(resultRow -> parseResult(query, resultRow));
         }
     }
 
@@ -122,7 +121,7 @@ public interface HBaseFetcher<Q, R> {
      * @param rowBatchSize number of rows in a Scan batch
      * @return stream of raw results
      */
-    default Stream<List<Result>> scan(Q query, String tableName, String family, List<Scan> scans, int rowBatchSize) {
+    default Stream<List<HBaseResultRow>> scan(Q query, String tableName, String family, List<Scan> scans, int rowBatchSize) {
         return scan(query, TableName.valueOf(tableName), family.getBytes(StandardCharsets.UTF_8), scans, rowBatchSize);
     }
 
@@ -137,7 +136,7 @@ public interface HBaseFetcher<Q, R> {
     default Stream<R> scan(Q query, TableName tableName, byte[] family, int rowBatchSize) {
         List<Scan> scans = toScans(query);
         return scan(query, tableName, family, scans, rowBatchSize)
-                .flatMap(results -> parseResults(query, family, results));
+                .flatMap(results -> parseResults(query, results));
     }
 
     /**
@@ -188,7 +187,7 @@ public interface HBaseFetcher<Q, R> {
      * @param family    column family to fetch data from
      * @return stream of raw results
      */
-    default Stream<List<Result>> scan(Q query, String tableName, String family, List<Scan> scans) {
+    default Stream<List<HBaseResultRow>> scan(Q query, String tableName, String family, List<Scan> scans) {
         return scan(query, tableName, family, scans, defaultRowBatchSize());
     }
 
@@ -243,37 +242,13 @@ public interface HBaseFetcher<Q, R> {
     /**
      * Parses data incoming from a HBase query
      *
-     * @param query        original query object
-     * @param family       column family the result came from
-     * @param hBaseResults HBase result objects
-     * @return Stream with the valid parsed results
-     */
-    default Stream<R> parseResults(Q query, String family, List<Result> hBaseResults) {
-        return parseResults(query, family.getBytes(StandardCharsets.UTF_8), hBaseResults);
-    }
-
-    /**
-     * Parses data incoming from a HBase query
-     *
-     * @param query       original query object
-     * @param family      column family the result came from
-     * @param hBaseResult HBase result object
+     * @param query     original query object
+     * @param resultRow HBase result object
      * @return Optional with the parsed result or empty if nothing could be parsed
      */
-    default Optional<R> parseResult(Q query, byte[] family, Result hBaseResult) {
-        return parseResults(query, family, singletonList(hBaseResult)).findFirst();
+    default Optional<R> parseResult(Q query, HBaseResultRow resultRow) {
+        return parseResults(query, singletonList(resultRow)).findFirst();
     }
 
-    /**
-     * Parses data incoming from a HBase query
-     *
-     * @param query       original query object
-     * @param family      column family the result came from
-     * @param hBaseResult HBase result object
-     * @return Optional with the parsed result or empty if nothing could be parsed
-     */
-    default Optional<R> parseResult(Q query, String family, Result hBaseResult) {
-        return parseResult(query, family.getBytes(StandardCharsets.UTF_8), hBaseResult);
-    }
 
 }

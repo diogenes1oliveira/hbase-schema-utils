@@ -2,9 +2,9 @@ package hbase.schema.connector.services;
 
 import hbase.schema.connector.interfaces.HBaseFetcher;
 import hbase.schema.connector.interfaces.HBaseFetcherWrapper;
+import hbase.schema.connector.models.HBaseResultRow;
 import hbase.schema.connector.utils.HBaseScansSlicer;
 import org.apache.hadoop.hbase.TableName;
-import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.Scan;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.stream.Stream;
 
 import static hbase.schema.api.utils.BytesNullableComparator.BYTES_NULLABLE_COMPARATOR;
+import static org.apache.hadoop.hbase.util.Bytes.toBytes;
 import static org.apache.hadoop.hbase.util.Bytes.toStringBinary;
 
 public class HBaseScanRowPaginator<Q, R> extends HBaseFetcherWrapper<Q, R> {
@@ -60,7 +61,7 @@ public class HBaseScanRowPaginator<Q, R> extends HBaseFetcherWrapper<Q, R> {
     }
 
     @Override
-    public Stream<List<Result>> scan(Q query, TableName tableName, byte[] family, List<Scan> scans, int rowBatchSize) {
+    public Stream<List<HBaseResultRow>> scan(Q query, TableName tableName, byte[] family, List<Scan> scans, int rowBatchSize) {
         if (rowBatchSize != defaultRowBatchSize()) {
             throw new IllegalArgumentException("Row batch size of " + defaultRowBatchSize() + " required, got " + rowBatchSize);
         }
@@ -70,22 +71,22 @@ public class HBaseScanRowPaginator<Q, R> extends HBaseFetcherWrapper<Q, R> {
         slicer.map(scan -> scan.setLimit(rowBatchSize));
 
         return Stream.generate(() -> {
-            List<Result> allResults = new ArrayList<>();
+            List<HBaseResultRow> fetchedRows = new ArrayList<>();
             LOGGER.info("Starting scans {}", slicer);
 
-            try (Stream<List<Result>> baseStream = super.scan(query, tableName, family, slicer.getScans(), rowBatchSize)) {
-                for (Iterator<List<Result>> it = baseStream.iterator(); it.hasNext() && allResults.size() < pageSize; ) {
-                    allResults.addAll(it.next());
+            try (Stream<List<HBaseResultRow>> baseStream = super.scan(query, tableName, family, slicer.getScans(), rowBatchSize)) {
+                for (Iterator<List<HBaseResultRow>> it = baseStream.iterator(); it.hasNext() && fetchedRows.size() < pageSize; ) {
+                    fetchedRows.addAll(it.next());
                 }
             }
 
-            return allResults;
+            return fetchedRows;
         }).limit(1);
     }
 
     @Override
-    public Stream<R> parseResults(Q query, byte[] family, List<Result> hBaseResults) {
-        return super.parseResults(query, family, updatePagination(hBaseResults));
+    public Stream<R> parseResults(Q query, List<HBaseResultRow> resultRows) {
+        return super.parseResults(query, updatePagination(resultRows));
     }
 
     public ByteBuffer nextRow() {
@@ -96,21 +97,21 @@ public class HBaseScanRowPaginator<Q, R> extends HBaseFetcherWrapper<Q, R> {
         }
     }
 
-    private List<Result> updatePagination(List<Result> results) {
-        if (results.size() > pageSize) {
+    private List<HBaseResultRow> updatePagination(List<HBaseResultRow> resultRows) {
+        if (resultRows.size() > pageSize) {
             int newSize;
 
             if (type == Type.EXACT) {
                 newSize = pageSize;
             } else {
-                newSize = results.size() - 1;
+                newSize = resultRows.size() - 1;
             }
 
-            lastRow = results.get(newSize).getRow();
-            return results.subList(0, newSize);
+            lastRow = toBytes(resultRows.get(newSize).rowKey());
+            return resultRows.subList(0, newSize);
         } else {
             lastRow = null;
-            return results;
+            return resultRows;
         }
     }
 

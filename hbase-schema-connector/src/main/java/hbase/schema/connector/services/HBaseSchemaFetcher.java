@@ -3,20 +3,22 @@ package hbase.schema.connector.services;
 import hbase.connector.services.HBaseStreamFetcher;
 import hbase.schema.api.interfaces.HBaseReadSchema;
 import hbase.schema.connector.interfaces.HBaseFetcher;
+import hbase.schema.connector.models.HBaseResultRow;
 import hbase.schema.connector.utils.HBaseQueryUtils;
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.Get;
-import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.Scan;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.ByteBuffer;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
+
+import static hbase.schema.connector.models.HBaseResultRow.fromResult;
+import static hbase.schema.connector.models.HBaseResultRow.fromResults;
 
 /**
  * Object to query and parse data from HBase based on a Schema
@@ -44,11 +46,12 @@ public class HBaseSchemaFetcher<Q, R> implements HBaseFetcher<Q, R> {
     }
 
     @Override
-    public Stream<Result> get(Q query, TableName tableName, byte[] family, Get get) {
+    public Stream<HBaseResultRow> get(Q query, TableName tableName, byte[] family, Get get) {
         get.addFamily(family);
         LOGGER.info("Get object was created: {}, now connecting to HBase to execute it", get);
 
-        return streamFetcher.fetch(tableName, get);
+        return streamFetcher.fetch(tableName, get)
+                            .map(result -> fromResult(family, result));
     }
 
     @Override
@@ -63,42 +66,39 @@ public class HBaseSchemaFetcher<Q, R> implements HBaseFetcher<Q, R> {
     }
 
     @Override
-    public Stream<List<Result>> scan(Q query, TableName tableName, byte[] family, List<Scan> scans, int rowBatchSize) {
+    public Stream<List<HBaseResultRow>> scan(Q query, TableName tableName, byte[] family, List<Scan> scans, int rowBatchSize) {
         for (Scan scan : scans) {
             scan.addFamily(family);
         }
         return streamFetcher.fetch(tableName, scans, rowBatchSize)
-                            .map(Arrays::asList);
+                            .map(results -> fromResults(family, results));
     }
 
     @Override
-    public Stream<R> parseResults(Q query, byte[] family, List<Result> hBaseResults) {
-        return hBaseResults.stream()
-                           .map(hBaseResult -> parseResult(query, family, hBaseResult))
-                           .flatMap(HBaseQueryUtils::optionalToStream);
+    public Stream<R> parseResults(Q query, List<HBaseResultRow> resultRows) {
+        return resultRows.stream()
+                         .map(resultRow -> parseResult(query, resultRow))
+                         .flatMap(HBaseQueryUtils::optionalToStream);
     }
 
     @Override
-    public Optional<R> parseResult(Q query, byte[] family, Result hBaseResult) {
-//        LOGGER.info("Trying to parse result {}", hBaseResult);
-        if (hBaseResult == null || hBaseResult.getRow() == null) {
-            LOGGER.info("Invalid empty result {}", hBaseResult);
-            return Optional.empty();
-        }
-        byte[] rowKey = hBaseResult.getRow();
+    public Optional<R> parseResult(Q query, HBaseResultRow resultRow) {
         R result = readSchema.newInstance();
-        boolean parsed = readSchema.parseRowKey(result, ByteBuffer.wrap(rowKey), query);
-        for (Map.Entry<byte[], byte[]> entry : hBaseResult.getFamilyMap(family).entrySet()) {
+
+        boolean parsed = readSchema.parseRowKey(result, resultRow.rowKey(), query);
+
+        for (Map.Entry<byte[], byte[]> entry : resultRow.cellsMap().entrySet()) {
             byte[] qualifier = entry.getKey();
             byte[] value = entry.getValue();
             if (value != null) {
                 parsed = readSchema.parseCell(result, ByteBuffer.wrap(qualifier), ByteBuffer.wrap(value), query) || parsed;
             }
         }
+
         if (parsed && readSchema.validate(result, query)) {
             return Optional.of(result);
         } else {
-            LOGGER.info("Invalid unparseable result {}", hBaseResult);
+            LOGGER.info("Invalid unparseable result {}", resultRow);
             return Optional.empty();
         }
     }
