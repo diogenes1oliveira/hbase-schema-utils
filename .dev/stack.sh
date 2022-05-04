@@ -43,6 +43,7 @@ command_up() {
     docker-compose --env-file ../.env up --remove-orphans --renew-anon-volumes --detach
   )
   hbase_wait_for_shell
+  command_shell < .dev/init.rb
 #  sonar_wait_for_port
 #  sonar_wait_for_initialization
 #  sonar_create_project
@@ -63,7 +64,11 @@ command_rm() {
 }
 
 command_shell() {
-  hbase_exec hbase shell
+  flags=()
+  if [ -t 0 ]; then
+    flags=( -n )
+  fi
+  hbase_exec hbase shell "${flags[@]}"
 }
 
 command_version() {

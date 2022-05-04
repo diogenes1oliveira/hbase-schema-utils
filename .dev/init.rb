@@ -1,0 +1,5 @@
+create 'table', 'f'
+put 'table', 'row1', 'f:col', 'value'
+put 'table', 'row1', 'f:p1', 'value1'
+put 'table', 'row1', 'f:p2', 'value2'
+put 'table', 'row2', 'f:col', 'value'
