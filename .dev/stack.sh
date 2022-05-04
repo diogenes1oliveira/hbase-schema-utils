@@ -12,13 +12,13 @@ eof
 
 SCRIPT="$0"
 HBASE_TEST_INSTANCE_TYPE="${HBASE_TEST_INSTANCE_TYPE:-local}"
-SONAR_USER='admin'
-SONAR_PASSWORD="${SONAR_PASSWORD:-password}"
-SONAR_PROJECT_NAME="${SONAR_PROJECT_NAME:-hbase-schema-utils}"
-SONAR_PROJECT_KEY="${SONAR_PROJECT_KEY:-hbase-schema-utils}"
-SONAR_TOKEN="${SONAR_TOKEN:-}"
-SONAR_WEB_SECRET="${SONAR_WEB_SECRET:-}"
-SONAR_URL="${SONAR_URL:-http://sonar.localhost:9000}"
+#SONAR_USER='admin'
+#SONAR_PASSWORD="${SONAR_PASSWORD:-password}"
+#SONAR_PROJECT_NAME="${SONAR_PROJECT_NAME:-hbase-schema-utils}"
+#SONAR_PROJECT_KEY="${SONAR_PROJECT_KEY:-hbase-schema-utils}"
+#SONAR_TOKEN="${SONAR_TOKEN:-}"
+#SONAR_WEB_SECRET="${SONAR_WEB_SECRET:-}"
+#SONAR_URL="${SONAR_URL:-http://sonar.localhost:9000}"
 
 main() {
   up_to_root
@@ -28,11 +28,11 @@ main() {
 
 setup_env() {
   conf_add_if_absent HBASE_TEST_INSTANCE_TYPE
-  conf_replace SONAR_USER
-  conf_replace SONAR_PASSWORD
-  conf_replace SONAR_PROJECT_NAME
-  conf_replace SONAR_PROJECT_KEY
-  conf_replace SONAR_TOKEN
+#  conf_replace SONAR_USER
+#  conf_replace SONAR_PASSWORD
+#  conf_replace SONAR_PROJECT_NAME
+#  conf_replace SONAR_PROJECT_KEY
+#  conf_replace SONAR_TOKEN
 }
 
 command_up() {
@@ -43,11 +43,11 @@ command_up() {
     docker-compose --env-file ../.env up --remove-orphans --renew-anon-volumes --detach
   )
   hbase_wait_for_shell
-  sonar_wait_for_port
-  sonar_wait_for_initialization
-  sonar_create_project
-
-  sonar_setup_token
+#  sonar_wait_for_port
+#  sonar_wait_for_initialization
+#  sonar_create_project
+#
+#  sonar_setup_token
   setup_env
 }
 
@@ -57,7 +57,7 @@ command_rm() {
     docker-compose kill -s 9
     docker-compose rm -fsv
   )
-  conf_remove SONAR_TOKEN
+#  conf_remove SONAR_TOKEN
   docker volume prune -f
   docker network prune -f
 }
@@ -76,25 +76,25 @@ command_version() {
   fi
 }
 
-command_sonar() {
-  version="$(command_version)"
-  mvn org.sonarsource.scanner.maven:sonar-maven-plugin:3.9.1.2184:sonar \
-    -Dsonar.login="${SONAR_TOKEN}" \
-    -Dsonar.host.url="${SONAR_URL}" \
-    -Dsonar.sourceEncoding=UTF-8 \
-    -Dsonar.verbose=true \
-    -Dsonar.java.binaries=target/classes/* \
-    -Dsonar.java.source=1.8 \
-    -Dsonar.projectVersion="${version}" \
-    -Dsonar.projectKey="${SONAR_PROJECT_KEY}" \
-    -Dsonar.projectName="${SONAR_PROJECT_NAME}" \
-    -Dsonar.java.coveragePlugin=jacoco \
-    -Dsonar.dynamicAnalysis=reuseReports \
-    -Dsonar.coverage.jacoco.xmlReportPaths=target/jacoco/jacoco.xml \
-    -Dsonar.language=java
-
-  rm -rf .scannerwork/
-}
+#command_sonar() {
+#  version="$(command_version)"
+#  mvn org.sonarsource.scanner.maven:sonar-maven-plugin:3.9.1.2184:sonar \
+#    -Dsonar.login="${SONAR_TOKEN}" \
+#    -Dsonar.host.url="${SONAR_URL}" \
+#    -Dsonar.sourceEncoding=UTF-8 \
+#    -Dsonar.verbose=true \
+#    -Dsonar.java.binaries=target/classes/* \
+#    -Dsonar.java.source=1.8 \
+#    -Dsonar.projectVersion="${version}" \
+#    -Dsonar.projectKey="${SONAR_PROJECT_KEY}" \
+#    -Dsonar.projectName="${SONAR_PROJECT_NAME}" \
+#    -Dsonar.java.coveragePlugin=jacoco \
+#    -Dsonar.dynamicAnalysis=reuseReports \
+#    -Dsonar.coverage.jacoco.xmlReportPaths=target/jacoco/jacoco.xml \
+#    -Dsonar.language=java
+#
+#  rm -rf .scannerwork/
+#}
 
 check_requirements() {
   if ! jq --version 2>&1 > /dev/null; then

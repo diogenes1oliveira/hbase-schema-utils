@@ -16,15 +16,15 @@ services:
       - HBASE_CONF_hbase_master_hostname=hbase.localhost
     mem_limit: 2g
 
-  sonar:
-    image: sonarqube:9.3-community
-    container_name: sonar
-    hostname: sonar.localhost
-    ports:
-      - "9000:9000"
-    environment:
-      - SONAR_ES_BOOTSTRAP_CHECKS_DISABLE=true
-    mem_limit: 2g
+#  sonar:
+#    image: sonarqube:9.3-community
+#    container_name: sonar
+#    hostname: sonar.localhost
+#    ports:
+#      - "9000:9000"
+#    environment:
+#      - SONAR_ES_BOOTSTRAP_CHECKS_DISABLE=true
+#    mem_limit: 2g
 
 networks:
   default:
