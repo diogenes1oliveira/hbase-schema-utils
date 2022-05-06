@@ -10,7 +10,6 @@ public class ByteBufferComparator implements Comparator<ByteBuffer> {
 
     @Override
     public int compare(ByteBuffer byteBuffer1, ByteBuffer byteBuffer2) {
-        // manually because HBase tools don't like read-only buffers
         ByteBuffer buffer1 = byteBuffer1 == null ? ByteBuffer.allocate(0) : byteBuffer1.slice();
         ByteBuffer buffer2 = byteBuffer2 == null ? ByteBuffer.allocate(0) : byteBuffer2.slice();
 
@@ -18,6 +17,7 @@ public class ByteBufferComparator implements Comparator<ByteBuffer> {
             return -compare(buffer2, buffer1);
         }
 
+        // manually because HBase tools don't like read-only buffers
         while (buffer1.hasRemaining()) {
             byte b1 = buffer1.get();
             byte b2 = buffer2.get();

@@ -21,12 +21,12 @@
         <maven.compiler.parameters>true</maven.compiler.parameters>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <!-- main dependencies -->
-        <hbase.version>2.0.2</hbase.version>
+        <hbase.version>2.3.7</hbase.version>
         <slf4j.version>1.7.5</slf4j.version>
         <commons-io.version>2.11.0</commons-io.version>
         <commons-codec.version>1.15</commons-codec.version>
         <commons-lang3.version>3.12.0</commons-lang3.version>
-        <jackson.version>2.13.1</jackson.version>
+        <jackson.version>2.12.6</jackson.version>
         <annotations.version>23.0.0</annotations.version>
         <!-- test dependencies -->
         <junit.version>5.7.2</junit.version>
@@ -50,6 +50,7 @@
         <module>hbase-test-utils</module>
         <module>hadoop-auth-utils</module>
         <module>hbase-base-types</module>
+<!--        <module>hbase-spark-job</module>-->
         <module>build-report</module>
     </modules>
 
@@ -86,6 +87,11 @@
                 <artifactId>hbase-base-types</artifactId>
                 <version>${project.version}</version>
             </dependency>
+<!--            <dependency>-->
+<!--                <groupId>com.github.diogenes1oliveira</groupId>-->
+<!--                <artifactId>hbase-spark-job</artifactId>-->
+<!--                <version>${project.version}</version>-->
+<!--            </dependency>-->
             <dependency>
                 <groupId>org.apache.hbase</groupId>
                 <artifactId>hbase-shaded-client</artifactId>

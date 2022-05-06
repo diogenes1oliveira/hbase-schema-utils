@@ -1,10 +1,10 @@
 package hbase.schema.api.interfaces;
 
+import hbase.schema.api.models.HBaseGenericRow;
 import org.apache.hadoop.hbase.client.Get;
 import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.filter.Filter;
 
-import java.nio.ByteBuffer;
 import java.util.List;
 
 /**
@@ -60,24 +60,14 @@ public interface HBaseReadSchema<Q, R> {
      * <p>
      * The default implementation just returns {@code false}, signaling no data was parsed
      *
-     * @param rowKey fetched row key
+     * @param result target result object
+     * @param row    fetched row
      * @param query  original query object
      * @return {@code true} if some data was parsed
      */
-    default boolean parseRowKey(R result, ByteBuffer rowKey, Q query) {
+    default boolean parseRow(R result, HBaseGenericRow row, Q query) {
         return false;
     }
-
-    /**
-     * Populates the result object with data from a fetched cell
-     *
-     * @param result    result object
-     * @param qualifier fetched column qualifier
-     * @param value     fetched cell value
-     * @param query     original query object
-     * @return {@code true} if some data was parsed
-     */
-    boolean parseCell(R result, ByteBuffer qualifier, ByteBuffer value, Q query);
 
     /**
      * Validates whether the result parsed from the row is valid.
@@ -91,4 +81,20 @@ public interface HBaseReadSchema<Q, R> {
     default boolean validate(R result, Q query) {
         return true;
     }
+
+    /**
+     * Creates a result object with data from the row key
+     *
+     * @param row   fetched row
+     * @param query original query object
+     * @return the fresh populated instance or {@code null} if nothing got parsed or the result is invalid
+     */
+    default R parseRow(HBaseGenericRow row, Q query) {
+        R result = newInstance();
+        if (!parseRow(result, row, query) || !validate(result, query)) {
+            return null;
+        }
+        return result;
+    }
+
 }

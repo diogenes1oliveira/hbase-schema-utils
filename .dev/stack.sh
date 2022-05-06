@@ -65,7 +65,7 @@ command_rm() {
 
 command_shell() {
   flags=()
-  if [ -t 0 ]; then
+  if ! [ -t 0 ]; then
     flags=( -n )
   fi
   hbase_exec hbase shell "${flags[@]}"
