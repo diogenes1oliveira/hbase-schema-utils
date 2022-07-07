@@ -1,11 +1,13 @@
 package hbase.connector.interfaces;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hbase.ServerName;
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.Admin;
 import org.apache.hadoop.hbase.client.BufferedMutator;
 import org.apache.hadoop.hbase.client.BufferedMutatorParams;
 import org.apache.hadoop.hbase.client.Connection;
+import org.apache.hadoop.hbase.client.Hbck;
 import org.apache.hadoop.hbase.client.RegionLocator;
 import org.apache.hadoop.hbase.client.Table;
 import org.apache.hadoop.hbase.client.TableBuilder;
@@ -81,5 +83,20 @@ public class HBaseConnectionProxy implements Connection {
     @Override
     public Table getTable(TableName tableName, ExecutorService pool) throws IOException {
         return connection.getTable(tableName, pool);
+    }
+
+    @Override
+    public void clearRegionLocationCache() {
+        connection.clearRegionLocationCache();
+    }
+
+    @Override
+    public Hbck getHbck() throws IOException {
+        return connection.getHbck();
+    }
+
+    @Override
+    public Hbck getHbck(ServerName masterServer) throws IOException {
+        return connection.getHbck(masterServer);
     }
 }

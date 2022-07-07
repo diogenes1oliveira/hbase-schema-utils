@@ -1,7 +1,5 @@
 package hbase.connector.services;
 
-import hbase.connector.interfaces.HBaseConnectionProxy;
-import hbase.connector.utils.IOExitStack;
 import hbase.connector.utils.IOLazyRef;
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.Connection;
@@ -22,20 +20,38 @@ import java.util.stream.Stream;
 
 import static hbase.connector.utils.TakeWhileIterator.streamTakeWhile;
 
+/**
+ * Object to supply a nice stream-based API to fetch data from HBase
+ */
 public class HBaseStreamFetcher {
     private static final Logger LOGGER = LoggerFactory.getLogger(HBaseStreamFetcher.class);
     private final HBaseConnector connector;
 
+    /**
+     * @param connector HBase connector object
+     */
     public HBaseStreamFetcher(HBaseConnector connector) {
         this.connector = connector;
     }
 
-    public Stream<Result> fetch(TableName tableName, Get get) {
+    /**
+     * Yields the result of a Get as a single Java stream
+     *
+     * @param tableName name of the table to be fetched
+     * @param get       Get object
+     * @param userName  username for the connection
+     * @return stream that yields one or no results
+     * @throws UncheckedIOException failed to connect or fetch data from HBase
+     */
+    public Stream<Result> get(String tableName, Get get, String userName) {
         AtomicInteger count = new AtomicInteger(0);
 
         return Stream.generate(() -> {
-            try (Connection connection = connector.context(); Table table = connection.getTable(tableName)) {
+            Connection connection = connector.get(userName);
+
+            try (Table table = connection.getTable(TableName.valueOf(tableName))) {
                 Result result = table.get(get);
+
                 if (result != null && result.getRow() != null) {
                     if (count.getAndIncrement() > 0) {
                         throw new IllegalStateException("Should have run just once");
@@ -50,29 +66,37 @@ public class HBaseStreamFetcher {
         }).limit(1).filter(Objects::nonNull);
     }
 
-    public Stream<Result[]> fetch(TableName tableName, List<Scan> scans, int batchSize) {
+    /**
+     * Yields the results of multiple Scans sequentially as a single Java stream
+     *
+     * @param tableName name of the table to be scanned
+     * @param scans     Scan objects
+     * @param userName  username for the connection
+     * @param batchSize maximum size of each result batch
+     * @return stream that yields a batch of results at each iteration. MUST be closed after completion
+     * @throws UncheckedIOException failed to connect or fetch data from HBase
+     */
+    public Stream<Result[]> scan(String tableName, List<Scan> scans, String userName, int batchSize) {
         return scans.stream()
-                    .flatMap(scan -> fetchSingleScan(tableName, scan, batchSize));
+                    .flatMap(scan -> this.scan(tableName, scan, userName, batchSize));
     }
 
-    private Stream<Result[]> fetchSingleScan(TableName tableName, Scan scan, int batchSize) {
-        IOExitStack exitStack = new IOExitStack("Exit stack for scan " + scan);
-
-        IOLazyRef<HBaseConnectionProxy> connectionRef = new IOLazyRef<>(() -> {
-            HBaseConnectionProxy connection = connector.context();
-            exitStack.add("failed to close connection context after Scan", connection::close);
-            return connection;
-        });
+    /**
+     * Yields the Scan results as a Java stream
+     *
+     * @param tableName name of the table to be scanned
+     * @param scan      Scan object
+     * @param userName  username for the connection
+     * @param batchSize maximum size of each result batch
+     * @return stream that yields a batch of results at each iteration. MUST be closed after completion
+     * @throws UncheckedIOException failed to connect or fetch data from HBase
+     */
+    public Stream<Result[]> scan(String tableName, Scan scan, String userName, int batchSize) {
         IOLazyRef<Table> tableRef = new IOLazyRef<>(() -> {
-            Table table = connectionRef.get().getTable(tableName);
-            exitStack.add("failed to close table after Scan", table::close);
-            return table;
+            Connection connection = connector.connect(userName);
+            return connection.getTable(TableName.valueOf(tableName));
         });
-        IOLazyRef<ResultScanner> scannerRef = new IOLazyRef<>(() -> {
-            ResultScanner scanner = tableRef.get().getScanner(scan);
-            exitStack.add("failed to close scanner", scanner::close);
-            return scanner;
-        });
+        IOLazyRef<ResultScanner> scannerRef = new IOLazyRef<>(() -> tableRef.get().getScanner(scan));
 
         Stream<Result[]> stream = Stream.generate(() -> {
             try {
@@ -91,6 +115,18 @@ public class HBaseStreamFetcher {
                 LOGGER.debug("StreamFetcher: no results, stream should be finished");
                 return false;
             }
-        }).onClose(exitStack::close);
+        }).onClose(() -> {
+            try {
+                scannerRef.remove(ResultScanner::close);
+            } catch (UncheckedIOException scannerException) {
+                try {
+                    tableRef.remove(Table::close);
+                } catch (UncheckedIOException tableException) {
+                    LOGGER.warn("Failed cleaning up table object after scanner failure", tableException);
+                }
+                throw scannerException;
+            }
+        });
     }
+
 }

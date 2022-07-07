@@ -38,6 +38,10 @@
             <artifactId>annotations</artifactId>
             <optional>true</optional>
         </dependency>
+        <dependency>
+            <groupId>com.github.ben-manes.caffeine</groupId>
+            <artifactId>caffeine</artifactId>
+        </dependency>
         <!-- test dependencies -->
         <dependency>
             <groupId>com.github.diogenes1oliveira</groupId>

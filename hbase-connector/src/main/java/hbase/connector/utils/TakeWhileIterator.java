@@ -9,8 +9,13 @@ import java.util.function.Supplier;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-// Taken from https://coderanch.com/t/664547/java/Java-data-directed#3093922
+/**
+ * Wraps an iterator in a new iterator that stops when a given predicate returns true
+ *
+ * @param <T> item type
+ */
 public class TakeWhileIterator<T> implements Iterator<T> {
+    // Taken from https://coderanch.com/t/664547/java/Java-data-directed#3093922
     private static final int NO_ADDITIONAL_CHARACTERISTICS = 0;
 
     private final Iterator<? extends T> inner;
@@ -19,7 +24,11 @@ public class TakeWhileIterator<T> implements Iterator<T> {
     private boolean innerHadNext;
     private T next;
 
-    TakeWhileIterator(Iterator<? extends T> inner, Predicate<? super T> predicate) {
+    /**
+     * @param inner     wrapped iterator
+     * @param predicate stop condition
+     */
+    public TakeWhileIterator(Iterator<? extends T> inner, Predicate<? super T> predicate) {
         if (inner == null || predicate == null)
             throw new IllegalArgumentException();
 
@@ -48,6 +57,14 @@ public class TakeWhileIterator<T> implements Iterator<T> {
         return result;
     }
 
+    /**
+     * Yields a new stream that yields data from the input stream until a stop condition is met
+     *
+     * @param stream    original stream
+     * @param predicate stop condition
+     * @param <T>       item type
+     * @return new filtered stream
+     */
     public static <T> Stream<T> streamTakeWhile(Stream<T> stream, Predicate<T> predicate) {
         Supplier<Spliterator<T>> supplier = () -> Spliterators.spliteratorUnknownSize(
                 new TakeWhileIterator<>(stream.iterator(), predicate),
