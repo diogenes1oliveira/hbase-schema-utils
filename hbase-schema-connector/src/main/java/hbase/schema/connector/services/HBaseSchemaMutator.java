@@ -2,7 +2,6 @@ package hbase.schema.connector.services;
 
 import hbase.base.exceptions.UncheckedInterruptionException;
 import hbase.base.interfaces.IOSupplier;
-import hbase.connector.services.HBaseConnector;
 import hbase.schema.connector.interfaces.HBaseMutationBuilder;
 import hbase.schema.connector.interfaces.HBaseMutator;
 import org.apache.hadoop.hbase.TableName;

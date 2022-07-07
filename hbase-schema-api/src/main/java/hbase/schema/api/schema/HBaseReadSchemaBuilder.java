@@ -8,6 +8,7 @@ import hbase.schema.api.interfaces.HBaseCellParser;
 import hbase.schema.api.interfaces.HBaseQueryCustomizer;
 import hbase.schema.api.interfaces.HBaseReadSchema;
 import hbase.schema.api.interfaces.conversion.BytesConverter;
+import hbase.schema.api.models.HBaseGenericRow;
 import hbase.schema.api.utils.ByteBufferComparator;
 import hbase.schema.api.utils.ByteBufferPrefixComparator;
 import org.apache.commons.lang3.tuple.Pair;
@@ -323,25 +324,14 @@ public class HBaseReadSchemaBuilder<Q, R> {
             }
 
             @Override
-            public boolean parseRowKey(R result, ByteBuffer rowKey, Q query) {
+            public boolean parseRow(R result, HBaseGenericRow row, Q query) {
                 boolean parsed = false;
 
                 for (HBaseByteParser<R> parser : rowKeyParsers) {
-                    parsed = parser.parse(result, rowKey) || parsed;
+                    parsed = parser.parse(result, row.getRowKey()) || parsed;
                 }
 
                 return true;
-            }
-
-            @Override
-            public boolean parseCell(R result, ByteBuffer qualifier, ByteBuffer value, Q query) {
-                boolean parsed = false;
-
-                for (HBaseCellParser<R> parser : cellParsers) {
-                    parsed = parser.parse(result, qualifier, value) || parsed;
-                }
-
-                return parsed;
             }
 
             @Override

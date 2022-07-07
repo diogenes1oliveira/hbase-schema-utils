@@ -1,6 +1,6 @@
 package hbase.schema.connector.services;
 
-import hbase.connector.services.HBaseStreamFetcher;
+import hbase.connector.services.HBaseStreamFetcherOld;
 import hbase.schema.api.interfaces.HBaseReadSchema;
 import hbase.schema.connector.interfaces.HBaseFetcher;
 import hbase.schema.connector.models.HBaseResultRow;
@@ -32,9 +32,9 @@ public class HBaseSchemaFetcher<Q, R> implements HBaseFetcher<Q, R> {
     private static final Logger LOGGER = LoggerFactory.getLogger(HBaseSchemaFetcher.class);
 
     private final HBaseReadSchema<Q, R> readSchema;
-    private final HBaseStreamFetcher streamFetcher;
+    private final HBaseStreamFetcherOld streamFetcher;
 
-    public HBaseSchemaFetcher(HBaseStreamFetcher streamFetcher, HBaseReadSchema<Q, R> readSchema) {
+    public HBaseSchemaFetcher(HBaseStreamFetcherOld streamFetcher, HBaseReadSchema<Q, R> readSchema) {
         this.streamFetcher = streamFetcher;
         this.readSchema = readSchema;
     }
@@ -83,24 +83,25 @@ public class HBaseSchemaFetcher<Q, R> implements HBaseFetcher<Q, R> {
 
     @Override
     public Optional<R> parseResult(Q query, HBaseResultRow resultRow) {
-        R result = readSchema.newInstance();
-
-        boolean parsed = readSchema.parseRowKey(result, resultRow.rowKey(), query);
-
-        for (Map.Entry<byte[], byte[]> entry : resultRow.cellsMap().entrySet()) {
-            byte[] qualifier = entry.getKey();
-            byte[] value = entry.getValue();
-            if (value != null) {
-                parsed = readSchema.parseCell(result, ByteBuffer.wrap(qualifier), ByteBuffer.wrap(value), query) || parsed;
-            }
-        }
-
-        if (parsed && readSchema.validate(result, query)) {
-            return Optional.of(result);
-        } else {
-            LOGGER.info("Invalid unparseable result {}", resultRow);
-            return Optional.empty();
-        }
+        return Optional.empty();
+//        R result = readSchema.newInstance();
+//
+//        boolean parsed = readSchema.parseRowKey(result, resultRow.rowKey(), query);
+//
+//        for (Map.Entry<byte[], byte[]> entry : resultRow.cellsMap().entrySet()) {
+//            byte[] qualifier = entry.getKey();
+//            byte[] value = entry.getValue();
+//            if (value != null) {
+//                parsed = readSchema.parseCell(result, ByteBuffer.wrap(qualifier), ByteBuffer.wrap(value), query) || parsed;
+//            }
+//        }
+//
+//        if (parsed && readSchema.validate(result, query)) {
+//            return Optional.of(result);
+//        } else {
+//            LOGGER.info("Invalid unparseable result {}", resultRow);
+//            return Optional.empty();
+//        }
     }
 
 }

@@ -1,9 +1,10 @@
 package hbase.schema.api.interfaces;
 
+import hbase.schema.api.models.HBaseGenericRow;
 import org.apache.hadoop.hbase.client.Get;
 import org.apache.hadoop.hbase.client.Scan;
+import org.apache.hadoop.hbase.filter.Filter;
 
-import java.nio.ByteBuffer;
 import java.util.List;
 
 /**
@@ -31,6 +32,7 @@ public abstract class HBaseReadSchemaWrapper<Q, R> implements HBaseReadSchema<Q,
      * @return generated Scans
      * @throws UnsupportedOperationException schema doesn't support this operation
      */
+    @Override
     public List<Scan> toScans(Q query) {
         return wrapped.toScans(query);
     }
@@ -44,8 +46,24 @@ public abstract class HBaseReadSchemaWrapper<Q, R> implements HBaseReadSchema<Q,
      * @return generated Get
      * @throws UnsupportedOperationException schema doesn't support this operation
      */
+    @Override
     public Get toGet(Q query) {
         return wrapped.toGet(query);
+    }
+
+    /**
+     * Description copied from {@link HBaseReadSchema}
+     * <p>
+     * Generates a Filter corresponding to the query object
+     * <p>
+     * The default implementation just returns {@code null}
+     *
+     * @param query query object
+     * @return generated Filter or null
+     */
+    @Override
+    public Filter toFilter(Q query) {
+        return wrapped.toFilter(query);
     }
 
     /**
@@ -55,6 +73,7 @@ public abstract class HBaseReadSchemaWrapper<Q, R> implements HBaseReadSchema<Q,
      * <p>
      * Generally, this will be something like {@code ResultClass::new}
      */
+    @Override
     public R newInstance() {
         return wrapped.newInstance();
     }
@@ -66,26 +85,30 @@ public abstract class HBaseReadSchemaWrapper<Q, R> implements HBaseReadSchema<Q,
      * <p>
      * The default implementation just returns {@code false}, signaling no data was parsed
      *
-     * @param rowKey fetched row key
+     * @param result target result object
+     * @param row    fetched row
      * @param query  original query object
      * @return {@code true} if some data was parsed
      */
-    public boolean parseRowKey(R result, ByteBuffer rowKey, Q query) {
-        return wrapped.parseRowKey(result, rowKey, query);
+    @Override
+    public boolean parseRow(R result, HBaseGenericRow row, Q query) {
+        return wrapped.parseRow(result, row, query);
     }
 
     /**
      * Description copied from {@link HBaseReadSchema}
      * <p>
-     * Populates the result object with data from a fetched cell
+     * Validates whether the result parsed from the row is valid.
+     * <p>
+     * The default implementation always returns {@code true}
      *
-     * @param result    result object
-     * @param qualifier fetched column qualifier
-     * @param value     fetched cell value
-     * @param query     original query object
-     * @return {@code true} if some data was parsed
+     * @param result result object
+     * @param query  original query object
+     * @return {@code true} if the parsed result is valid
      */
-    public boolean parseCell(R result, ByteBuffer qualifier, ByteBuffer value, Q query) {
-        return wrapped.parseCell(result, qualifier, value, query);
+    @Override
+    public boolean validate(R result, Q query) {
+        return wrapped.validate(result, query);
     }
+
 }

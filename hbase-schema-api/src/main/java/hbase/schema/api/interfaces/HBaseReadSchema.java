@@ -82,19 +82,4 @@ public interface HBaseReadSchema<Q, R> {
         return true;
     }
 
-    /**
-     * Creates a result object with data from the row key
-     *
-     * @param row   fetched row
-     * @param query original query object
-     * @return the fresh populated instance or {@code null} if nothing got parsed or the result is invalid
-     */
-    default R parseRow(HBaseGenericRow row, Q query) {
-        R result = newInstance();
-        if (!parseRow(result, row, query) || !validate(result, query)) {
-            return null;
-        }
-        return result;
-    }
-
 }
