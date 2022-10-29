@@ -23,8 +23,7 @@
         <!-- main dependencies -->
         <dependency>
             <groupId>org.apache.hbase</groupId>
-            <artifactId>hbase-client</artifactId>
-            <scope>provided</scope>
+            <artifactId>hbase-shaded-client</artifactId>
         </dependency>
         <dependency>
             <groupId>com.github.diogenes1oliveira</groupId>
@@ -49,6 +48,11 @@
             <optional>true</optional>
         </dependency>
         <!-- test dependencies -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>com.github.diogenes1oliveira</groupId>
             <artifactId>hbase-test-utils</artifactId>

@@ -13,7 +13,7 @@ import java.util.NavigableMap;
 import java.util.TreeMap;
 
 import static hbase.schema.api.utils.ByteBufferComparator.BYTE_BUFFER_COMPARATOR;
-import static hbase.schema.api.utils.BytePrefixComparator.BYTE_PREFIX_COMPARATOR;
+import static hbase.schema.api.utils.BytesPrefixComparator.BYTES_PREFIX_COMPARATOR;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Objects.requireNonNull;
@@ -170,7 +170,7 @@ public class HBaseGenericRow {
             byte[] valueBytes = entry.getValue();
             if (valueBytes == null) {
                 continue;
-            } else if (BYTE_PREFIX_COMPARATOR.compare(qualifierBytes, prefix) > 0) {
+            } else if (BYTES_PREFIX_COMPARATOR.compare(qualifierBytes, prefix) > 0) {
                 break;
             }
 

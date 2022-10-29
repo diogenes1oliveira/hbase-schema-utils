@@ -4,7 +4,7 @@ import hbase.base.interfaces.TriConsumer;
 import hbase.schema.api.interfaces.HBaseByteMapper;
 import hbase.schema.api.interfaces.HBaseByteParser;
 import hbase.schema.api.interfaces.HBaseBytesMapper;
-import hbase.schema.api.interfaces.HBaseCellParser;
+import hbase.schema.api.interfaces.HBaseCellParserOld;
 import hbase.schema.api.interfaces.HBaseQueryCustomizer;
 import hbase.schema.api.interfaces.HBaseReadSchema;
 import hbase.schema.api.interfaces.conversion.BytesConverter;
@@ -31,7 +31,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 import static hbase.schema.api.interfaces.HBaseByteParser.hBaseByteParser;
-import static hbase.schema.api.interfaces.HBaseCellParser.hBaseCellParser;
+import static hbase.schema.api.interfaces.HBaseCellParserOld.hBaseCellParser;
 import static hbase.schema.api.utils.HBaseSchemaUtils.chain;
 import static hbase.schema.api.utils.HBaseSchemaUtils.chainMap;
 import static java.util.Arrays.asList;
@@ -44,12 +44,12 @@ public class HBaseReadSchemaBuilder<Q, R> {
 
     private final Supplier<R> resultCreator;
     private final List<HBaseByteParser<R>> rowKeyParsers = new ArrayList<>();
-    private final List<HBaseCellParser<R>> cellParsers = asList(this::parseFixedCell, this::parsePrefixCell);
+    private final List<HBaseCellParserOld<R>> cellParsers = asList(this::parseFixedCell, this::parsePrefixCell);
     private HBaseByteMapper<Q> rowKeyMapper = null;
     private HBaseBytesMapper<Q> scanStartsMapper = HBaseBytesMapper.empty();
     private HBaseBytesMapper<Q> scanStopsMapper = HBaseBytesMapper.empty();
     private final SortedMap<ByteBuffer, HBaseByteParser<R>> fixedCellParsers = new TreeMap<>(ByteBufferComparator.BYTE_BUFFER_COMPARATOR);
-    private final SortedMap<ByteBuffer, HBaseCellParser<R>> prefixCellParsers = new TreeMap<>(ByteBufferPrefixComparator.BYTE_BUFFER_PREFIX_COMPARATOR);
+    private final SortedMap<ByteBuffer, HBaseCellParserOld<R>> prefixCellParsers = new TreeMap<>(ByteBufferPrefixComparator.BYTE_BUFFER_PREFIX_COMPARATOR);
     private Function<Q, Filter> filterMapper = q -> null;
     private BiPredicate<R, Q> validator = (r, q) -> true;
     private final List<HBaseQueryCustomizer<Q>> queryCustomizers = new ArrayList<>();
@@ -71,17 +71,17 @@ public class HBaseReadSchemaBuilder<Q, R> {
         this(resultCreator);
     }
 
-    public HBaseReadSchemaBuilder<Q, R> parseAny(HBaseCellParser<R> cellParser) {
+    public HBaseReadSchemaBuilder<Q, R> parseAny(HBaseCellParserOld<R> cellParser) {
         cellParsers.add(cellParser);
         return this;
     }
 
-    public HBaseReadSchemaBuilder<Q, R> parsePrefix(byte[] prefix, HBaseCellParser<R> cellParser) {
+    public HBaseReadSchemaBuilder<Q, R> parsePrefix(byte[] prefix, HBaseCellParserOld<R> cellParser) {
         this.prefixCellParsers.put(ByteBuffer.wrap(prefix), cellParser);
         return this;
     }
 
-    public HBaseReadSchemaBuilder<Q, R> parsePrefix(String prefix, HBaseCellParser<R> cellParser) {
+    public HBaseReadSchemaBuilder<Q, R> parsePrefix(String prefix, HBaseCellParserOld<R> cellParser) {
         return parsePrefix(prefix.getBytes(StandardCharsets.UTF_8), cellParser);
     }
 
@@ -375,7 +375,7 @@ public class HBaseReadSchemaBuilder<Q, R> {
     }
 
     private boolean parsePrefixCell(R result, ByteBuffer column, ByteBuffer value) {
-        HBaseCellParser<R> parser = prefixCellParsers.get(column);
+        HBaseCellParserOld<R> parser = prefixCellParsers.get(column);
 
         if (parser != null) {
             ByteBuffer prefix = prefixCellParsers.tailMap(column).firstKey();

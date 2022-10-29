@@ -4,8 +4,8 @@ import org.apache.hadoop.hbase.util.Bytes;
 
 import java.util.Comparator;
 
-public class BytePrefixComparator implements Comparator<byte[]> {
-    private BytePrefixComparator() {
+public class BytesPrefixComparator implements Comparator<byte[]> {
+    private BytesPrefixComparator() {
         // singleton
     }
 
@@ -18,5 +18,5 @@ public class BytePrefixComparator implements Comparator<byte[]> {
         return Bytes.compareTo(b1, 0, prefixLength, b2, 0, prefixLength);
     }
 
-    public static final BytePrefixComparator BYTE_PREFIX_COMPARATOR = new BytePrefixComparator();
+    public static final BytesPrefixComparator BYTES_PREFIX_COMPARATOR = new BytesPrefixComparator();
 }
