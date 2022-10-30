@@ -43,8 +43,6 @@ public class HBaseStreamFetcher {
      * @throws UncheckedIOException failed to connect or fetch data from HBase
      */
     public Stream<Result> get(Get get, TableName tableName) {
-        AtomicInteger count = new AtomicInteger(0);
-
         return Stream.generate(() -> {
             Connection connection = connector.get();
 
@@ -52,9 +50,6 @@ public class HBaseStreamFetcher {
                 Result result = table.get(get);
 
                 if (result != null && result.getRow() != null) {
-                    if (count.getAndIncrement() > 0) {
-                        throw new IllegalStateException("Should have run just once");
-                    }
                     return result;
                 } else {
                     return null;
