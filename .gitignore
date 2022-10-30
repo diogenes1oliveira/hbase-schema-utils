@@ -40,3 +40,6 @@ hs_err_pid*
 /.idea/libraries
 /.idea/jarRepositories.xml
 /.idea/compiler.xml
+
+# VSCode
+.vscode/
