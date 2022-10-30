@@ -1,6 +1,5 @@
 package dev.diogenes.hbase.connector.utils;
 
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,7 +18,6 @@ import static dev.diogenes.hbase.connector.utils.ConfigHelpers.mergeProps;
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 
-
 /**
  * Maps environment variables to a Properties object
  * <p>
@@ -27,7 +25,8 @@ import static org.apache.commons.lang3.StringUtils.isEmpty;
  * <li>One underscore is replaced by a dot '.';</li>
  * <li>Two consecutive underscores are replaced by a dash '-';</li>
  * <li>The result is then converted to lowercase.</li>
- * <li>Three consecutive underscores work as an escape character: the character immediately afterwards
+ * <li>Three consecutive underscores work as an escape character: the character
+ * immediately afterwards
  * is used verbatim.</li>
  * <p>
  * Examples:
@@ -40,21 +39,23 @@ import static org.apache.commons.lang3.StringUtils.isEmpty;
 public class ConfigEnvMapper {
     private static final Logger LOGGER = LoggerFactory.getLogger(ConfigEnvMapper.class);
 
-    public static final String ENV_FILE_CONFIG = "HBASE_CONNECTOR_CONFIG_ENV_FILE";
+    public static final String ENV_FILE_CONFIG = "CONNECTOR_ENV_FILE";
 
-    private final Set<String> envPrefixes = new HashSet<>();
+    private final String envPrefix;
 
     /**
-     * @param envPrefixes only environment variables starting with one of these prefixes will be considered
+     * @param envPrefix only environment variables starting with this prefix will be
+     *                  considered
      */
-    public ConfigEnvMapper(String... envPrefixes) {
-        this.envPrefixes.addAll(asList(envPrefixes));
+    public ConfigEnvMapper(String envPrefix) {
+        this.envPrefix = envPrefix;
     }
 
     /**
      * Builds a properties object corresponding to the environment
      * <p>
-     * Environment variables are filtered by prefix and then transformed by the mapping rules
+     * Environment variables are filtered by prefix and then transformed by the
+     * mapping rules
      *
      * @param env environment values
      * @return parsed Properties object
@@ -65,12 +66,16 @@ public class ConfigEnvMapper {
 
         for (Map.Entry<String, String> entry : env.entrySet()) {
             String envName = entry.getKey();
+            if (!envName.startsWith(envPrefix)) {
+                continue;
+            }
+            envName = envName.substring(envPrefix.length());
+            String envValue = entry.getValue();
+
             if (ENV_FILE_CONFIG.equals(envName)) {
                 envFilePath = entry.getValue();
-            } else if (envPrefixes.stream().anyMatch(envName::startsWith)) {
+            } else {
                 String propName = envToPropName(envName);
-                String envValue = entry.getValue();
-
                 props.setProperty(propName, envValue);
             }
         }
@@ -83,7 +88,7 @@ public class ConfigEnvMapper {
         return props;
     }
 
-    @SuppressWarnings({"unchecked", "rawtypes"})
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     public Properties parseEnv(String envFilePath) {
         Properties env = new Properties();
 
@@ -120,8 +125,8 @@ public class ConfigEnvMapper {
 
     private static String envToPropNameWithoutEscapes(String name) {
         return name.toLowerCase(Locale.ROOT)
-                   .replace("__", "-")
-                   .replace('_', '.');
+                .replace("__", "-")
+                .replace('_', '.');
     }
 
 }

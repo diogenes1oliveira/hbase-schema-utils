@@ -20,7 +20,6 @@ import java.util.stream.Stream;
 
 import static dev.diogenes.hbase.connector.utils.TakeWhileIterator.streamTakeWhile;
 
-
 /**
  * Object to supply a nice stream-based API to fetch data from HBase
  */
@@ -72,7 +71,8 @@ public class HBaseStreamFetcher {
      * @param scans     Scan objects
      * @param tableName name of the table to be scanned
      * @param batchSize maximum size of each result batch
-     * @return stream that yields a batch of results at each iteration. MUST be closed after completion
+     * @return stream that yields a batch of results at each iteration. MUST be
+     *         closed after completion
      * @throws UncheckedIOException failed to connect or fetch data from HBase
      */
     public Stream<Result[]> scan(Stream<Scan> scans, TableName tableName, int batchSize) {
@@ -85,7 +85,8 @@ public class HBaseStreamFetcher {
      * @param scan      Scan object
      * @param tableName name of the table to be scanned
      * @param batchSize maximum size of each result batch
-     * @return stream that yields a batch of results at each iteration. MUST be closed after completion
+     * @return stream that yields a batch of results at each iteration. MUST be
+     *         closed after completion
      * @throws UncheckedIOException failed to connect or fetch data from HBase
      */
     public Stream<Result[]> scan(Scan scan, TableName tableName, int batchSize) {
@@ -93,7 +94,8 @@ public class HBaseStreamFetcher {
             Connection connection = connector.get();
             return connection.getTable(tableName);
         }, Table::close);
-        IOLazyRef<ResultScanner> scannerRef = new IOLazyRef<>(() -> tableRef.get().getScanner(scan), ResultScanner::close);
+        IOLazyRef<ResultScanner> scannerRef = new IOLazyRef<>(() -> tableRef.get().getScanner(scan),
+                ResultScanner::close);
 
         Stream<Result[]> stream = Stream.generate(() -> {
             try {
@@ -119,7 +121,7 @@ public class HBaseStreamFetcher {
                 try {
                     tableRef.close();
                 } catch (UncheckedIOException tableException) {
-                    LOGGER.warn("Failed cleaning up table object after scanner failure", tableException);
+                    LOGGER.warn("Failed to clean up table object after scanner failure", tableException);
                 }
                 throw scannerException;
             }
