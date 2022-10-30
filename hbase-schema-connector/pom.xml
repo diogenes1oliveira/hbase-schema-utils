@@ -113,39 +113,6 @@
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
             </plugin>
-            <plugin>
-                <groupId>org.codehaus.gmaven</groupId>
-                <artifactId>groovy-maven-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <configuration>
-                            <classpathScope>runtime</classpathScope>
-                        </configuration>
-                    </execution>
-                </executions>
-                <dependencies>
-                    <dependency>
-                        <groupId>com.github.diogenes1oliveira</groupId>
-                        <artifactId>hbase-connector</artifactId>
-                        <version>${project.version}</version>
-                    </dependency>
-                    <dependency>
-                        <groupId>com.github.diogenes1oliveira</groupId>
-                        <artifactId>hbase-base-types</artifactId>
-                        <version>${project.version}</version>
-                    </dependency>
-                    <dependency>
-                        <groupId>com.github.diogenes1oliveira</groupId>
-                        <artifactId>hbase-schema-api</artifactId>
-                        <version>${project.version}</version>
-                    </dependency>
-                    <dependency>
-                        <groupId>com.github.diogenes1oliveira</groupId>
-                        <artifactId>hbase-schema-connector</artifactId>
-                        <version>${project.version}</version>
-                    </dependency>
-                </dependencies>
-            </plugin>
         </plugins>
     </build>
 </project>

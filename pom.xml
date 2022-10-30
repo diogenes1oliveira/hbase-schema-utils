@@ -41,7 +41,8 @@
         <source.plugin.version>3.2.1</source.plugin.version>
         <javadoc.plugin.version>3.3.2</javadoc.plugin.version>
         <jacoco.plugin.version>0.8.7</jacoco.plugin.version>
-        <groovy.plugin.version>2.1.1</groovy.plugin.version>
+        <groovy.version>2.4.16</groovy.version>
+        <gmavenplus.plugin.version>2.1.0</gmavenplus.plugin.version>
     </properties>
 
     <modules>
@@ -194,6 +195,13 @@
                 <version>${slf4j.version}</version>
                 <scope>test</scope>
             </dependency>
+            <!-- dev dependencies -->
+            <dependency>
+                <groupId>org.codehaus.groovy</groupId>
+                <artifactId>groovy-all</artifactId>
+                <version>${groovy.version}</version>
+                <scope>runtime</scope>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -287,9 +295,23 @@
                     </executions>
                 </plugin>
                 <plugin>
-                    <groupId>org.codehaus.gmaven</groupId>
-                    <artifactId>groovy-maven-plugin</artifactId>
-                    <version>${groovy.plugin.version}</version>
+                    <groupId>org.codehaus.gmavenplus</groupId>
+                    <artifactId>gmavenplus-plugin</artifactId>
+                    <version>${gmavenplus.plugin.version}</version>
+                    <dependencies>
+                        <dependency>
+                            <groupId>org.codehaus.groovy</groupId>
+                            <artifactId>groovy-all</artifactId>
+                            <version>${groovy.version}</version>
+                            <scope>runtime</scope>
+                        </dependency>
+                        <dependency>
+                            <groupId>com.github.diogenes1oliveira</groupId>
+                            <artifactId>hbase-connector</artifactId>
+                            <version>${project.version}</version>
+                            <scope>runtime</scope>
+                        </dependency>
+                    </dependencies>
                 </plugin>
             </plugins>
         </pluginManagement>

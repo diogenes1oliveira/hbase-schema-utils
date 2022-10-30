@@ -110,17 +110,8 @@
                 <artifactId>jacoco-maven-plugin</artifactId>
             </plugin>
             <plugin>
-                <groupId>org.codehaus.gmaven</groupId>
-                <artifactId>groovy-maven-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <configuration>
-                            <classpathScope>runtime</classpathScope>
-                        </configuration>
-                    </execution>
-                </executions>
-                <dependencies>
-                </dependencies>
+                <groupId>org.codehaus.gmavenplus</groupId>
+                <artifactId>gmavenplus-plugin</artifactId>
             </plugin>
         </plugins>
     </build>
