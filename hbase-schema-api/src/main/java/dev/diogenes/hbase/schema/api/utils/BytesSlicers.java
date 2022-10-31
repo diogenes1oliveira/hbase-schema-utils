@@ -12,7 +12,7 @@ public final class BytesSlicers {
         // utility class
     }
 
-    public static BytesSlicer full() {
+    public static BytesSlicer remainder() {
         return buffer -> {
             ByteBuffer result = buffer.slice();
             buffer.position(buffer.position() + result.remaining());

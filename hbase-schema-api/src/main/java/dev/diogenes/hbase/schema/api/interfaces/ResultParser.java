@@ -20,17 +20,8 @@ public interface ResultParser<T> {
 
     T newInstance();
 
-    default Optional<T> parseResult(Result result, byte[] family) {
-        return parseResult(result.getRow(), result.getFamilyMap(family));
-    }
-
-    default Optional<T> parseResult(byte[] rowKey, NavigableMap<byte[], byte[]> cellsMap) {
-        T obj = newInstance();
+    default Optional<T> parseCells(T obj, NavigableMap<byte[], byte[]> cellsMap) {
         boolean parsed = false;
-
-        if (rowKey != null) {
-            parsed = parseRowKey(obj, ByteBuffer.wrap(rowKey)) || parsed;
-        }
 
         if (cellsMap != null) {
             for (Map.Entry<byte[], byte[]> entry : cellsMap.entrySet()) {

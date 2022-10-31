@@ -18,9 +18,9 @@ import static org.hamcrest.MatcherAssert.assertThat;
 
 public class BytesSlicersTest {
     @ParameterizedTest
-    @MethodSource("provideFull")
-    void testFull(ByteBuffer input, String expected, String remaining) {
-        ByteBuffer actual = BytesSlicers.full().slice(input).orElse(null);
+    @MethodSource("provideRemainder")
+    void testRemainder(ByteBuffer input, String expected, String remaining) {
+        ByteBuffer actual = BytesSlicers.remainder().slice(input).orElse(null);
 
         assertThat(string(actual), equalTo(expected));
         assertThat(string(input), equalTo(remaining));
@@ -64,7 +64,7 @@ public class BytesSlicersTest {
         assertThat(string(slices.get(2)), equalTo("ccc"));
     }
 
-    static Stream<Arguments> provideFull() {
+    static Stream<Arguments> provideRemainder() {
         return Stream.of(
                 Arguments.of(buffer(""), "", ""),
                 Arguments.of(buffer("something"), "something", ""),
