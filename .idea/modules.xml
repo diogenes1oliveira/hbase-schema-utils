@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/build-report/build-report.iml" filepath="$PROJECT_DIR$/build-report/build-report.iml" />
+      <module fileurl="file://$PROJECT_DIR$/hadoop-auth-utils/hadoop-auth-utils.iml" filepath="$PROJECT_DIR$/hadoop-auth-utils/hadoop-auth-utils.iml" />
+      <module fileurl="file://$PROJECT_DIR$/hbase-base-types/hbase-base-types.iml" filepath="$PROJECT_DIR$/hbase-base-types/hbase-base-types.iml" />
+      <module fileurl="file://$PROJECT_DIR$/hbase-connector/hbase-connector.iml" filepath="$PROJECT_DIR$/hbase-connector/hbase-connector.iml" />
+      <module fileurl="file://$PROJECT_DIR$/hbase-schema-api/hbase-schema-api.iml" filepath="$PROJECT_DIR$/hbase-schema-api/hbase-schema-api.iml" />
+      <module fileurl="file://$PROJECT_DIR$/hbase-schema-connector/hbase-schema-connector.iml" filepath="$PROJECT_DIR$/hbase-schema-connector/hbase-schema-connector.iml" />
+      <module fileurl="file://$PROJECT_DIR$/hbase-test-utils/hbase-test-utils.iml" filepath="$PROJECT_DIR$/hbase-test-utils/hbase-test-utils.iml" />
+      <module fileurl="file://$PROJECT_DIR$/hbase-utils-parent.iml" filepath="$PROJECT_DIR$/hbase-utils-parent.iml" />
+    </modules>
+  </component>
+</project>
