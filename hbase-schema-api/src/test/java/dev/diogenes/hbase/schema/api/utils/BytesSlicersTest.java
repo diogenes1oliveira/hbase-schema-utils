@@ -1,16 +1,17 @@
 package dev.diogenes.hbase.schema.api.utils;
 
-import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
-import java.util.List;
-import java.util.stream.Stream;
-
 import dev.diogenes.hbase.schema.api.interfaces.BytesSlicer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import java.nio.ByteBuffer;
+import java.util.List;
+import java.util.stream.Stream;
+
+import static dev.diogenes.hbase.schema.api.testutils.BufferUtils.buffer;
+import static dev.diogenes.hbase.schema.api.testutils.BufferUtils.string;
 import static java.util.Arrays.asList;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -87,20 +88,4 @@ public class BytesSlicersTest {
         );
     }
 
-    private static ByteBuffer buffer(String s) {
-        if (s == null) {
-            return null;
-        }
-        byte[] bytes = s.getBytes(StandardCharsets.UTF_8);
-        return ByteBuffer.wrap(bytes);
-    }
-
-    private static String string(ByteBuffer buffer) {
-        if (buffer == null) {
-            return null;
-        }
-        byte[] bytes = new byte[buffer.remaining()];
-        buffer.get(bytes);
-        return new String(bytes, StandardCharsets.UTF_8);
-    }
 }

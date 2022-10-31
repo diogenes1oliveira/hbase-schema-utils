@@ -41,6 +41,7 @@ hs_err_pid*
 .idea/compiler.xml
 .idea/workspace.xml
 .idea/uiDesigner.xml
+.attach_pid*
 
 # VSCode
 .vscode/
