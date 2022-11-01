@@ -7,8 +7,12 @@ import dev.diogenes.hbase.schema.api.interfaces.NodeParser;
 import dev.diogenes.hbase.schema.api.interfaces.ResultParser;
 
 import java.nio.ByteBuffer;
+import java.util.List;
+import java.util.Map;
 
 import static dev.diogenes.hbase.schema.api.parsers.StringParsers.UTF8_PARSER;
+import static java.util.function.UnaryOperator.identity;
+import static java.util.stream.Collectors.toMap;
 
 public class JsonFixedColumnParser implements ResultParser<ObjectNode> {
     private final NodeParser parser;
@@ -33,6 +37,10 @@ public class JsonFixedColumnParser implements ResultParser<ObjectNode> {
                 return false;
             }
         }
+        return parseCellUnchecked(root, value);
+    }
+
+    private boolean parseCellUnchecked(ObjectNode root, ByteBuffer value) {
         JsonNode node = parser.parse(value);
         if (node == null) {
             return false;
@@ -44,5 +52,25 @@ public class JsonFixedColumnParser implements ResultParser<ObjectNode> {
     @Override
     public ObjectNode newInstance() {
         return JsonNodeFactory.instance.objectNode();
+    }
+
+    public static ResultParser<ObjectNode> combineAll(List<JsonFixedColumnParser> parsers) {
+        Map<String, JsonFixedColumnParser> parsersByName = parsers.stream().collect(toMap(p -> p.name, identity()));
+        return new ResultParser<ObjectNode>() {
+            @Override
+            public boolean parseCell(ObjectNode root, ByteBuffer column, ByteBuffer value) {
+                String columnName = UTF8_PARSER.parse(column);
+                JsonFixedColumnParser parser = parsersByName.get(columnName);
+                if (parser == null) {
+                    return false;
+                }
+                return parser.parseCellUnchecked(root, value);
+            }
+
+            @Override
+            public ObjectNode newInstance() {
+                return JsonNodeFactory.instance.objectNode();
+            }
+        };
     }
 }

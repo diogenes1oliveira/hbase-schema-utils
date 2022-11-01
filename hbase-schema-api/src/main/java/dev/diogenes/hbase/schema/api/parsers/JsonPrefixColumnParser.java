@@ -30,16 +30,16 @@ public class JsonPrefixColumnParser implements ResultParser<ObjectNode> {
             return false;
         }
 
-        JsonNode prefixNode = root.get(prefix);
-        if (!(prefixNode instanceof ObjectNode)) {
-            prefixNode = JsonNodeFactory.instance.objectNode();
-            root.replace(prefix, prefixNode);
+        JsonNode currentNode = root.get(prefix);
+        if (!(currentNode instanceof ObjectNode)) {
+            currentNode = JsonNodeFactory.instance.objectNode();
+            root.replace(prefix, currentNode);
         }
 
-        ObjectNode prefixMapNode = (ObjectNode) prefixNode;
+        ObjectNode prefixNode = (ObjectNode) currentNode;
         String key = columnName.substring(prefix.length());
 
-        prefixMapNode.replace(key, valueNode);
+        prefixNode.replace(key, valueNode);
         return true;
     }
 
