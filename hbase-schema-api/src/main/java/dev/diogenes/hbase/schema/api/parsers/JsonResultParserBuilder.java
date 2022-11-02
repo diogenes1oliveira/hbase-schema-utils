@@ -1,6 +1,5 @@
 package dev.diogenes.hbase.schema.api.parsers;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import dev.diogenes.hbase.schema.api.interfaces.BytesSlicer;
@@ -52,7 +51,8 @@ public class JsonResultParserBuilder {
 
     public ResultParser<ObjectNode> build() {
         JsonStringRowKeyParser rowKeyParser = new JsonStringRowKeyParser(rowKeySlicers, rowKeyNames);
-        ResultParser<ObjectNode> columnsParser = JsonFixedColumnParser.combineAll(columnParsers);
+        ResultParser<ObjectNode> columnsParser = JsonFixedColumnParser.combineParsers(columnParsers);
+        ResultParser<ObjectNode> prefixParser = ResultParser.combineParsers(prefixParsers, JsonNodeFactory.instance::objectNode);
 
         return new ResultParser<ObjectNode>() {
             @Override
@@ -62,7 +62,7 @@ public class JsonResultParserBuilder {
 
             @Override
             public boolean parseCell(ObjectNode root, ByteBuffer column, ByteBuffer value) {
-                return columnsParser.parseCell(root, column, value);
+                return columnsParser.parseCell(root, column, value) || prefixParser.parseCell(root, column, value);
             }
 
             @Override

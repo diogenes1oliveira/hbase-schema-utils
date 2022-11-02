@@ -1,9 +1,13 @@
 package dev.diogenes.hbase.schema.api.interfaces;
 
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.NavigableMap;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 import org.apache.hadoop.hbase.client.Result;
 
@@ -20,7 +24,7 @@ public interface ResultParser<T> {
 
     T newInstance();
 
-    default Optional<T> parseCells(T obj, NavigableMap<byte[], byte[]> cellsMap) {
+    default boolean parseCells(T obj, NavigableMap<byte[], byte[]> cellsMap) {
         boolean parsed = false;
 
         if (cellsMap != null) {
@@ -33,11 +37,47 @@ public interface ResultParser<T> {
             }
         }
 
-        if (!parsed) {
-            return Optional.empty();
-        }
+        return parsed;
+    }
 
-        return Optional.of(obj);
+    static <T> ResultParser<T> combineParsers(List<? extends ResultParser<? super T>> parsers, Supplier<T> newInstance) {
+
+        return new ResultParser<T>() {
+            @Override
+            public T newInstance() {
+                return newInstance.get();
+            }
+
+            @Override
+            public boolean parseRowKey(T obj, ByteBuffer rowKey) {
+                for (ResultParser<? super T> parser : parsers) {
+                    if (parser.parseRowKey(obj, rowKey)) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+
+            @Override
+            public boolean parseCell(T obj, ByteBuffer column, ByteBuffer value) {
+                for (ResultParser<? super T> parser : parsers) {
+                    if (parser.parseCell(obj, column, value)) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+
+            @Override
+            public boolean parseCells(T obj, NavigableMap<byte[], byte[]> cellsMap) {
+                for (ResultParser<? super T> parser : parsers) {
+                    if (parser.parseCells(obj, cellsMap)) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+        };
     }
 
 }

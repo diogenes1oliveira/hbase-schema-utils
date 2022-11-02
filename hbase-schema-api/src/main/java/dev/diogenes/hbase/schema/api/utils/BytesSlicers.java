@@ -52,6 +52,30 @@ public final class BytesSlicers {
         };
     }
 
+    public static BytesSlicer split(byte[] separator) {
+        return buffer -> {
+            ByteBuffer result = buffer.slice();
+            int size = 0;
+            int i = 0;
+
+            while (buffer.hasRemaining()) {
+                byte b = buffer.get();
+                if(b != separator[i]) {
+                    i = 0;
+                }
+                if(b == separator[i]) {
+                    i++;
+                    if(i == separator.length) {
+
+                    }
+                }
+            }
+
+            result.limit(size);
+            return Optional.of(result);
+        };
+    }
+
     public static BytesSlicer split(char separator) {
         return split((byte) separator);
     }

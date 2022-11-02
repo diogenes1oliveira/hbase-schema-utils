@@ -54,7 +54,7 @@ public class JsonFixedColumnParser implements ResultParser<ObjectNode> {
         return JsonNodeFactory.instance.objectNode();
     }
 
-    public static ResultParser<ObjectNode> combineAll(List<JsonFixedColumnParser> parsers) {
+    public static ResultParser<ObjectNode> combineParsers(List<JsonFixedColumnParser> parsers) {
         Map<String, JsonFixedColumnParser> parsersByName = parsers.stream().collect(toMap(p -> p.name, identity()));
         return new ResultParser<ObjectNode>() {
             @Override
