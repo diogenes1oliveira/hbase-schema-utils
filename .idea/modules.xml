@@ -8,8 +8,8 @@
       <module fileurl="file://$PROJECT_DIR$/hbase-connector/hbase-connector.iml" filepath="$PROJECT_DIR$/hbase-connector/hbase-connector.iml" />
       <module fileurl="file://$PROJECT_DIR$/hbase-schema-api/hbase-schema-api.iml" filepath="$PROJECT_DIR$/hbase-schema-api/hbase-schema-api.iml" />
       <module fileurl="file://$PROJECT_DIR$/hbase-schema-connector/hbase-schema-connector.iml" filepath="$PROJECT_DIR$/hbase-schema-connector/hbase-schema-connector.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/hbase-schema-utils.iml" filepath="$PROJECT_DIR$/.idea/hbase-schema-utils.iml" />
       <module fileurl="file://$PROJECT_DIR$/hbase-test-utils/hbase-test-utils.iml" filepath="$PROJECT_DIR$/hbase-test-utils/hbase-test-utils.iml" />
-      <module fileurl="file://$PROJECT_DIR$/hbase-utils-parent.iml" filepath="$PROJECT_DIR$/hbase-utils-parent.iml" />
     </modules>
   </component>
 </project>

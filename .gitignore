@@ -36,11 +36,11 @@ hs_err_pid*
 /tmp
 
 # IntelliJ
-.idea/libraries
-.idea/jarRepositories.xml
-.idea/compiler.xml
-.idea/workspace.xml
-.idea/uiDesigner.xml
+.idea/*
+!.idea/encodings.xml
+!.idea/misc.xml
+!.idea/modules.xml
+!.idea/vcs.xml
 .attach_pid*
 
 # VSCode
